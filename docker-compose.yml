@@ -1,0 +1,139 @@
+services:
+  db:
+    image: postgres:16
+    container_name: nextcloud-db
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file:
+      - db.env
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c work_mem=32MB
+      -c maintenance_work_mem=256MB
+      -c effective_cache_size=3GB
+      -c wal_buffers=16MB
+      -c max_connections=500
+    ports:
+      - "55432:5432"
+    networks:
+      - nextcloud-net
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+
+  redis:
+    image: redis:7
+    container_name: nextcloud-redis
+    restart: unless-stopped
+    env_file:
+      - redis.env
+    command: sh -c "redis-server --requirepass $${REDIS_HOST_PASSWORD}"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nextcloud-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  app:
+    image: nextcloud:latest
+    container_name: nextcloud-app
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - nextcloud_data:/var/www/html
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_custom_apps:/var/www/html/custom_apps
+      - nextcloud_themes:/var/www/html/themes
+      - /media/ncdata/nextcloud:/mnt/ncdata
+    env_file:
+      - nextcloud.env
+    ports:
+      - "8080:80"
+    networks:
+      - nextcloud-net
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "1.5"
+          memory: 1.5G
+
+
+  collabora:
+    image: collabora/code:latest
+    container_name: collabora
+    restart: unless-stopped
+    cap_add:
+      - MKNOD
+    env_file:
+      - collabora.env
+    ports:
+      - "9980:9980"
+    networks:
+      - nextcloud-net
+    deploy:
+      resources:
+        limits:
+          cpus: "3.0"
+          memory: 3G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+
+
+
+#  harp:
+#    image: ghcr.io/nextcloud/nextcloud-appapi-harp:latest
+#    container_name: nextcloud-harp
+#    restart: unless-stopped
+#    env_file:
+#      - harp.env
+#    ports:
+#      - "8780:8780"
+#      - "8782:8782"
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    networks:
+#      - nextcloud-net
+
+  appapi-daemon:
+    image: ghcr.io/nextcloud/nextcloud-appapi-dsp:release
+    container_name: nextcloud-appapi-daemon
+    restart: unless-stopped
+    env_file:
+      - appapi-daemon.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - nextcloud-net
+
+
+volumes:
+  db_data:
+  redis_data:
+  nextcloud_data:
+  nextcloud_config:
+  nextcloud_custom_apps:
+  nextcloud_themes:
+
+networks:
+  nextcloud-net:
+    driver: bridge

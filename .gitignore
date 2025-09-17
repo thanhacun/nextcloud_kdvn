@@ -1,0 +1,5 @@
+*.env
+*.sql
+*.csv
+*config.php
+

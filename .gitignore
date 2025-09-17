@@ -2,4 +2,4 @@
 *.sql
 *.csv
 *config.php
-
+*.gz

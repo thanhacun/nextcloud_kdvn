@@ -1,0 +1,27 @@
+#version: "3.9"
+
+services:
+  app:
+    mem_limit: 6g
+    mem_reservation: 4g
+    cpus: "3.0"
+
+  db:
+    mem_limit: 4g
+    mem_reservation: 3g
+    cpus: "2.0"
+
+  collabora:
+    mem_limit: 4g
+    mem_reservation: 3g
+    cpus: "1.5"
+
+  redis:
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: "0.5"
+
+  appapi-daemon:
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: "1.0"

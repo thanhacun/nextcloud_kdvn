@@ -19,14 +19,6 @@ services:
       - "55432:5432"
     networks:
       - nextcloud-net
-    deploy:
-      resources:
-        limits:
-          cpus: "2.0"
-          memory: 2G
-        reservations:
-          cpus: "1.0"
-          memory: 1G
 
   redis:
     image: redis:7
@@ -39,14 +31,6 @@ services:
       - redis_data:/data
     networks:
       - nextcloud-net
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          cpus: "0.25"
-          memory: 256M
 
   app:
     image: nextcloud:latest
@@ -67,15 +51,6 @@ services:
       - "8080:80"
     networks:
       - nextcloud-net
-    deploy:
-      resources:
-        limits:
-          cpus: "2.0"
-          memory: 2G
-        reservations:
-          cpus: "1.5"
-          memory: 1.5G
-
 
   collabora:
     image: collabora/code:latest
@@ -89,16 +64,6 @@ services:
       - "9980:9980"
     networks:
       - nextcloud-net
-    deploy:
-      resources:
-        limits:
-          cpus: "3.0"
-          memory: 3G
-        reservations:
-          cpus: "1.0"
-          memory: 1G
-
-
 
 #  harp:
 #    image: ghcr.io/nextcloud/nextcloud-appapi-harp:latest

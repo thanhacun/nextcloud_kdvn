@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # --- SETTINGS ---
-BACKUP_ROOT="/media/ncbackup"
+BACKUP_ROOT="/home/kdvn_admin/nextcloud-stack/backup"
 DATE=$(date +%F_%H-%M)
 BACKUP_DIR="$BACKUP_ROOT/$DATE"
 

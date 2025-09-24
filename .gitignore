@@ -3,3 +3,5 @@
 *.csv
 *config.php
 *.gz
+archive/
+backup/

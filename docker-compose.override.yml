@@ -1,7 +1,9 @@
-#version: "3.9"
-
 services:
   app:
+    volumes:
+      - ./php-conf.d/opcache.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro
+    environment:
+      - PHP_OPCACHE_MEMORY_CONSUMPTION=512  # this variable is mention in /usr/local/etc/php/conf.f/opcache-recommended.ini
     mem_limit: 6g
     mem_reservation: 4g
     cpus: "3.0"
@@ -25,3 +27,33 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
     cpus: "1.0"
+
+  nextcloud-webhook-worker:
+    image: nextcloud:latest
+    restart: always
+    depends_on:
+      - nextcloud-app
+    volumes:
+      - nextcloud:/var/www/html
+    entrypoint: [ "php", "occ", "background-job:worker", "-v", "-t", "60", "OCA\\WebhookListeners\\BackgroundJobs\\WebhookCall" ]
+    networks:
+      - nextcloud-net
+
+  nextcloud-generic-worker:
+    image: nextcloud:latest
+    restart: always
+    depends_on:
+      - nextcloud-app
+    volumes:
+      - nextcloud:/var/www/html
+    entrypoint: [ "php", "occ", "background-job:worker", "-v", "-t", "60" ]
+    networks:
+      - nextcloud-net
+
+volumes:
+  nextcloud_data:
+    external: true
+
+networks:
+  nextcloud-net:
+    external: true

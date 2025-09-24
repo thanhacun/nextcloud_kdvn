@@ -60,6 +60,9 @@ services:
       - MKNOD
     env_file:
       - collabora.env
+    volumes:
+      - ./collabora_config/coolwsd:/etc/coolwsd
+      - ./collabora_config/fonts:/usr/share/fonts/custom
     ports:
       - "9980:9980"
     networks:
@@ -87,6 +90,7 @@ services:
       - appapi-daemon.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      #- ./dsp/apps:/var/lib/dsp/apps
     networks:
       - nextcloud-net
 

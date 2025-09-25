@@ -1,0 +1,17 @@
+[Unit]
+Description=Nextcloud Flow/Webhook Worker
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/run-webhook-worker.sh
+Restart=always
+RestartSec=5
+User=root
+# Optional: run in background log only
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

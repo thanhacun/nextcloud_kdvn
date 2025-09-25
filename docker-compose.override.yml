@@ -28,32 +28,3 @@ services:
     mem_reservation: 256m
     cpus: "1.0"
 
-  nextcloud-webhook-worker:
-    image: nextcloud:latest
-    restart: always
-    depends_on:
-      - nextcloud-app
-    volumes:
-      - nextcloud:/var/www/html
-    entrypoint: [ "php", "occ", "background-job:worker", "-v", "-t", "60", "OCA\\WebhookListeners\\BackgroundJobs\\WebhookCall" ]
-    networks:
-      - nextcloud-net
-
-  nextcloud-generic-worker:
-    image: nextcloud:latest
-    restart: always
-    depends_on:
-      - nextcloud-app
-    volumes:
-      - nextcloud:/var/www/html
-    entrypoint: [ "php", "occ", "background-job:worker", "-v", "-t", "60" ]
-    networks:
-      - nextcloud-net
-
-volumes:
-  nextcloud_data:
-    external: true
-
-networks:
-  nextcloud-net:
-    external: true

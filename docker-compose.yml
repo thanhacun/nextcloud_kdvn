@@ -94,6 +94,48 @@ services:
     networks:
       - nextcloud-net
 
+  imaginary:
+    #image: nextcloud/aio-imaginary:latest
+    image: ghcr.io/nextcloud-releases/aio-imaginary:latest
+    container_name: nextcloud-imaginary
+    restart: unless-stopped
+    environment:
+      # Limit memory per request to avoid crashes on huge images
+      - IMAGINARY_MAX_HEAP_SIZE=150M
+    command: ["-p", "9000", "-enable-url-source", "-return-size"]
+    ports:
+      - "9000:9000"   # you can keep it internal if you want, only Nextcloud needs access
+    networks:
+      - nextcloud-net
+
+  netdata:
+    image: netdata/netdata:latest
+    container_name: netdata
+    hostname: netdata-server
+    ports:
+      - 127.0.0.1:19999:19999
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      # Persistent Netdata configuration and data
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      # Monitor host and Docker
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - PGID=0
+      - PUID=0
+      - TZ=Asia/Ho_Chi_Minh
+      - DOCKER_USR=root
+      - DOCKER_GRP=root
 
 volumes:
   db_data:
@@ -102,6 +144,10 @@ volumes:
   nextcloud_config:
   nextcloud_custom_apps:
   nextcloud_themes:
+  # Netdata volumes
+  netdataconfig:
+  netdatalib:
+  netdatacache:
 
 networks:
   nextcloud-net:

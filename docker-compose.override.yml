@@ -1,7 +1,7 @@
 services:
   app:
     volumes:
-      - ./php-conf.d/opcache.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro
+      - ./php-conf.d/opcache.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro  # need to change opcache-recommended.ini to *.ini.bak
     environment:
       - PHP_OPCACHE_MEMORY_CONSUMPTION=512  # this variable is mention in /usr/local/etc/php/conf.f/opcache-recommended.ini
     mem_limit: 6g
@@ -28,3 +28,7 @@ services:
     mem_reservation: 256m
     cpus: "1.0"
 
+  imaginary:
+    mem_limit: 521m
+    mem_reservation: 256m
+    cpus: "1.0"

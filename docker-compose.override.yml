@@ -32,3 +32,8 @@ services:
     mem_limit: 521m
     mem_reservation: 256m
     cpus: "1.0"
+
+  internal-haproxy:
+    mem_limit: 1g
+    mem_reservation: 512m
+    cpus: "1.0"

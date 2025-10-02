@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>nocollabora_filter</id>
+    <name>No Collabora Filter</name>
+    <description>Blocks Collabora from opening large or tagged files.</description>
+    <version>1.0.0</version>
+    <namespace>OCA\NoCollaboraFilter</namespace>
+    <category>integration</category>
+    <author>Thanh Truong</author>
+    <dependencies>
+        <nextcloud min-version="30" max-version="31" />
+    </dependencies>
+</info>

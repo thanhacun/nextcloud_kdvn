@@ -137,6 +137,20 @@ services:
       - DOCKER_USR=root
       - DOCKER_GRP=root
 
+  internal-haproxy:
+    image: haproxy:lts
+    container_name: internal-haproxy
+    restart: always
+    ports:
+      - "9080:9080"          # Receives HTTP from external HAProxy
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks:
+      - nextcloud-net
+    depends_on:
+      - app
+      - collabora
+
 volumes:
   db_data:
   redis_data:

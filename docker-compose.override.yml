@@ -28,10 +28,10 @@ services:
     mem_reservation: 256m
     cpus: "1.0"
 
-  imaginary:
-    mem_limit: 521m
-    mem_reservation: 256m
-    cpus: "1.0"
+#  imaginary:
+#    mem_limit: 521m
+#    mem_reservation: 256m
+#    cpus: "1.0"
 
   internal-haproxy:
     mem_limit: 1g

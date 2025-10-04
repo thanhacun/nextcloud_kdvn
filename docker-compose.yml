@@ -94,19 +94,19 @@ services:
     networks:
       - nextcloud-net
 
-  imaginary:
+#  imaginary:
     #image: nextcloud/aio-imaginary:latest
-    image: ghcr.io/nextcloud-releases/aio-imaginary:latest
-    container_name: nextcloud-imaginary
-    restart: unless-stopped
-    environment:
+#    image: ghcr.io/nextcloud-releases/aio-imaginary:latest
+#    container_name: nextcloud-imaginary
+#    restart: unless-stopped
+#    environment:
       # Limit memory per request to avoid crashes on huge images
-      - IMAGINARY_MAX_HEAP_SIZE=150M
-    command: ["-p", "9000", "-enable-url-source", "-return-size"]
-    ports:
-      - "9000:9000"   # you can keep it internal if you want, only Nextcloud needs access
-    networks:
-      - nextcloud-net
+#      - IMAGINARY_MAX_HEAP_SIZE=150M
+#    command: ["-p", "9000", "-enable-url-source", "-return-size"]
+#    ports:
+#      - "9000:9000"   # you can keep it internal if you want, only Nextcloud needs access
+#    networks:
+#      - nextcloud-net
 
   netdata:
     image: netdata/netdata:latest
@@ -145,6 +145,7 @@ services:
       - "9080:9080"          # Receives HTTP from external HAProxy
     volumes:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+     # - ./haproxy/lua/xlsx_block.lua:/usr/local/etc/haproxy/xlsx_block.lua:ro
     networks:
       - nextcloud-net
     depends_on:

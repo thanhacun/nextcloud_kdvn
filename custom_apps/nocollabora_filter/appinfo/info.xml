@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<info>
+  <id>nocollabora_filter</id>
+  <name>No Collabora Filter</name>
+  <version>1.0.2</version>
+  <description>Block Collabora preview for large Excel files</description>
+  <namespace>OCA\NoCollaboraFilter</namespace>
+  <category>tools</category>
+  <dependencies>
+    <nextcloud min-version="28" max-version="31"/>
+  </dependencies>
+</info>

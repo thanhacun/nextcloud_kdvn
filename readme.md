@@ -7,4 +7,7 @@
 - Create run-flow-worker.sh to handle event listening faster
 - Create systemd service for this running and loging
 ## Notes
+- Add users to a group
+php occ user:list | awk '{print $2}' | sed 's/://g' | while read u; do php occ group:adduser Everyone $u; done
+
 

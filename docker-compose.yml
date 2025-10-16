@@ -154,6 +154,22 @@ services:
       - app
       - collabora
 
+  clamav:
+    image: clamav/clamav:stable
+    container_name: clamav
+    restart: unless-stopped
+    ports:
+      - "3310:3310"
+    volumes:
+      - clamav-db:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3310 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - nextcloud-net
+
 volumes:
   db_data:
   redis_data:
@@ -165,6 +181,8 @@ volumes:
   netdataconfig:
   netdatalib:
   netdatacache:
+  # clamav voulumes
+  clamav-db:
 
 networks:
   nextcloud-net:

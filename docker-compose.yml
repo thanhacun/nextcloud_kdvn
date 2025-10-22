@@ -161,7 +161,12 @@ services:
     ports:
       - "3310:3310"
     volumes:
+      - ./clamav/config/clamd.conf:/etc/clamav/clamd.conf:ro
+#      - ./clamav/config/freshclam.conf:/etc/clamav/freshclam.conf:ro
+#      - ./clamav/start-clamd.sh:/start-clamd.sh
       - clamav-db:/var/lib/clamav
+#    command: ["/bin/bash", "-c", "/start-clamd.sh"]
+    command: ["/usr/sbin/clamd", "--foreground", "--config-file=/etc/clamav/clamd.conf"]
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 3310 || exit 1"]
       interval: 30s
@@ -181,7 +186,7 @@ volumes:
   netdataconfig:
   netdatalib:
   netdatacache:
-  # clamav voulumes
+  # clamav volumes
   clamav-db:
 
 networks:

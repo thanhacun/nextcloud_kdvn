@@ -1,7 +1,6 @@
 services:
   app:
     extra_hosts:
-     - "onlyoffice.kinden.com.vn:172.16.10.247"
      - "cloud.kinden.com.vn:172.16.10.247"
     volumes:
       - ./php-conf.d/opcache.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro  # need to change opcache-recommended.ini to *.ini.bak

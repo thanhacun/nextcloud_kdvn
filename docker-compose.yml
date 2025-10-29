@@ -126,26 +126,6 @@ services:
       - app
       - collabora
 
-#  caddy:
-#    image: caddy:latest
-#    container_name: caddy_reverse
-#    restart: unless-stopped
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    volumes:
-#      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-#      - ./caddy_data:/data
-#      - ./caddy_config:/config
-#      - ./certs/cert.pem:/etc/ssl/certs/cert.pem:ro
-#      - ./certs/cert.pem:/etc/ssl/private/privkey.pem:ro
-#    environment:
-#      - ONLYOFFICE_HOST=172.16.10.75
-#      - COLLABORA_HOST=172.16.10.247
-#      - NEXTCLOUD_HOST=172.16.10.247
-#    networks:
-#      - nextcloud-net
-
   clamav:
     image: clamav/clamav:stable
     container_name: clamav

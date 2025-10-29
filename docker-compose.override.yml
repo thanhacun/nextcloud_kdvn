@@ -1,9 +1,8 @@
 services:
   app:
     extra_hosts:
-     - "collabora.kinden.com.vn:172.16.10.129"  # point to External HAProxy
-     - "onlyoffice.kinden.com.vn:172.16.10.129"
-     - "cloud.kinden.com.vn:172.16.10.129"
+     - "onlyoffice.kinden.com.vn:172.16.10.247"
+     - "cloud.kinden.com.vn:172.16.10.247"
     volumes:
       - ./php-conf.d/opcache.ini:/usr/local/etc/php/conf.d/99-opcache.ini:ro  # need to change opcache-recommended.ini to *.ini.bak
     environment:
@@ -19,7 +18,7 @@ services:
 
   collabora:
     extra_hosts:
-      - "cloud.kinden.com.vn:172.16.10.129"  # point to External HAProxy
+      - "cloud.kinden.com.vn:172.16.10.247"  # point to External HAProxy
     mem_limit: 4g
     mem_reservation: 3g
     cpus: "1.5"
@@ -33,11 +32,6 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
     cpus: "1.0"
-
-#  imaginary:
-#    mem_limit: 521m
-#    mem_reservation: 256m
-#    cpus: "1.0"
 
   internal-haproxy:
     mem_limit: 1g

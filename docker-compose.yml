@@ -33,7 +33,7 @@ services:
       - nextcloud-net
 
   app:
-    image: nextcloud:latest
+    image: nextcloud:31.0.10
     container_name: nextcloud-app
     restart: unless-stopped
     depends_on:
@@ -68,20 +68,6 @@ services:
     networks:
       - nextcloud-net
 
-#  harp:
-#    image: ghcr.io/nextcloud/nextcloud-appapi-harp:latest
-#    container_name: nextcloud-harp
-#    restart: unless-stopped
-#    env_file:
-#      - harp.env
-#    ports:
-#      - "8780:8780"
-#      - "8782:8782"
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    networks:
-#      - nextcloud-net
-
   appapi-daemon:
     image: ghcr.io/nextcloud/nextcloud-appapi-dsp:release
     container_name: nextcloud-appapi-daemon
@@ -90,23 +76,8 @@ services:
       - appapi-daemon.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      #- ./dsp/apps:/var/lib/dsp/apps
     networks:
       - nextcloud-net
-
-#  imaginary:
-    #image: nextcloud/aio-imaginary:latest
-#    image: ghcr.io/nextcloud-releases/aio-imaginary:latest
-#    container_name: nextcloud-imaginary
-#    restart: unless-stopped
-#    environment:
-      # Limit memory per request to avoid crashes on huge images
-#      - IMAGINARY_MAX_HEAP_SIZE=150M
-#    command: ["-p", "9000", "-enable-url-source", "-return-size"]
-#    ports:
-#      - "9000:9000"   # you can keep it internal if you want, only Nextcloud needs access
-#    networks:
-#      - nextcloud-net
 
   netdata:
     image: netdata/netdata:latest
@@ -142,10 +113,11 @@ services:
     container_name: internal-haproxy
     restart: always
     ports:
-      - "9080:9080"          # Receives HTTP from external HAProxy
+      - "80:80"
+      - "443:443"
     volumes:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      #- ./haproxy/lua/xlsx_block.lua:/usr/local/etc/haproxy/xlsx_block.lua:ro
+      - ./haproxy/certs/:/usr/local/etc/haproxy/certs/:ro
       - ./haproxy/errors/403_default.http:/usr/local/etc/haproxy/errors/403_default.http:ro
       - ./haproxy/errors/403_onlyoffice.http:/usr/local/etc/haproxy/errors/403_onlyoffice.http:ro
     networks:
@@ -154,6 +126,26 @@ services:
       - app
       - collabora
 
+#  caddy:
+#    image: caddy:latest
+#    container_name: caddy_reverse
+#    restart: unless-stopped
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    volumes:
+#      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+#      - ./caddy_data:/data
+#      - ./caddy_config:/config
+#      - ./certs/cert.pem:/etc/ssl/certs/cert.pem:ro
+#      - ./certs/cert.pem:/etc/ssl/private/privkey.pem:ro
+#    environment:
+#      - ONLYOFFICE_HOST=172.16.10.75
+#      - COLLABORA_HOST=172.16.10.247
+#      - NEXTCLOUD_HOST=172.16.10.247
+#    networks:
+#      - nextcloud-net
+
   clamav:
     image: clamav/clamav:stable
     container_name: clamav
@@ -161,12 +153,7 @@ services:
     ports:
       - "3310:3310"
     volumes:
-      - ./clamav/config/clamd.conf:/etc/clamav/clamd.conf:ro
-#      - ./clamav/config/freshclam.conf:/etc/clamav/freshclam.conf:ro
-#      - ./clamav/start-clamd.sh:/start-clamd.sh
       - clamav-db:/var/lib/clamav
-#    command: ["/bin/bash", "-c", "/start-clamd.sh"]
-    command: ["/usr/sbin/clamd", "--foreground", "--config-file=/etc/clamav/clamd.conf"]
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 3310 || exit 1"]
       interval: 30s
@@ -186,7 +173,7 @@ volumes:
   netdataconfig:
   netdatalib:
   netdatacache:
-  # clamav volumes
+  # clamav voulumes
   clamav-db:
 
 networks:

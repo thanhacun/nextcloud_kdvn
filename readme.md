@@ -10,4 +10,10 @@
 - Add users to a group
 php occ user:list | awk '{print $2}' | sed 's/://g' | while read u; do php occ group:adduser Everyone $u; done
 
+## OPcache
+- Need to rename opcahce-recommended.ini file in /usr/local/etc/php/conf.d folder to activate the mounted 99-opcache.ini file
 
+## Extra apps/libraries need to install for nextcloud-app
+- ffmpeg
+- smbclient
+- nano

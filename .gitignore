@@ -3,6 +3,11 @@
 *.csv
 *config.php
 *.gz
+*.bak
+*new*
+*old*
 archive/
 backup/
 clamav/
+certs/
+haproxy/certs/

@@ -67,6 +67,7 @@ services:
       - "9980:9980"
     networks:
       - nextcloud-net
+    profiles: ["manual-start"]
 
   appapi-daemon:
     image: ghcr.io/nextcloud/nextcloud-appapi-dsp:release
@@ -124,7 +125,6 @@ services:
       - nextcloud-net
     depends_on:
       - app
-      - collabora
 
   clamav:
     image: clamav/clamav:stable
@@ -141,6 +141,27 @@ services:
       retries: 5
     networks:
       - nextcloud-net
+
+  talk:
+    image: ghcr.io/nextcloud-releases/aio-talk:latest
+    container_name: nextcloud-talk-hpb
+    depends_on:
+      - app
+    env_file:
+      - talk-secrets.env
+    environment:
+      - HOSTNAME=nextcloud-talk-hpb
+      - NC_DOMAIN=cloud.kinden.com.vn
+      - TZ=Asia/Bangkok
+      - TALK_PORT=3478
+      - TALK_HOST=nextlcoud-talk-hdp
+    ports:
+      - "3478:3478/udp"      # if using UDP for TURN
+      - "3478:3478/tcp"
+      - "8088:8081"          # or whatever HTTP port the container serves   
+    networks:
+      - nextcloud-net
+    restart: unless-stopped
 
 volumes:
   db_data:

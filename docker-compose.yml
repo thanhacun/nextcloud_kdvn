@@ -163,6 +163,38 @@ services:
       - nextcloud-net
     restart: unless-stopped
 
+  notify:
+    image: ghcr.io/nextcloud-releases/aio-notify-push:latest
+    container_name: nextcloud-notify-push
+    restart: unless-stopped
+    depends-on:
+      - app
+#    init: true
+#    read_only: true
+#    cap_drop:
+#      - NET_RAW
+    user: "33" # www-data
+    expose:
+      - "7867"
+    env_file:
+      - notify-push.env
+    environment:
+      NC_DOMAIN: cloud.kinden.com.vn
+      NEXTCLOUD_HOST: app
+      TZ: Asia/Bangkok
+      REDIS_HOST: redis
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    volumes:
+      - nextcloud_data:/nextcloud:ro
+    healthcheck:
+      test: ["CMD", "/healthcheck.sh"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - nextcloud-net
+
 volumes:
   db_data:
   redis_data:

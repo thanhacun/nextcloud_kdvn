@@ -164,7 +164,8 @@ services:
     restart: unless-stopped
 
   notify:
-    image: ghcr.io/nextcloud-releases/aio-notify-push:latest
+#    image: ghcr.io/nextcloud-releases/aio-notify-push:latest  # original image using port 9001
+    build: ./Dockerfile/notify-push  # modified script files to use port 80
     container_name: nextcloud-notify-push
     restart: unless-stopped
     depends_on:

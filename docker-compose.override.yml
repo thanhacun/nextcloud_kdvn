@@ -1,7 +1,7 @@
 services:
   app:
     extra_hosts:
-     - "cloud.kinden.com.vn:172.16.10.247"
+      - "cloud.kinden.com.vn:172.16.10.247"
     volumes:
       - ./php-conf.d/zzz-nextcloud.ini:/usr/local/etc/php/conf.d/zzz-nextcloud.ini:ro  # need to be the last in the command php --ini
       - ./apache2/conf-enabled/zzz-nextcloud.conf:/etc/apache2/conf-enabled/zzz-nextcloud.conf  # customize apache2
@@ -42,3 +42,7 @@ services:
     mem_limit: 1.5g
     mem_reservation: 1g
     cpus: "1.0"
+
+  notify:
+    extra_hosts:
+      - "cloud.kinden.com.vn:172.16.10.247"

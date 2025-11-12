@@ -21,5 +21,9 @@ php occ user:list | awk '{print $2}' | sed 's/://g' | while read u; do php occ g
 
 ## Extra apps/libraries need to install for nextcloud-app
 - ffmpeg
-- smbclient
+- php-smbclient
+``` bash
+    apt update && apt -y install libsmbclient-dev libmagickwand-dev
+    pecl install smbclient
+```
 - nano

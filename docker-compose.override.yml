@@ -28,7 +28,7 @@ services:
     mem_reservation: 256m
     cpus: "0.5"
 
-  appapi-daemon:
+  harp:
     mem_limit: 512m
     mem_reservation: 256m
     cpus: "1.0"

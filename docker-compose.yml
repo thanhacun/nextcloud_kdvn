@@ -24,6 +24,8 @@ services:
     image: redis:7
     container_name: nextcloud-redis
     restart: unless-stopped
+    labels:
+      stack-back.volumes: false
     env_file:
       - redis.env
     command: sh -c "redis-server --requirepass $${REDIS_HOST_PASSWORD}"
@@ -80,6 +82,21 @@ services:
     networks:
       - nextcloud-net
 
+  harp:
+    image: ghcr.io/nextcloud/nextcloud-appapi-harp:main
+    container_name: nextcloud-appapi-harp
+    restart: unless-stopped
+    env_file:
+      - harp.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./haproxy/certs:/certs
+    ports:
+      - 8780:8780
+      - 8782:8782
+    networks:
+      - nextcloud-net
+
   netdata:
     image: netdata/netdata:latest
     container_name: netdata
@@ -91,6 +108,8 @@ services:
       - SYS_PTRACE
     security_opt:
       - apparmor:unconfined
+    labels:
+      stack-back.volumes: false
     volumes:
       # Persistent Netdata configuration and data
       - netdataconfig:/etc/netdata
@@ -130,8 +149,6 @@ services:
     image: clamav/clamav:stable
     container_name: clamav
     restart: unless-stopped
-#    ports:
-#      - "3310:3310"
     volumes:
       - clamav-db:/var/lib/clamav
     healthcheck:
@@ -173,8 +190,6 @@ services:
       - db
       - redis
     user: "33"
-#    ports:
-#      - "7867:7867"
     expose:
       - "7867"
     env_file:
@@ -198,6 +213,22 @@ services:
     networks:
       - nextcloud-net
 
+  backup:
+    image: ghcr.io/lawndoc/stack-back:latest
+    container_name: stack-backup
+    env_file:
+      - stack-back.env
+    environment:
+      - AUTO_BACKUP_ALL=True
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - cache:/cache
+      - /media/ncbackup:/backups  # host path to store backup data
+    restart: unless-stopped
+    networks:
+      - nextcloud-net
+#    command: ["schedule"]
+
 volumes:
   db_data:
   redis_data:
@@ -209,8 +240,9 @@ volumes:
   netdataconfig:
   netdatalib:
   netdatacache:
-  # clamav voulumes
+  # clamav volumes
   clamav-db:
+  cache:
 
 networks:
   nextcloud-net:

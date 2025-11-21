@@ -25,5 +25,7 @@ php occ user:list | awk '{print $2}' | sed 's/://g' | while read u; do php occ g
 ``` bash
     apt update && apt -y install libsmbclient-dev libmagickwand-dev
     pecl install smbclient
+
+    echo "extension=smbclient.so" > /usr/local/etc/php/conf.d/docker-php-ext-smbclient.ini
 ```
 - nano

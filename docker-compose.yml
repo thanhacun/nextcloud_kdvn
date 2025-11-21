@@ -71,16 +71,16 @@ services:
       - nextcloud-net
     profiles: ["manual-start"]
 
-  appapi-daemon:
-    image: ghcr.io/nextcloud/nextcloud-appapi-dsp:release
-    container_name: nextcloud-appapi-daemon
-    restart: unless-stopped
-    env_file:
-      - appapi-daemon.env
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - nextcloud-net
+#  appapi-daemon:
+#    image: ghcr.io/nextcloud/nextcloud-appapi-dsp:release
+#    container_name: nextcloud-appapi-daemon
+#    restart: unless-stopped
+#    env_file:
+#      - appapi-daemon.env
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    networks:
+#      - nextcloud-net
 
   harp:
     image: ghcr.io/nextcloud/nextcloud-appapi-harp:main
@@ -159,26 +159,8 @@ services:
     networks:
       - nextcloud-net
 
-  talk:
-    image: ghcr.io/nextcloud-releases/aio-talk:latest
-    container_name: nextcloud-talk-hpb
-    depends_on:
-      - app
-    env_file:
-      - talk-secrets.env
-    environment:
-      - HOSTNAME=nextcloud-talk-hpb
-      - NC_DOMAIN=cloud.kinden.com.vn
-      - TZ=Asia/Bangkok
-      - TALK_PORT=3478
-      - TALK_HOST=nextlcoud-talk-hpb
-    ports:
-      - "3478:3478/udp"      # if using UDP for TURN
-      - "3478:3478/tcp"
-#      - "8088:8081"          # or whatever HTTP port the container serves   
-    networks:
-      - nextcloud-net
-    restart: unless-stopped
+  #talk: this service was move to digital ocean as a way to avoid the complication
+  # of routing inside nextcloud-app network
 
   notify:
 #    image: ghcr.io/nextcloud-releases/aio-notify-push:latest  # original image using port 9001

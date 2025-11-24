@@ -11,3 +11,4 @@ backup/
 clamav/
 certs/
 haproxy/certs/
+kdvn_db/

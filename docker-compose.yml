@@ -35,7 +35,7 @@ services:
       - nextcloud-net
 
   app:
-    image: nextcloud:32.0.1
+    image: nextcloud:32.0.2
     container_name: nextcloud-app
     restart: unless-stopped
     depends_on:
@@ -47,6 +47,7 @@ services:
       - nextcloud_custom_apps:/var/www/html/custom_apps
       - nextcloud_themes:/var/www/html/themes
       - /media/ncdata/nextcloud:/mnt/ncdata
+      - ./kdvn_db:/mnt/kdvn_db:rshared
     env_file:
       - nextcloud.env
     ports:
@@ -209,7 +210,6 @@ services:
     restart: unless-stopped
     networks:
       - nextcloud-net
-#    command: ["schedule"]
 
 volumes:
   db_data:

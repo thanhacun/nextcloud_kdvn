@@ -12,3 +12,4 @@ clamav/
 certs/
 haproxy/certs/
 kdvn_db/
+custom_apps/

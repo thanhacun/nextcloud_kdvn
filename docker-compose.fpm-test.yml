@@ -1,0 +1,35 @@
+services:
+  # The new high-performance PHP processor
+  app-fpm:
+    image: nextcloud:32.0.3-fpm-alpine
+    container_name: nextcloud-app-fpm
+    restart: unless-stopped
+    depends_on:
+      - db # Links to your existing 'db' service
+      - redis # Links to your existing 'redis' service
+    volumes:
+      - nextcloud_data:/var/www/html
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_custom_apps:/var/www/html/custom_apps
+      - nextcloud_themes:/var/www/html/themes
+      - /media/ncdata/nextcloud:/mnt/ncdata
+    env_file:
+      - nextcloud.env
+    networks:
+      - nextcloud-net
+
+  # Nginx handles web traffic and passes it to PHP-FPM
+  web:
+    image: nginx:alpine
+    container_name: nextcloud-web-fpm
+    restart: unless-stopped
+    ports:
+      - "8081:80" # Temporary port to test without impacting live users
+    volumes:
+      - nextcloud_data:/var/www/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - nextcloud-net
+    depends_on:
+      - app-fpm
+

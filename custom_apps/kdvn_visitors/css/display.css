@@ -1,0 +1,170 @@
+/* Room display for a TV in front of the meeting rooms. Dark by default (easy on the eyes in a
+   corridor, less glare); &theme=light for bright lobbies. The accent is the logo green. */
+
+:root {
+	--kd-bg: #0e110e;
+	--kd-panel: #181c18;
+	--kd-panel-2: #212621;
+	--kd-ink: #f2f4f2;
+	--kd-muted: #a3aba3;
+	--kd-line: #2c332c;
+	--kd-busy: #f0b429;
+	--kd-busy-ink: #1a1405;
+}
+:root[data-theme="light"] {
+	--kd-bg: #f2f3f1;
+	--kd-panel: #ffffff;
+	--kd-panel-2: #f6f7f5;
+	--kd-ink: #141614;
+	--kd-muted: #545a54;
+	--kd-line: #dde1dc;
+	--kd-busy: #8f5600;  /* dark amber: white text stays above 4.5:1 */
+	--kd-busy-ink: #ffffff;
+}
+
+html, body#body-public.layout-base {
+	height: 100%;
+	margin: 0;
+	background: var(--kd-bg) !important;
+	color: var(--kd-ink);
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Noto Sans", sans-serif;
+	overflow: hidden;
+}
+
+#kv-display {
+	position: fixed;
+	inset: 0;
+	z-index: 10;
+	display: flex;
+	flex-direction: column;
+	gap: 1.4vh;
+	box-sizing: border-box;
+	padding: 2.2vh 2vw 1.4vh;
+	background: var(--kd-bg);
+	/* Everything scales with the screen, so a 32" and a 65" TV look the same from their distance. */
+	font-size: clamp(14px, 1.15vw, 30px);
+}
+
+/* Nextcloud's own stylesheet colors h2–h6 with its theme text color (dark), which made room names
+   nearly invisible here. Headings on this page take the display's own colors. */
+#kv-display h1, #kv-display h2, #kv-display h3 { color: inherit; line-height: 1.15; }
+
+/* ---- header ---- */
+.kd-head { display: flex; justify-content: space-between; align-items: center; gap: 2vw; }
+.kd-brand { display: flex; align-items: center; gap: 1.4vw; min-width: 0; }
+.kd-logo { height: 6.5vh; width: auto; max-width: 22vw; padding: 0.6vh 0.8vw; border-radius: 0.6vw; background: #fff; }
+.kd-title { margin: 0; font-size: 2em; font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; }
+.kd-building { margin: 0.2em 0 0; font-size: 1.15em; color: var(--kd-muted); }
+.kd-clock { display: flex; flex-direction: column; align-items: flex-end; text-align: end; }
+.kd-clock__time { font-size: 2.8em; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.kd-clock__date { font-size: 1.05em; color: var(--kd-muted); margin-top: 0.3em; }
+.kd-offline { margin-top: 0.4em; padding: 0.2em 0.7em; border-radius: 999px; background: var(--kd-busy); color: var(--kd-busy-ink); font-size: 0.85em; font-weight: 700; }
+
+/* ---- grid of rooms ---- */
+.kd-grid {
+	flex: 1;
+	min-height: 0;
+	display: grid;
+	grid-template-columns: repeat(var(--kd-cols, 4), minmax(0, 1fr));
+	grid-auto-rows: minmax(0, 1fr);
+	gap: 1.2vw;
+}
+
+.kd-room {
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	border-radius: 1vw;
+	background: var(--kd-panel);
+	border: 1px solid var(--kd-line);
+	overflow: hidden;
+}
+.kd-room__head { padding: 1.4vh 1.2vw 1vh; }
+.kd-room__name { margin: 0; font-size: 1.7em; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; color: var(--kd-ink); }
+.kd-room__meta { margin: 0.3em 0 0; color: var(--kd-muted); font-size: 0.95em; }
+
+/* Free/busy right now: the one thing people read from a distance. */
+.kd-status { margin: 0 1.2vw; padding: 1vh 1vw; border-radius: 0.7vw; display: flex; flex-direction: column; gap: 0.2em; }
+.kd-status.is-free { background: var(--kd-accent, #017101); color: var(--kd-accent-text, #fff); }
+.kd-status.is-busy { background: var(--kd-busy); color: var(--kd-busy-ink); }
+.kd-status__label { font-size: 1.25em; font-weight: 800; }
+.kd-status__what { font-size: 1em; font-weight: 600; overflow-wrap: anywhere; }
+
+.kd-room__list { position: relative; /* page positions are measured inside the list */ flex: 1; min-height: 0; overflow-y: auto; padding: 1.2vh 1.2vw 1.6vh; scrollbar-width: none; transition: opacity 0.25s; }
+.kd-room__list.is-turning { opacity: 0; }
+.kd-room__list::-webkit-scrollbar { display: none; }
+
+.kd-day + .kd-day { margin-top: 1.4vh; }
+.kd-day__label { margin: 0 0 0.6vh; line-height: 1.3; font-size: 0.9em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--kd-muted); }
+.kd-day__label.is-today { color: var(--kd-ink); }
+.kd-day__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.8vh; }
+
+.kd-booking {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15em;
+	padding: 0.9vh 0.9vw;
+	border-radius: 0.6vw;
+	background: var(--kd-panel-2);
+	border-inline-start: 0.35vw solid var(--kd-line);
+}
+.kd-booking.is-now { border-inline-start-color: var(--kd-busy); }
+/* A guest visit without a Calendar booking: dashed edge, so it reads as "guests coming", not a reservation. */
+.kd-booking.is-visit { border-inline-start-style: dashed; border-inline-start-color: var(--kd-accent, #017101); }
+.kd-booking__time { font-size: 1.15em; font-weight: 800; font-variant-numeric: tabular-nums; }
+.kd-booking__title { font-size: 1.05em; font-weight: 600; overflow-wrap: anywhere; }
+.kd-booking__meta { font-size: 0.9em; color: var(--kd-muted); }
+.kd-booking__guests { font-size: 0.9em; font-weight: 600; color: var(--kd-ink); }
+.kd-arrived { color: var(--kd-muted); font-weight: 400; }
+
+.kd-empty { margin: 1vh 0; color: var(--kd-muted); }
+.kd-empty--big { flex: 1; display: grid; place-items: center; font-size: 1.6em; }
+.kd-foot { text-align: end; font-size: 0.8em; color: var(--kd-muted); }
+
+/* ---- paging (layout=pages, layout=condensed) ---- */
+.kd-room { position: relative; }
+.kd-cont { position: absolute; left: 1.2vw; right: 1.2vw; margin: 0; padding-top: 10px; }
+.kd-pager { align-self: flex-end; margin: 0 1.2vw 0.6vh; font-size: 0.85em; font-weight: 700; color: var(--kd-muted); font-variant-numeric: tabular-nums; min-height: 1em; }
+
+/* ---- layout=condensed: later days as one line each ---- */
+.kd-later { padding: 1vh 1.2vw 1.4vh; border-top: 1px solid var(--kd-line); }
+.kd-later__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5vh; }
+.kd-later__item { display: flex; justify-content: space-between; gap: 1vw; font-size: 0.95em; }
+.kd-later__day { font-weight: 700; }
+
+/* ---- layout=timeline: today across all rooms ---- */
+.kd-tl { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1vh; }
+.kd-tl__axis, .kd-tl__row { display: grid; grid-template-columns: minmax(14vw, 20%) 1fr; gap: 1vw; }
+.kd-tl__ticks { position: relative; height: 1.6em; }
+.kd-tl__ticks span { position: absolute; transform: translateX(-50%); font-size: 0.85em; color: var(--kd-muted); font-variant-numeric: tabular-nums; }
+.kd-tl__rows { flex: 1; min-height: 0; display: grid; grid-auto-rows: minmax(0, 1fr); gap: 0.8vh; }
+.kd-tl__room { display: flex; flex-direction: column; justify-content: center; gap: 0.6vh; min-width: 0; }
+.kd-tl__room .kd-room__name { font-size: 1.3em; }
+.kd-tl__room .kd-status { margin: 0; padding: 0.6vh 0.8vw; }
+.kd-tl__room .kd-status__label { font-size: 1em; }
+.kd-tl__room .kd-status__what { display: none; }
+.kd-tl__track { position: relative; border-radius: 0.7vw; background: var(--kd-panel); border: 1px solid var(--kd-line); overflow: hidden; }
+.kd-tl__past { position: absolute; inset: 0 auto 0 0; background: var(--kd-bg); opacity: 0.55; }
+.kd-tl__now { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: var(--kd-busy); z-index: 2; }
+.kd-bar {
+	position: absolute; top: 12%; bottom: 12%; box-sizing: border-box; padding: 0.5vh 0.6vw; overflow: hidden;
+	display: flex; flex-direction: column; justify-content: center; gap: 0.1em;
+	border-radius: 0.5vw; background: var(--kd-panel-2); border: 1px solid var(--kd-line); border-inline-start: 0.35vw solid var(--kd-accent, #017101);
+}
+.kd-bar.is-now { border-inline-start-color: var(--kd-busy); }
+.kd-bar.is-past { opacity: 0.55; }
+.kd-bar.is-visit { border-inline-start-style: dashed; }
+.kd-bar > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kd-bar__time { font-weight: 800; font-size: 0.9em; font-variant-numeric: tabular-nums; }
+.kd-bar__title { font-weight: 600; font-size: 0.95em; }
+.kd-bar__meta { font-size: 0.8em; color: var(--kd-muted); }
+.kd-tl__next table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+.kd-tl__next th, .kd-tl__next td { padding: 0.5vh 0.6vw; text-align: start; border-bottom: 1px solid var(--kd-line); }
+.kd-tl__next thead th { color: var(--kd-muted); font-weight: 700; }
+.kd-tl__next tbody th { font-weight: 700; white-space: nowrap; }
+.kd-tl__next td.is-empty { color: var(--kd-muted); }
+
+/* Portrait screens: bigger type; the script uses at most two columns. */
+@media (orientation: portrait) {
+	#kv-display { font-size: clamp(14px, 2vw, 30px); }
+}

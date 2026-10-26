@@ -1,0 +1,85 @@
+/* Guest visitor pass: always light and high-contrast so the QR scans reliably. */
+
+body#body-public.layout-base {
+	background: #eef0ed !important;
+	color: #141614;
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Noto Sans", sans-serif;
+}
+
+#content.app-public { padding: 0; background: transparent; }
+
+.kv-pass {
+	min-height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 24px 16px 48px;
+	box-sizing: border-box;
+}
+
+.kv-card {
+	width: 100%;
+	max-width: 400px;
+	background: #ffffff;
+	border-radius: 18px;
+	box-shadow: 0 1px 2px rgba(20, 22, 20, 0.08), 0 8px 24px rgba(20, 22, 20, 0.08);
+	overflow: hidden;
+	text-align: center;
+	padding-bottom: 20px;
+}
+
+.kv-card--empty { padding: 24px; text-align: start; line-height: 1.6; }
+
+/* The band at the top reads like a printed visitor badge. */
+.kv-card__head {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 12px;
+	padding: 14px 20px;
+	background: var(--kv-accent, #141614);
+	color: var(--kv-accent-text, #ffffff);
+}
+.kv-card__company { display: flex; align-items: center; gap: 10px; font-weight: 700; text-align: start; }
+/* The logo sits on a white chip so any logo color stays visible on the accent band. */
+.kv-card__logo { height: 34px; width: auto; max-width: 120px; padding: 4px 6px; border-radius: 6px; background: #fff; }
+.kv-card__title { font-size: 0.9em; opacity: 0.85; white-space: nowrap; }
+
+.kv-card__guest { margin: 22px 20px 0; font-size: 1.7em; line-height: 1.25; font-weight: 700; overflow-wrap: anywhere; }
+.kv-card__guest-company { margin: 4px 20px 0; color: #545a54; }
+
+.kv-card__notice {
+	margin: 16px 20px 0;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: #e8f3e8;
+	color: #0b4f0b;
+}
+
+.kv-card__qr { width: min(260px, 72vw); margin: 18px auto 0; }
+.kv-card__qr svg { display: block; width: 100%; height: auto; }
+
+.kv-card__hint { margin: 10px 24px 0; line-height: 1.5; }
+
+.kv-card__code { margin: 12px 0 0; color: #545a54; }
+.kv-card__code strong {
+	display: inline-block;
+	margin-inline-start: 6px;
+	color: #141614;
+	font-size: 1.35em;
+	letter-spacing: 0.18em;
+}
+
+.kv-card__facts {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 6px 14px;
+	margin: 20px 20px 0;
+	padding-top: 16px;
+	border-top: 1px dashed #cdd2cc;
+	text-align: start;
+}
+.kv-card__facts dt { color: #545a54; }
+.kv-card__facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+.kv-card__tip { margin: 16px 20px 0; font-size: 0.85em; color: #545a54; }

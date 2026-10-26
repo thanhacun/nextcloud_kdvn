@@ -1,6 +1,0 @@
-{
-  "name": "nocollabora_filter",
-  "description": "Block Collabora preview for large Excel files",
-  "type": "nextcloud-app",
-  "require": {}
-}

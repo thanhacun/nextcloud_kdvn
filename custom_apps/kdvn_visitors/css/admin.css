@@ -1,0 +1,53 @@
+#kv-admin .kv-admin-form { display: flex; flex-direction: column; gap: 10px; max-width: 900px; }
+#kv-admin .kv-admin-form > label { max-width: 560px; }
+#kv-admin .kv-admin-form label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+#kv-admin .kv-admin-form input,
+#kv-admin .kv-admin-form textarea { width: 100%; margin: 0; font-weight: normal; box-sizing: border-box; }
+#kv-admin h3 { margin: 16px 0 4px; font-weight: 600; }
+#kv-admin .kv-admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+#kv-admin .kv-status { min-height: 1.5em; }
+#kv-admin .kv-status.is-error,
+#kv-admin .kv-warn { color: var(--color-error-text, var(--color-error)); font-weight: 600; }
+#kv-admin .kv-kiosk-result { margin-top: 12px; max-width: 760px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+#kv-admin .kv-kiosk-result p { flex-basis: 100%; margin: 0; }
+#kv-admin .kv-kiosk-result input { flex: 1; min-width: 280px; margin: 0; }
+
+#kv-admin .kv-admin-inline { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+#kv-admin .kv-admin-form label.kv-admin-check { flex-direction: row; align-items: center; gap: 6px; font-weight: normal; min-height: 34px; }
+#kv-admin .kv-admin-form input[type="color"] { width: 64px; height: 36px; padding: 2px; }
+#kv-admin .kv-admin-form input[type="checkbox"] { width: auto; }
+#kv-admin .kv-admin-texts { width: 100%; max-width: 900px; border-collapse: collapse; }
+#kv-admin .kv-admin-texts th { text-align: start; font-weight: 600; padding: 4px 8px 4px 0; white-space: nowrap; }
+#kv-admin .kv-admin-texts td { padding: 4px 8px 4px 0; }
+#kv-admin .kv-admin-texts input { width: 100%; margin: 0; }
+
+#kv-admin .kv-admin-logo { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+#kv-admin .kv-admin-logo__preview {
+	width: 220px;
+	height: 110px;
+	display: grid;
+	place-items: center;
+	padding: 10px;
+	box-sizing: border-box;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 10px);
+	background: #f2f3f1; /* the tablet's background, so the preview looks like the real thing */
+}
+#kv-admin .kv-admin-logo__preview img { max-width: 100%; max-height: 100%; }
+#kv-admin .kv-admin-logo__actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; flex: 1; min-width: 260px; }
+#kv-admin .kv-admin-logo__actions .settings-hint { margin: 0; }
+#kv-admin .kv-admin-upload .button { cursor: pointer; }
+
+#kv-admin .kv-admin-form select { width: 100%; max-width: 560px; margin: 0; font-weight: normal; }
+#kv-admin .kv-display-links { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; }
+#kv-admin .kv-display-links li { display: grid; grid-template-columns: 10em 1fr auto; gap: 8px; align-items: center; }
+#kv-admin .kv-display-links input { margin: 0; width: 100%; }
+#kv-admin code { font-size: 0.9em; }
+
+#kv-admin .kv-admin-workdays { border-collapse: collapse; margin: 4px 0 8px; }
+#kv-admin .kv-admin-workdays th, #kv-admin .kv-admin-workdays td { padding: 4px 10px 4px 0; text-align: center; font-weight: normal; }
+#kv-admin .kv-admin-workdays th[scope="row"] { text-align: start; font-weight: 600; }
+#kv-admin .kv-admin-workdays input { width: auto; margin: 0; }
+
+#kv-admin .kv-display-layout { display: flex; flex-direction: column; gap: 4px; font-weight: 600; flex-basis: 100%; max-width: 640px; }
+#kv-admin .kv-display-layout select { margin: 0; font-weight: normal; }

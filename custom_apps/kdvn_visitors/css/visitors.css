@@ -1,0 +1,200 @@
+/* Staff "Visitors" page: follows the Nextcloud theme (light/dark). */
+
+#kv-app {
+	max-width: 980px;
+	margin: 0 auto;
+	padding: 24px 20px 48px;
+}
+
+#kv-app .kv-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+#kv-app .kv-head h2 { margin: 0; font-size: 1.6em; font-weight: 700; }
+#kv-app .kv-sub { margin: 4px 0 0; max-width: 60ch; color: var(--color-text-maxcontrast); }
+
+#kv-app .kv-status { min-height: 1.5em; margin: 12px 0 0; }
+#kv-app .kv-status.is-error,
+.kv-error { color: var(--color-error-text, var(--color-error)); } /* --color-error is for icons; -text is the readable one */
+
+#kv-app .kv-section { margin-top: 24px; }
+#kv-app .kv-section h3 { margin: 0 0 8px; font-size: 1.1em; font-weight: 600; }
+#kv-app .kv-empty { color: var(--color-text-maxcontrast); padding: 8px 0; }
+
+#kv-app .kv-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 10px);
+	overflow: hidden;
+}
+
+#kv-app .kv-visit {
+	display: grid;
+	grid-template-columns: 10em 1fr auto;
+	gap: 16px;
+	align-items: start;
+	padding: 12px 16px;
+	border-top: 1px solid var(--color-border);
+	background: var(--color-main-background);
+}
+
+#kv-app .kv-visit:first-child { border-top: none; }
+#kv-app .kv-visit--cancelled { opacity: 0.6; }
+#kv-app .kv-visit--cancelled .kv-visit__name { text-decoration: line-through; }
+
+#kv-app .kv-visit__when,
+#kv-app .kv-visit__who,
+#kv-app .kv-visit__side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#kv-app .kv-visit__side { align-items: flex-end; }
+
+#kv-app .kv-visit__time { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#kv-app .kv-visit__date,
+#kv-app .kv-visit__meta { color: var(--color-text-maxcontrast); font-size: 0.9em; overflow-wrap: anywhere; }
+#kv-app .kv-visit__name { font-weight: 600; overflow-wrap: anywhere; }
+#kv-app .kv-visit__code { font-size: 0.85em; letter-spacing: 0.12em; color: var(--color-text-maxcontrast); }
+#kv-app .kv-visit__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; margin-top: 4px; }
+
+#kv-app .kv-badge {
+	padding: 2px 10px;
+	border-radius: var(--border-radius-pill, 999px);
+	font-size: 0.85em;
+	font-weight: 600;
+	background: var(--color-background-dark);
+}
+#kv-app .kv-badge--checked_in {
+	/* Outlined so the text stays readable in both light and dark themes */
+	background: transparent;
+	color: var(--color-success-text, var(--color-success));
+	box-shadow: inset 0 0 0 1.5px var(--color-success);
+}
+#kv-app .kv-badge--invited { background: var(--color-primary-element-light); color: var(--color-primary-element-light-text, var(--color-main-text)); }
+
+#kv-app button.kv-link {
+	min-height: 0;
+	margin: 0;
+	padding: 4px 8px;
+	border: none;
+	background: none;
+	font-weight: normal;
+	color: var(--color-text-maxcontrast);
+}
+#kv-app button.kv-link:hover,
+#kv-app button.kv-link:focus-visible { color: var(--color-main-text); background: var(--color-background-hover); }
+#kv-app button.kv-danger:hover,
+#kv-app button.kv-danger:focus-visible { color: var(--color-error-text, var(--color-error)); }
+
+@media (max-width: 700px) {
+	#kv-app .kv-visit { grid-template-columns: 1fr; gap: 6px; }
+	#kv-app .kv-visit__when { flex-direction: row; gap: 8px; }
+	#kv-app .kv-visit__side { align-items: flex-start; }
+	#kv-app .kv-visit__actions { justify-content: flex-start; }
+}
+
+/* ---- invite dialog (appended to <body>) ---- */
+
+dialog.kv-dialog {
+	width: min(620px, calc(100vw - 24px));
+	max-height: calc(100vh - 48px);
+	padding: 0;
+	border: none;
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	box-shadow: 0 0 40px var(--color-box-shadow);
+}
+dialog.kv-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+
+dialog.kv-dialog .kv-form { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+dialog.kv-dialog h3 { margin: 0; font-size: 1.25em; font-weight: 600; }
+dialog.kv-dialog .kv-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+dialog.kv-dialog .kv-label { font-weight: 600; }
+dialog.kv-dialog .kv-hint { color: var(--color-text-maxcontrast); font-size: 0.9em; }
+dialog.kv-dialog .kv-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+dialog.kv-dialog .kv-row--3 { grid-template-columns: 1.4fr 1fr 1fr; }
+dialog.kv-dialog input,
+dialog.kv-dialog select,
+dialog.kv-dialog textarea { width: 100%; margin: 0; box-sizing: border-box; }
+dialog.kv-dialog .kv-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+dialog.kv-dialog .kv-actions--start { justify-content: flex-start; }
+dialog.kv-dialog .kv-code { letter-spacing: 0.15em; font-size: 1.2em; }
+
+@media (max-width: 520px) {
+	dialog.kv-dialog .kv-row,
+	dialog.kv-dialog .kv-row--3 { grid-template-columns: 1fr; }
+}
+
+/* ---- 0.2: tabs, reception desk, walk-ins ---- */
+
+#kv-app .kv-tabs { display: flex; gap: 4px; margin-top: 16px; border-bottom: 1px solid var(--color-border); }
+#kv-app button.kv-tab {
+	margin: 0 0 -1px;
+	min-height: 44px;
+	padding: 0 16px;
+	border: none;
+	border-bottom: 3px solid transparent;
+	border-radius: 0;
+	background: none;
+	color: var(--color-text-maxcontrast);
+	font-weight: 600;
+}
+#kv-app button.kv-tab.is-active { color: var(--color-main-text); border-bottom-color: var(--color-primary-element); }
+
+#kv-app .kv-section--attention h3 { color: var(--color-warning-text, var(--color-warning)); }
+#kv-app .kv-section--attention .kv-list { box-shadow: inset 4px 0 0 var(--color-warning); }
+#kv-app .kv-section--quiet { opacity: 0.8; }
+
+#kv-app .kv-badge--waiting {
+	background: transparent;
+	color: var(--color-warning-text, var(--color-warning));
+	box-shadow: inset 0 0 0 1.5px var(--color-warning);
+}
+#kv-app .kv-badge--checked_out,
+#kv-app .kv-badge--declined { background: var(--color-background-dark); }
+
+#kv-app button.kv-small { min-height: 34px; padding: 0 14px; margin: 0; }
+
+#kv-app .kv-desk-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-top: 16px; }
+#kv-app .kv-desk-date { display: flex; gap: 4px; align-items: center; }
+#kv-app .kv-desk-date input,
+#kv-app .kv-desk-date button { margin: 0; }
+#kv-app .kv-desk-search { margin: 0; width: min(340px, 100%); }
+
+#kv-app .kv-counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#kv-app .kv-count {
+	padding: 4px 12px;
+	border-radius: var(--border-radius-pill, 999px);
+	background: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
+}
+#kv-app .kv-count strong { color: var(--color-main-text); }
+#kv-app .kv-count.is-attention { background: transparent; box-shadow: inset 0 0 0 1.5px var(--color-warning); }
+
+dialog.kv-dialog .kv-host { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+dialog.kv-dialog .kv-host__chosen { font-weight: 600; }
+dialog.kv-dialog .kv-host__results { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+dialog.kv-dialog button.kv-chip { margin: 0; min-height: 32px; padding: 0 12px; border-radius: var(--border-radius-pill, 999px); }
+dialog.kv-dialog button.kv-link { margin: 0; border: none; background: none; color: var(--color-primary-element); font-weight: 600; }
+
+#kv-app .kv-visit__source { font-size: 0.8em; color: var(--color-text-maxcontrast); }
+
+dialog.kv-dialog .kv-check { display: flex; align-items: center; gap: 8px; }
+dialog.kv-dialog .kv-check[hidden] { display: none; }
+dialog.kv-dialog .kv-check input { width: auto; }
+
+/* Errors inside dialogs: a tinted box, so they can't be missed under the form */
+dialog.kv-dialog .kv-error {
+	margin: 0;
+	padding: 12px 14px;
+	/* In Nextcloud 32, --color-error is a pale pink (a background) and --color-error-text a dark red */
+	border: 1px solid color-mix(in srgb, var(--color-error-text, #8a0000) 35%, transparent);
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-error, #ffe7e7);
+	color: var(--color-error-text, var(--color-error));
+	font-weight: 600;
+}

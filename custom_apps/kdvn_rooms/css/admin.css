@@ -1,0 +1,228 @@
+/* Meeting Rooms admin page. Uses Nextcloud's theme variables so light/dark themes just work. */
+
+#kdvn-rooms .kr-columns {
+	display: grid;
+	grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(300px, 2fr);
+	gap: 16px;
+	align-items: start;
+	max-width: 1280px;
+	margin-top: 12px;
+}
+
+@media (max-width: 1024px) {
+	#kdvn-rooms .kr-columns { grid-template-columns: 1fr 1fr; }
+	#kdvn-rooms .kr-col-rooms { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+	#kdvn-rooms .kr-columns { grid-template-columns: 1fr; }
+}
+
+#kdvn-rooms .kr-col {
+	min-width: 0;
+	padding: 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-main-background);
+}
+
+#kdvn-rooms .kr-col-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+#kdvn-rooms .kr-col-head h3 {
+	margin: 0;
+	font-size: 1.05em;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+#kdvn-rooms .kr-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+#kdvn-rooms .kr-item {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	border-radius: var(--border-radius, 6px);
+}
+
+#kdvn-rooms .kr-item:hover { background: var(--color-background-hover); }
+#kdvn-rooms .kr-item.is-selected { background: var(--color-primary-element-light); }
+
+#kdvn-rooms button.kr-pick {
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	margin: 0;
+	padding: 8px;
+	border: none;
+	background: none;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	text-align: start;
+	cursor: pointer;
+	font-weight: normal;
+}
+
+#kdvn-rooms .kr-name { font-weight: 600; overflow-wrap: anywhere; }
+
+#kdvn-rooms .kr-meta,
+#kdvn-rooms .kr-access {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+}
+
+#kdvn-rooms .kr-access.is-limited { color: var(--color-main-text); }
+
+#kdvn-rooms .kr-row-actions {
+	display: flex;
+	gap: 2px;
+	flex-shrink: 0;
+}
+
+#kdvn-rooms button.kr-link {
+	min-height: 0;
+	margin: 0;
+	padding: 4px 8px;
+	border: none;
+	background: none;
+	color: var(--color-text-maxcontrast);
+	font-weight: normal;
+}
+
+#kdvn-rooms button.kr-link:hover,
+#kdvn-rooms button.kr-link:focus-visible {
+	color: var(--color-main-text);
+	background: var(--color-background-dark);
+}
+
+#kdvn-rooms button.kr-danger:hover,
+#kdvn-rooms button.kr-danger:focus-visible { color: var(--color-error-text, var(--color-error)); }
+
+#kdvn-rooms .kr-room {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 10px 4px;
+	border-top: 1px solid var(--color-border);
+}
+
+#kdvn-rooms .kr-room:first-child { border-top: none; }
+
+#kdvn-rooms .kr-room-main {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+#kdvn-rooms .kr-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0; }
+
+#kdvn-rooms .kr-chip {
+	padding: 1px 8px;
+	border-radius: var(--border-radius-pill, 999px);
+	background: var(--color-background-dark);
+	font-size: 0.85em;
+}
+
+#kdvn-rooms .kr-empty {
+	padding: 12px 4px;
+	color: var(--color-text-maxcontrast);
+}
+
+#kdvn-rooms .kr-status { min-height: 1.5em; margin-top: 8px; }
+#kdvn-rooms .kr-status.is-error,
+.kr-error { color: var(--color-error-text, var(--color-error)); }
+
+/* ---- dialog (appended to <body>, so not under #kdvn-rooms) ---- */
+
+dialog.kr-dialog {
+	width: min(560px, calc(100vw - 32px));
+	max-height: calc(100vh - 64px);
+	padding: 0;
+	border: none;
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	box-shadow: 0 0 40px var(--color-box-shadow);
+}
+
+dialog.kr-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+
+dialog.kr-dialog .kr-form {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 20px;
+}
+
+dialog.kr-dialog h3 { margin: 0; font-size: 1.2em; font-weight: 600; }
+
+dialog.kr-dialog .kr-field { display: flex; flex-direction: column; gap: 4px; }
+dialog.kr-dialog .kr-label { font-weight: 600; }
+dialog.kr-dialog .kr-hint { color: var(--color-text-maxcontrast); font-size: 0.9em; }
+
+dialog.kr-dialog input[type="text"],
+dialog.kr-dialog input[type="email"],
+dialog.kr-dialog input[type="number"],
+dialog.kr-dialog input[type="search"],
+dialog.kr-dialog select,
+dialog.kr-dialog textarea {
+	width: 100%;
+	margin: 0;
+	box-sizing: border-box;
+}
+
+dialog.kr-dialog input[readonly] { color: var(--color-text-maxcontrast); }
+
+dialog.kr-dialog .kr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+dialog.kr-dialog .kr-fieldset {
+	margin: 0;
+	padding: 8px 12px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius, 6px);
+}
+
+dialog.kr-dialog legend { padding: 0 4px; font-weight: 600; }
+
+dialog.kr-dialog .kr-check { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+dialog.kr-dialog .kr-check[hidden] { display: none; }
+dialog.kr-dialog .kr-check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+
+dialog.kr-dialog .kr-groups { margin: 6px 0 0 24px; }
+dialog.kr-dialog .kr-groups[hidden] { display: none; }
+dialog.kr-dialog .kr-group-list { max-height: 180px; overflow-y: auto; margin-top: 6px; }
+
+dialog.kr-dialog .kr-details summary { cursor: pointer; color: var(--color-text-maxcontrast); }
+dialog.kr-dialog .kr-details-body { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+
+dialog.kr-dialog .kr-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+@media (max-width: 480px) {
+	dialog.kr-dialog .kr-row,
+	dialog.kr-dialog .kr-check-grid { grid-template-columns: 1fr; }
+}
+
+#kdvn-rooms .kr-warning { color: var(--color-error-text, var(--color-error)); font-size: 0.9em; font-weight: 600; }
+
+dialog.kr-dialog .kr-error {
+	margin: 0;
+	padding: 12px 14px;
+	/* In Nextcloud 32, --color-error is a pale pink (a background) and --color-error-text a dark red */
+	border: 1px solid color-mix(in srgb, var(--color-error-text, #8a0000) 35%, transparent);
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-error, #ffe7e7);
+	color: var(--color-error-text, var(--color-error));
+	font-weight: 600;
+}

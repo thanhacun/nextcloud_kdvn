@@ -1,13 +1,13 @@
 # Deploying kdvn_rooms / kdvn_visitors
 
-Run on the server from /home/kdvn_admin/nextcloud-stack (the apps are in apps/), one app at a time. Show each
+Run on the server from /home/kdvn_admin/nextcloud-stack (the apps are in custom_apps/), one app at a time. Show each
 command and wait for approval. Steps 2 to 4 change the server.
 
 1. Get the new source onto the server: `git pull` in this stack repo on the server (TODO:
    confirm the server folder is a git clone), or copy/unzip the app folder. Then
-   `grep '<version>' apps/kdvn_visitors/appinfo/info.xml` must show the new version.
+   `grep '<version>' custom_apps/kdvn_visitors/appinfo/info.xml` must show the new version.
    (`occ upgrade` once answered "No upgrade required" because the zip was never unpacked.)
-2. `docker cp apps/kdvn_visitors nextcloud-app:/var/www/html/custom_apps/`
+2. `docker cp custom_apps/kdvn_visitors nextcloud-app:/var/www/html/custom_apps/`
    A single changed file can be copied alone; no restart needed. `docker cp` never deletes
    files removed in a newer version.
 3. `docker exec nextcloud-app chown -R www-data:www-data /var/www/html/custom_apps/kdvn_visitors`

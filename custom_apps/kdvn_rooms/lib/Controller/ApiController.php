@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace OCA\KdvnRooms\Controller;
 
+use OCA\KdvnRooms\Service\Access;
 use OCA\KdvnRooms\Service\ResourceStore;
 use OCA\KdvnRooms\Service\UserError;
-use OCA\KdvnRooms\Settings\Admin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -17,8 +17,8 @@ use Psr\Log\LoggerInterface;
 /**
  * JSON endpoints used by js/admin.js.
  *
- * Every method carries #[AuthorizedAdminSetting]: admins can always call it, and so can
- * members of a group the admin delegated the "Meeting rooms" settings page to.
+ * Every method is #[NoAdminRequired] (any logged-in user reaches it) and run() then lets only
+ * admins and the reception group through, see Service\Access.
  * CSRF protection stays on (the page sends the requesttoken header).
  */
 class ApiController extends Controller {
@@ -26,27 +26,28 @@ class ApiController extends Controller {
 		string $appName,
 		IRequest $request,
 		private ResourceStore $store,
+		private Access $access,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct($appName, $request);
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function data(): DataResponse {
 		return $this->run(fn () => $this->store->listAll());
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function createBuilding(): DataResponse {
 		return $this->run(fn () => ['id' => $this->store->saveBuilding(null, $this->request->getParams())]);
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function updateBuilding(int $id): DataResponse {
 		return $this->run(fn () => ['id' => $this->store->saveBuilding($id, $this->request->getParams())]);
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function deleteBuilding(int $id): DataResponse {
 		return $this->run(function () use ($id) {
 			$this->store->deleteBuilding($id);
@@ -54,17 +55,17 @@ class ApiController extends Controller {
 		});
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function createFloor(): DataResponse {
 		return $this->run(fn () => ['id' => $this->store->saveFloor(null, $this->request->getParams())]);
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function updateFloor(int $id): DataResponse {
 		return $this->run(fn () => ['id' => $this->store->saveFloor($id, $this->request->getParams())]);
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function deleteFloor(int $id): DataResponse {
 		return $this->run(function () use ($id) {
 			$this->store->deleteFloor($id);
@@ -72,17 +73,17 @@ class ApiController extends Controller {
 		});
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function createRoom(): DataResponse {
 		return $this->run(fn () => ['id' => $this->store->saveRoom(null, $this->request->getParams())]);
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function updateRoom(int $id): DataResponse {
 		return $this->run(fn () => ['id' => $this->store->saveRoom($id, $this->request->getParams())]);
 	}
 
-	#[AuthorizedAdminSetting(settings: Admin::class)]
+	#[NoAdminRequired]
 	public function deleteRoom(int $id): DataResponse {
 		return $this->run(function () use ($id) {
 			$this->store->deleteRoom($id);
@@ -93,6 +94,7 @@ class ApiController extends Controller {
 	/** Turns exceptions into JSON the page can show. */
 	private function run(callable $action): DataResponse {
 		try {
+			$this->access->require();
 			return new DataResponse($action());
 		} catch (UserError $e) {
 			return new DataResponse(['message' => $e->getMessage()], $e->getCode() ?: Http::STATUS_BAD_REQUEST);

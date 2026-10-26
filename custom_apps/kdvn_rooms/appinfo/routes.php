@@ -5,6 +5,8 @@ declare(strict_types=1);
 // "api#create_building" calls ApiController::createBuilding()
 return [
 	'routes' => [
+		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
+
 		['name' => 'api#data', 'url' => '/api/data', 'verb' => 'GET'],
 
 		['name' => 'api#create_building', 'url' => '/api/buildings', 'verb' => 'POST'],

@@ -3,9 +3,9 @@
 Docker Compose project `nextcloud-stack` (volumes `nextcloud-stack_*`). Nextcloud 34.0.5
 (apache image), PostgreSQL 17, about 500 users. Server path:
 /home/kdvn_admin/nextcloud-stack. Status and open items: docs/progress.md.
-Our two Nextcloud apps (kdvn_rooms, kdvn_visitors) live in apps/ (rules: apps/CLAUDE.md,
-deploy: docs/deploy-apps.md). custom_apps/ is the Docker volume content and stays
-git-ignored (it can also hold apps installed from the app store).
+Our two Nextcloud apps (kdvn_rooms, kdvn_visitors) live in custom_apps/ (rules:
+custom_apps/CLAUDE.md, deploy: docs/deploy-apps.md). custom_apps/ is also the Docker volume
+content on the server, so apps installed from the app store land there too.
 
 ## Working rules
 - Changes go through git. Never edit files on the server or inside containers by hand.

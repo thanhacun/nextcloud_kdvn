@@ -25,7 +25,7 @@
 - Reverse proxy: check trusted_proxies and forwarded_for_headers in config.php behind
   internal-haproxy and Cloudflare (rate limits need real client IPs). TODO: confirm set.
 - Maintenance window: TODO: confirm.
-- The meeting room that could not be booked: see apps/kdvn_rooms/CLAUDE.md pitfalls.
+- The meeting room that could not be booked: see custom_apps/kdvn_rooms/CLAUDE.md pitfalls.
 - After deploying 0.4.5: untick every office except head office under Visitor reception and
   save (until saved, all offices count).
 - Retention and consent wording with HR/legal. IT contact in the reception plan.

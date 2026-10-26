@@ -5,7 +5,7 @@
 	<name>Meeting Rooms</name>
 	<summary>Manage calendar buildings, floors and meeting rooms from the web</summary>
 	<description>A web page on top of Calendar Resource Management, so rooms can be managed without occ commands.</description>
-	<version>0.1.3</version>
+	<version>0.2.0</version>
 	<licence>agpl</licence>
 	<author>KDVN IT</author>
 	<namespace>KdvnRooms</namespace>

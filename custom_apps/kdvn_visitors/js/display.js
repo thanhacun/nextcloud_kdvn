@@ -10,22 +10,24 @@
 (function () {
 	'use strict'
 
+	const EARLY_WINDOW = 30 * 60 // seconds before the booked start in which an arrived guest marks the room as waiting
+
 	const LOCALES = { vi: 'vi-VN', en: 'en-GB', ja: 'ja-JP' }
 	const T = {
 		vi: {
-			title: 'Lịch phòng họp', comingUp: 'Sắp tới', bookings: '{n} lịch đặt', oneBooking: '1 lịch đặt', noMoreToday: 'Hôm nay không còn cuộc họp nào', nextDays: 'Những ngày tới', guestVisit: 'Tiếp khách', free: 'Trống', freeUntil: 'Trống đến {time}', freeRest: 'Trống đến hết ngày',
+			title: 'Lịch phòng họp', comingUp: 'Sắp tới', bookings: '{n} lịch đặt', oneBooking: '1 lịch đặt', noMoreToday: 'Hôm nay không còn cuộc họp nào', nextDays: 'Những ngày tới', guestVisit: 'Tiếp khách', free: 'Trống', freeUntil: 'Trống đến {time}', freeRest: 'Trống đến hết ngày', guestWaiting: 'Khách đã đến, họp lúc {time}',
 			busyUntil: 'Đang họp đến {time}', today: 'Hôm nay', tomorrow: 'Ngày mai', none: 'Chưa có lịch đặt phòng',
 			guests: 'Khách: {list}', guestCount: '{n} khách', arrived: '{n} đã đến', booked: 'Đã đặt', allDay: 'Cả ngày',
 			seats: '{n} chỗ', updated: 'Cập nhật {time}', offline: 'Mất kết nối – đang thử lại', noRooms: 'Chưa có phòng họp nào.',
 		},
 		en: {
-			title: 'Meeting rooms', comingUp: 'Coming up', bookings: '{n} bookings', oneBooking: '1 booking', noMoreToday: 'No more meetings today', nextDays: 'Next days', guestVisit: 'Guest visit', free: 'Free', freeUntil: 'Free until {time}', freeRest: 'Free for today',
+			title: 'Meeting rooms', comingUp: 'Coming up', bookings: '{n} bookings', oneBooking: '1 booking', noMoreToday: 'No more meetings today', nextDays: 'Next days', guestVisit: 'Guest visit', free: 'Free', freeUntil: 'Free until {time}', freeRest: 'Free for today', guestWaiting: 'Guest waiting, meeting at {time}',
 			busyUntil: 'In use until {time}', today: 'Today', tomorrow: 'Tomorrow', none: 'No bookings',
 			guests: 'Guests: {list}', guestCount: '{n} guests', arrived: '{n} arrived', booked: 'Booked', allDay: 'All day',
 			seats: '{n} seats', updated: 'Updated {time}', offline: 'Connection lost, retrying', noRooms: 'No meeting rooms yet.',
 		},
 		ja: {
-			title: '会議室予約状況', comingUp: '今後の予定', bookings: '予約{n}件', oneBooking: '予約1件', noMoreToday: '本日の予定はこれ以上ありません', nextDays: '今後の日程', guestVisit: '来客対応', free: '空き', freeUntil: '{time}まで空き', freeRest: '本日は空き',
+			title: '会議室予約状況', comingUp: '今後の予定', bookings: '予約{n}件', oneBooking: '予約1件', noMoreToday: '本日の予定はこれ以上ありません', nextDays: '今後の日程', guestVisit: '来客対応', free: '空き', freeUntil: '{time}まで空き', freeRest: '本日は空き', guestWaiting: '来訪者到着済み、{time}開始',
 			busyUntil: '{time}まで使用中', today: '今日', tomorrow: '明日', none: '予約はありません',
 			guests: '来訪者：{list}', guestCount: '来訪者{n}名', arrived: '{n}名到着', booked: '予約済み', allDay: '終日',
 			seats: '{n}名', updated: '{time}更新', offline: '接続が切れました。再試行中…', noRooms: '会議室がまだありません。',
@@ -116,6 +118,12 @@
 				return h('div', { class: 'kd-status is-busy' },
 					h('span', { class: 'kd-status__label' }, current.allDay ? t('allDay') : t('busyUntil', { time: fmtTime(current.end) })),
 					h('span', { class: 'kd-status__what' }, current.kind === 'visit' ? t('guestVisit') : current.private ? t('booked') : (current.title || t('booked'))))
+			}
+			// Guests checked in before the booked start: not free, but the booked times stay as they are.
+			const waiting = room.bookings.find(b => b.start > now && b.start - now <= EARLY_WINDOW && b.arrived && b.arrivedAt && b.arrivedAt <= now)
+			if (waiting) {
+				return h('div', { class: 'kd-status is-waiting' },
+					h('span', { class: 'kd-status__label' }, t('guestWaiting', { time: fmtTime(waiting.start) })))
 			}
 			const next = room.bookings.find(b => b.start > now && dayKey(b.start) === today)
 			return h('div', { class: 'kd-status is-free' },

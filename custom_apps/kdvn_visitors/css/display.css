@@ -87,6 +87,7 @@ html, body#body-public.layout-base {
 .kd-status { margin: 0 1.2vw; padding: 1vh 1vw; border-radius: 0.7vw; display: flex; flex-direction: column; gap: 0.2em; }
 .kd-status.is-free { background: var(--kd-accent, #017101); color: var(--kd-accent-text, #fff); }
 .kd-status.is-busy { background: var(--kd-busy); color: var(--kd-busy-ink); }
+.kd-status.is-waiting { background: #f0a30a; color: #1a1300; }
 .kd-status__label { font-size: 1.25em; font-weight: 800; }
 .kd-status__what { font-size: 1em; font-weight: 600; overflow-wrap: anywhere; }
 

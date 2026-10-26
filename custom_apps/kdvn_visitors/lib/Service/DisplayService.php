@@ -264,6 +264,7 @@ class DisplayService {
 			'guests' => $shown,
 			'guestCount' => count($guests),
 			'arrived' => count(array_filter($guests, fn ($v) => $v['status'] === 'checked_in')),
+			'arrivedAt' => $this->firstArrival($guests),
 		];
 	}
 
@@ -300,9 +301,17 @@ class DisplayService {
 				'guests' => $this->guestLabels($guests, $guestMode),
 				'guestCount' => count($guests),
 				'arrived' => count(array_filter($guests, fn ($v) => $v['status'] === 'checked_in')),
+				'arrivedAt' => $this->firstArrival($guests),
 			];
 		}
 		return $entries;
+	}
+
+	/** Earliest check-in time of the guests who are in the building, or null when none arrived. */
+	private function firstArrival(array $guests): ?int {
+		$times = array_map(fn ($v) => (int)$v['checked_in_at'],
+			array_filter($guests, fn ($v) => $v['status'] === 'checked_in' && !empty($v['checked_in_at'])));
+		return $times === [] ? null : min($times);
 	}
 
 	private function guestLabels(array $guests, string $guestMode): array {

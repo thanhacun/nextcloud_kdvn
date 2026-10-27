@@ -16,9 +16,25 @@ the bookings per building.
   the search then needs 3 letters.
 - Phone layout of the staff page: full-width Invite button, full-screen invite form with the buttons
   pinned at the bottom, bigger touch targets.
-- Nextcloud mobile app: the Android/iOS apps list links from the "External sites" app, not custom apps
-  (unverified on 34, test with one phone first). Enable External sites, add a site "Visitors" with
-  the URL `/apps/kdvn_visitors/` (type: internal link, icon Visitors), allowed for all users.
+- Talk message to the inviter: right after a manual invitation (not Calendar-created passes) the
+  person who invited gets a Talk message with guest, time, room, phone, email, purpose, the 6-letter
+  code and the pass link, in their own Nextcloud language. If Talk fails the invitation still
+  goes out. If the inviter is the Talk reception account itself, no message is sent.
+- Nextcloud mobile app: the Android app's menu lists the "External sites" links (ATT Hanoi, GLPI...),
+  not custom apps. Add Visitors there: Administration settings > External sites > add a site named
+  Visitors, URL `https://<our domain>/apps/kdvn_visitors/`, for all users. Opening it inside the
+  app's browser without a new login is not verified yet: test on one phone.
+  How External sites works (read from github.com/nextcloud/external, 2026-10): the mobile apps ask
+  `/ocs/v2.php/apps/external/api/v1`; the server filters by language, group and device (decided
+  from the app's user agent: Android, iOS, desktop client, else browser) and applies no limit on the
+  number of links, so a short list on one Android phone is the client's doing. One entry = one
+  device type, so make one entry for iOS and one for Android.
+  Icons: upload square PNGs of 16, 24 or 32 px in External sites (SVG also works). The server serves
+  `name-dark.png` instead of `name.png` to the Android, iOS and desktop apps, so upload both:
+  `img/visitors.png` (white glyph) and `img/visitors-dark.png` (black glyph). If the icon is
+  invisible in the app, swap the two files.
+- The Talk reception account is searchable as a host (it is a real person at KDVN). Picking it
+  gives her a Nextcloud notification instead of a Talk message.
 
 ## What's new in 0.4
 - "Book the room in Calendar" on the invite form (ticked by default when a room is chosen): creates

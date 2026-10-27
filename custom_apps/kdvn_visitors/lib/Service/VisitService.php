@@ -144,6 +144,11 @@ class VisitService {
 		$visit = $this->insertWithToken($visit);
 		$passUrl = $this->passUrl($visit['_token']);
 		$emailError = $this->trySendEmail($visit, $passUrl);
+		try {
+			$this->messenger->inviteCreated($visit, $passUrl, $uid);
+		} catch (\Throwable $e) {
+			$this->logger->warning('kdvn_visitors: Talk message to the inviter failed: ' . $e->getMessage(), ['exception' => $e]);
+		}
 		return ['visit' => $this->toView($visit), 'passUrl' => $passUrl, 'emailError' => $emailError, 'roomBooked' => $eventUid !== null];
 	}
 

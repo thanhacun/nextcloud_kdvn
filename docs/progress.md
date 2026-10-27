@@ -45,10 +45,11 @@
 - Visitors 0.5.0 (`custom_apps/kdvn_visitors/lib/Service/StaffDirectory.php`) ignores accents in
   the "Who are you visiting?" search. It uses PHP's `intl` Transliterator when present, and falls
   back to a Vietnamese letter table when not.
-- Found while testing: the PHP on the dev machine has no `intl`, so only the fallback was
-  tested. Whether the production nextcloud-app container has `intl` is NOT checked.
-- Check (read-only, needs approval): `docker exec -u www-data nextcloud-app php -m | grep -i intl`
-- If `intl` is missing: the fallback covers Vietnamese only (other accents, e.g. Japanese romaji
+- The PHP on the dev machine has no `intl`, so only the fallback was tested here. Thanh checked
+  production on 2026-10-27: `intl` IS installed in nextcloud-app, so the full transliterator is
+  used. Re-check the same way after the image change for 35:
+  `docker exec -u www-data nextcloud-app php -m | grep -i intl`
+- If `intl` is ever missing: the fallback covers Vietnamese only (other accents, e.g. Japanese romaji
   or "ü", are not folded). Install `intl` through the Dockerfile (nextcloud-app image), which
   needs a rebuild and recreate of nextcloud-app, so take a fresh backup first (CLAUDE.md).
 - On the 35 upgrade: check the Nextcloud 35 admin manual for its PHP version and required

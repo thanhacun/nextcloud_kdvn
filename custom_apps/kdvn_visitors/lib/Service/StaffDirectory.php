@@ -42,7 +42,6 @@ class StaffDirectory {
 	public function __construct(
 		private IUserManager $userManager,
 		private ICacheFactory $cacheFactory,
-		private AppSettings $settings,
 	) {
 		if ($this->cacheFactory->isAvailable()) {
 			$this->cache = $this->cacheFactory->createDistributed('kdvn_visitors');
@@ -122,10 +121,11 @@ class StaffDirectory {
 		if (is_array($cached)) {
 			return $cached;
 		}
-		$talkUser = $this->settings->talkUser(); // the reception account itself is not a person to visit
+		// The Talk reception account is listed too: at KDVN it is a real person's account. If a guest
+		// picks it, Messenger falls back to a Nextcloud notification (Talk can't message itself).
 		$people = [];
 		foreach ($this->userManager->searchDisplayName('') as $user) {
-			if (!$user->isEnabled() || $user->getUID() === $talkUser) {
+			if (!$user->isEnabled()) {
 				continue;
 			}
 			$name = $user->getDisplayName();

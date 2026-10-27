@@ -12,6 +12,7 @@ use OCP\Notification\IManager as INotificationManager;
 
 /**
  * Who hears about what:
+ *  - guest invited by hand     -> the person who invited (Talk, with the code and the pass link)
  *  - invited guest arrives     -> host (Talk; Nextcloud notification + Reception desk if Talk fails)
  *  - walk-in guest arrives     -> host (Talk, with a link to decide) + Reception desk
  *  - walk-in let in / declined -> Reception desk + host (if someone else decided)
@@ -31,6 +32,32 @@ class Messenger {
 		private AppSettings $settings,
 		private ICacheFactory $cacheFactory,
 	) {
+	}
+
+	/**
+	 * Right after a manual invitation: everything the inviter needs on a phone, including the code
+	 * and the pass link (so they can forward it by Zalo). Talk only; failures never block the invitation.
+	 */
+	public function inviteCreated(array $visit, string $passUrl, string $inviter): void {
+		$lang = $this->langOf($inviter);
+		$lines = [
+			$this->t($lang, 'talk_invited', $visit),
+			Texts::get($lang, 'talk_when', ['when' => $this->formatter->when($visit, $lang)]),
+		];
+		if (!empty($visit['room_name'])) {
+			$lines[] = Texts::get($lang, 'talk_room', ['room' => $visit['room_name']]);
+		}
+		if (!empty($visit['host_uid']) && $visit['host_uid'] !== $inviter) {
+			$lines[] = Texts::get($lang, 'talk_host_line', ['host' => $this->nameOf($visit['host_uid'])]);
+		}
+		$lines[] = Texts::get($lang, 'talk_phone', ['phone' => $visit['guest_phone']]);
+		$lines[] = Texts::get($lang, 'talk_email', ['email' => $visit['guest_email']]);
+		if (!empty($visit['purpose'])) {
+			$lines[] = Texts::get($lang, 'talk_purpose', ['purpose' => $visit['purpose']]);
+		}
+		$lines[] = Texts::get($lang, 'talk_code', ['code' => $visit['code']]);
+		$lines[] = Texts::get($lang, 'talk_pass_link', ['link' => $passUrl]);
+		$this->talk->send($inviter, implode("\n", $lines));
 	}
 
 	public function invitedArrived(array $visit, ?string $checkedInBy = null): void {

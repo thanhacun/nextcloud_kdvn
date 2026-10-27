@@ -270,6 +270,56 @@ class AppSettings {
 		}
 	}
 
+	// ------------------------------------------------ purpose of visit, host privacy
+
+	public const DEFAULT_PURPOSES = "Meeting | Họp | 会議\nSales | Bán hàng | 営業\nInterview | Phỏng vấn | 面接\nDelivery | Giao hàng | 配達";
+
+	/** The list exactly as typed in the settings: one purpose per line, "English | Tiếng Việt | 日本語". */
+	public function purposesText(): string {
+		return $this->config->getValueString(self::APP, 'purpose_options', self::DEFAULT_PURPOSES);
+	}
+
+	/**
+	 * Purposes for the drop-down. The English label is what gets stored with the visit, so reception
+	 * reads one language whatever language the guest used.
+	 * @return list<array{value: string, labels: array<string, string>}>
+	 */
+	public function purposes(): array {
+		$out = [];
+		foreach (preg_split('/\R/u', $this->purposesText()) ?: [] as $line) {
+			$parts = array_map('trim', explode('|', $line));
+			if ($parts[0] === '') {
+				continue;
+			}
+			$out[] = ['value' => $parts[0], 'labels' => [
+				'en' => $parts[0],
+				'vi' => ($parts[1] ?? '') !== '' ? $parts[1] : $parts[0],
+				'ja' => ($parts[2] ?? '') !== '' ? $parts[2] : $parts[0],
+			]];
+		}
+		return $out;
+	}
+
+	public function setPurposesText(string $text): void {
+		$lines = array_filter(array_map(fn ($l) => mb_substr(trim($l), 0, 120), preg_split('/\R/u', $text) ?: []), fn ($l) => $l !== '' && !str_starts_with($l, '|'));
+		if (count($lines) > 20) {
+			throw new UserError('Use at most 20 purposes of visit.');
+		}
+		$this->config->setValueString(self::APP, 'purpose_options', implode("\n", $lines));
+	}
+
+	/** full = show staff names on the tablet; masked = "N*** V*** A***" (guest still picks by recognising it). */
+	public function hostNamePrivacy(): string {
+		return $this->config->getValueString(self::APP, 'host_name_privacy', 'full') === 'masked' ? 'masked' : 'full';
+	}
+
+	public function setHostNamePrivacy(string $mode): void {
+		if (!in_array($mode, ['full', 'masked'], true)) {
+			throw new UserError('Unknown privacy option.');
+		}
+		$this->config->setValueString(self::APP, 'host_name_privacy', $mode);
+	}
+
 	public function kioskKeyHash(): string {
 		return $this->config->getValueString(self::APP, 'kiosk_key_hash', '');
 	}

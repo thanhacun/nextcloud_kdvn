@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\KdvnVisitors\Controller;
 
 use OCA\KdvnVisitors\AppInfo\Application;
+use OCA\KdvnVisitors\Service\AppSettings;
 use OCA\KdvnVisitors\Service\Texts;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -24,6 +25,7 @@ class PageController extends Controller {
 		private IUserSession $userSession,
 		private IConfig $config,
 		private IURLGenerator $urlGenerator,
+		private AppSettings $settings,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -39,6 +41,7 @@ class PageController extends Controller {
 			'apiUrl' => $this->urlGenerator->linkToRoute('kdvn_visitors.visit_api.list'),
 			'receptionUrl' => $this->urlGenerator->linkToRoute('kdvn_visitors.visit_api.reception'),
 			'usersUrl' => $this->urlGenerator->linkToRoute('kdvn_visitors.visit_api.users'),
+			'purposes' => $this->settings->purposes(),
 			'defaultLanguage' => Texts::normalize($this->config->getUserValue($uid, 'core', 'lang', 'en')),
 		]);
 	}

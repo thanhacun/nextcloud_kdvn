@@ -54,6 +54,8 @@ class SettingsApiController extends Controller {
 		array $buildingWorkdays = [],
 		int $autoCheckoutMinutes = 60,
 		?array $receptionBuildings = null,
+		?string $purposes = null,
+		string $hostNamePrivacy = 'full',
 	): DataResponse {
 		$companyName = trim($companyName);
 		$talkUser = trim($talkUser);
@@ -82,6 +84,10 @@ class SettingsApiController extends Controller {
 			$this->settings->setAppearance($appearance);
 			$this->settings->setCalendarSettings($autoPassMode, $displayGuestMode, $displayTitleMode);
 			$this->settings->setAutoCheckoutMinutes($autoCheckoutMinutes);
+			$this->settings->setHostNamePrivacy($hostNamePrivacy);
+			if ($purposes !== null) {
+				$this->settings->setPurposesText($purposes);
+			}
 			if ($receptionBuildings !== null) {
 				$this->settings->setReceptionBuildings($receptionBuildings);
 			}

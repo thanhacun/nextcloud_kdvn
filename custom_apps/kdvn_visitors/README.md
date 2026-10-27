@@ -1,9 +1,24 @@
-# Visitors (kdvn_visitors) – version 0.4
+# Visitors (kdvn_visitors) – version 0.5
 
 Staff invite guests → guests get a QR visitor pass by email → guests check in at the reception
 tablet → the host gets a Talk message. Walk-in guests register on the tablet. Meetings booked in
 Calendar with outside guests create visitor passes automatically, and public room displays show
 the bookings per building.
+
+## What's new in 0.5
+- Walk-in form on the tablet: required fields carry a red star and a "* Required" legend from the
+  start; a missed field shows its own message under it (cleared as the guest types).
+- Purpose of visit is a drop-down (Administration settings > Visitors > Walk-in form on the tablet,
+  one per line, optional Vietnamese and Japanese wording: `Meeting | Họp | 会議`) with an "Other" box.
+  The staff invite form uses the same list. Reception always sees the English wording.
+- "Who are you visiting?" ignores accents and capitals ("nguyen van a" finds "Nguyễn Văn A", words in
+  any order) and shows up to 8 matches instead of 5. Option to hide most letters (N*** V*** A***);
+  the search then needs 3 letters.
+- Phone layout of the staff page: full-width Invite button, full-screen invite form with the buttons
+  pinned at the bottom, bigger touch targets.
+- Nextcloud mobile app: the Android/iOS apps list links from the "External sites" app, not custom apps
+  (unverified on 34, test with one phone first). Enable External sites, add a site "Visitors" with
+  the URL `/apps/kdvn_visitors/` (type: internal link, icon Visitors), allowed for all users.
 
 ## What's new in 0.4
 - "Book the room in Calendar" on the invite form (ticked by default when a room is chosen): creates

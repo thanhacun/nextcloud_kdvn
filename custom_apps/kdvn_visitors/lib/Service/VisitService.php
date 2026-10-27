@@ -48,6 +48,7 @@ class VisitService {
 		private IConfig $config,
 		private RoomCatalog $rooms,
 		private CalendarBooking $booking,
+		private StaffDirectory $staff,
 	) {
 	}
 
@@ -81,23 +82,8 @@ class VisitService {
 	}
 
 	/** Staff search for "invite on behalf of" (reception) and for the tablet's walk-in form. */
-	public function searchStaff(string $query, int $limit): array {
-		$query = trim($query);
-		if (mb_strlen($query) < 2) {
-			return [];
-		}
-		$sender = $this->settings->talkUser();
-		$found = [];
-		foreach ($this->userManager->searchDisplayName($query, $limit + 5) as $user) {
-			if (!$user->isEnabled() || $user->getUID() === $sender) {
-				continue;
-			}
-			$found[] = ['id' => $user->getUID(), 'name' => $user->getDisplayName()];
-			if (count($found) >= $limit) {
-				break;
-			}
-		}
-		return $found;
+	public function searchStaff(string $query, int $limit, bool $masked = false): array {
+		return $this->staff->search($query, $limit, $masked);
 	}
 
 	// --------------------------------------------------- invited guests

@@ -44,6 +44,8 @@ class Admin implements ISettings {
 			'officeTimezone' => $this->settings->officeTimezoneName(),
 			'appearance' => $this->settings->appearance(),
 			'autoPassMode' => $this->settings->autoPassMode(),
+			'purposesText' => $this->settings->purposesText(),
+			'hostNamePrivacy' => $this->settings->hostNamePrivacy(),
 			'autoCheckoutMinutes' => $this->settings->autoCheckoutMinutes(),
 			'buildings' => array_map(fn ($b) => $b + [
 				'workdays' => $this->settings->workdaysFor($b['id']),

@@ -33,8 +33,11 @@
 			bye: 'Cảm ơn {guest} đã ghé thăm. Hẹn gặp lại!',
 			noPassOut: 'Không có thẻ khách? Vui lòng báo nhân viên lễ tân khi ra về.',
 			name: 'Họ và tên', company: 'Công ty', phone: 'Số điện thoại',
-			host: 'Bạn muốn gặp ai?', hostHint: 'Nhập ít nhất 2 chữ cái của tên', notSure: 'Tôi không chắc', change: 'Đổi',
-			purpose: 'Mục đích (không bắt buộc)',
+			host: 'Bạn muốn gặp ai?', hostHint: 'Nhập ít nhất {n} chữ cái của tên (có dấu hoặc không dấu)', notSure: 'Tôi không chắc', change: 'Đổi',
+			purpose: 'Mục đích', optional: '(không bắt buộc)',
+			purposeChoose: 'Chọn mục đích…', purposeOther: 'Khác…', purposeOtherHint: 'Vui lòng ghi rõ mục đích',
+			requiredLegend: '* Bắt buộc', fieldRequired: 'Vui lòng điền mục này', consentRequired: 'Vui lòng đánh dấu đồng ý để tiếp tục',
+			noHostFound: 'Không tìm thấy. Hãy thử tên khác hoặc chọn "Tôi không chắc".',
 			consent: 'Tôi đồng ý để {company} lưu các thông tin này nhằm quản lý khách ra vào. Thông tin sẽ được xóa sau {days} ngày.',
 			required: 'Vui lòng điền họ tên, công ty, số điện thoại và đánh dấu đồng ý.',
 			walkDone: 'Cảm ơn bạn! Vui lòng ngồi chờ, lễ tân sẽ hỗ trợ bạn ngay.',
@@ -68,8 +71,11 @@
 			bye: 'Thank you for visiting, {guest}. Goodbye!',
 			noPassOut: 'No visitor pass? Please tell reception when you leave.',
 			name: 'Your name', company: 'Company', phone: 'Phone',
-			host: 'Who are you visiting?', hostHint: 'Type at least 2 letters of their name', notSure: "I'm not sure", change: 'Change',
-			purpose: 'Purpose of visit (optional)',
+			host: 'Who are you visiting?', hostHint: 'Type at least {n} letters of their name', notSure: "I'm not sure", change: 'Change',
+			purpose: 'Purpose of visit', optional: '(optional)',
+			purposeChoose: 'Choose a purpose…', purposeOther: 'Other…', purposeOtherHint: 'Please tell us the purpose',
+			requiredLegend: '* Required', fieldRequired: 'Please fill in this field', consentRequired: 'Please tick the box to continue',
+			noHostFound: 'No match. Try another spelling or choose "I\'m not sure".',
 			consent: 'I agree that {company} stores these details to manage building visitors. They are deleted after {days} days.',
 			required: 'Please fill in your name, company and phone, and tick the consent box.',
 			walkDone: 'Thank you! Please take a seat. Reception will be with you shortly.',
@@ -103,8 +109,11 @@
 			bye: '{guest}様、ご来訪ありがとうございました。',
 			noPassOut: 'パスをお持ちでない方は、お帰りの際に受付にお声がけください。',
 			name: 'お名前', company: '会社名', phone: '電話番号',
-			host: '訪問先の担当者', hostHint: 'お名前を2文字以上入力してください', notSure: 'わからない', change: '変更',
-			purpose: 'ご用件（任意）',
+			host: '訪問先の担当者', hostHint: 'お名前を{n}文字以上入力してください', notSure: 'わからない', change: '変更',
+			purpose: 'ご用件', optional: '（任意）',
+			purposeChoose: 'ご用件を選択…', purposeOther: 'その他…', purposeOtherHint: 'ご用件をご記入ください',
+			requiredLegend: '* 必須', fieldRequired: 'この項目を入力してください', consentRequired: '続けるには同意にチェックしてください',
+			noHostFound: '該当者が見つかりません。別の綴りをお試しいただくか「わからない」を選択してください。',
 			consent: '来訪者管理のため、{company}がこの情報を保存することに同意します。情報は{days}日後に削除されます。',
 			required: 'お名前、会社名、電話番号を入力し、同意にチェックしてください。',
 			walkDone: 'ありがとうございます。おかけになってお待ちください。受付担当がすぐに参ります。',
@@ -151,12 +160,21 @@
 		const loadedAt = Date.now()
 		const RELOAD_AFTER_MS = 15 * 60 * 1000 // pick up new settings and app updates
 
+		let purposes = []
+		try { purposes = JSON.parse(cfg.purposes || '[]') } catch (e) { /* only "Other" */ }
+		const maskHosts = cfg.maskHosts === '1'
+		const MIN_HOST_LETTERS = maskHosts ? 3 : 2
+		const newWalkin = () => ({
+			guestName: '', guestCompany: '', guestPhone: '', purpose: '', purposeOther: false,
+			host: null, notSure: false, consent: false, error: '', errors: {},
+		})
+
 		const state = {
 			lang: DEFAULT_LANG,
 			screen: 'welcome', // welcome | scan | code | walkin | busy | result
 			purpose: 'in',     // in | out (for scan / code)
 			result: null,
-			walkin: { guestName: '', guestCompany: '', guestPhone: '', purpose: '', host: null, notSure: false, consent: false, error: '' },
+			walkin: newWalkin(),
 		}
 		let idleTimer = null
 		let resultTimer = null
@@ -175,7 +193,7 @@
 			Object.assign(state, { screen }, extra || {})
 			if (screen === 'welcome') {
 				state.lang = DEFAULT_LANG
-				state.walkin = { guestName: '', guestCompany: '', guestPhone: '', purpose: '', host: null, notSure: false, consent: false, error: '' }
+				state.walkin = newWalkin()
 			}
 			if (screen === 'scan') startCamera(); else stopCamera()
 			render()
@@ -267,13 +285,28 @@
 			showResult(Object.assign({ kind: out ? 'out' : 'in' }, res))
 		}
 
+		/** Which required fields are still empty? Keys match the field names in walkInView. */
+		function missingWalkIn(w) {
+			const missing = {}
+			if (!w.guestName.trim()) missing.guestName = 'fieldRequired'
+			if (!w.guestCompany.trim()) missing.guestCompany = 'fieldRequired'
+			if (!w.guestPhone.trim()) missing.guestPhone = 'fieldRequired'
+			if (w.purposeOther && !w.purpose.trim()) missing.purpose = 'purposeOtherHint'
+			if (!w.consent) missing.consent = 'consentRequired'
+			return missing
+		}
+
 		async function submitWalkIn() {
 			const w = state.walkin
-			if (!w.guestName.trim() || !w.guestCompany.trim() || !w.guestPhone.trim() || !w.consent) {
+			w.errors = missingWalkIn(w)
+			if (Object.keys(w.errors).length) {
 				w.error = t('required')
 				render()
+				const first = document.querySelector('#kv-kiosk [aria-invalid="true"]')
+				if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' })
 				return
 			}
+			w.error = ''
 			go('busy')
 			const res = await post(cfg.walkInUrl, {
 				guestName: w.guestName, guestCompany: w.guestCompany, guestPhone: w.guestPhone,
@@ -386,10 +419,39 @@
 
 		function walkInView() {
 			const w = state.walkin
-			const bind = key => e => { w[key] = e.target.value }
-			const field = (label, input) => h('label', { class: 'kk-field' }, h('span', { class: 'kk-field__label' }, label), input)
 
-			// Who are you visiting?
+			/** Clears a field's error as soon as the guest starts fixing it, without redrawing the form. */
+			const clearError = (key, el) => {
+				if (!w.errors[key]) return
+				delete w.errors[key]
+				const wrap = el.closest('.kk-field, .kk-consent')
+				if (wrap) wrap.classList.remove('has-error')
+				el.removeAttribute('aria-invalid')
+				const message = wrap && wrap.querySelector('.kk-field__error')
+				if (message) message.remove()
+				if (!Object.keys(w.errors).length) {
+					w.error = ''
+					const summary = document.querySelector('#kv-kiosk .kk-form > .kk-error')
+					if (summary) summary.remove()
+				}
+			}
+			const bind = key => e => { w[key] = e.target.value; clearError(key, e.target) }
+			const errorLine = key => w.errors[key] ? h('span', { class: 'kk-field__error', role: 'alert' }, t(w.errors[key])) : null
+			const mark = key => w.errors[key] ? 'true' : null
+
+			/** A labelled field. `required` adds the red star; the error shows right under the input. */
+			const field = (key, label, input, required) => h('label', { class: 'kk-field' + (w.errors[key] ? ' has-error' : '') },
+				h('span', { class: 'kk-field__label' },
+					label,
+					required ? h('span', { class: 'kk-req', 'aria-hidden': 'true' }, ' *') : h('span', { class: 'kk-opt' }, ' ' + t('optional'))),
+				input,
+				errorLine(key))
+			const text = (key, type, max) => h('input', {
+				class: 'kk-input', type, maxlength: max, autocomplete: 'off', value: w[key],
+				required: true, 'aria-invalid': mark(key), oninput: bind(key),
+			})
+
+			// Who are you visiting? (optional)
 			let hostPart
 			if (w.host || w.notSure) {
 				hostPart = h('div', { class: 'kk-host-chosen' },
@@ -398,18 +460,24 @@
 			} else {
 				const results = h('div', { class: 'kk-host-results', role: 'listbox' })
 				let timer = null
+				let latest = 0
 				const search = h('input', {
-					class: 'kk-input', type: 'search', autocomplete: 'off', placeholder: t('hostHint'), 'aria-label': t('host'),
+					class: 'kk-input', type: 'search', autocomplete: 'off', placeholder: t('hostHint', { n: MIN_HOST_LETTERS }), 'aria-label': t('host'),
 					oninput: e => {
 						clearTimeout(timer)
 						const q = e.target.value.trim()
-						if (q.length < 2) { results.replaceChildren(); return }
+						latest++
+						if (q.length < MIN_HOST_LETTERS) { results.replaceChildren(); return }
+						const mine = latest
 						timer = setTimeout(async () => {
 							try {
 								const res = await fetch(cfg.hostsUrl + '?q=' + encodeURIComponent(q), { credentials: 'omit', headers: { Accept: 'application/json' } })
 								const data = await res.json()
-								results.replaceChildren(...(data.hosts || []).map(host =>
-									h('button', { type: 'button', class: 'kk-host', role: 'option', onclick: () => { w.host = host; render() } }, host.name)))
+								if (mine !== latest) return // a newer search is already on its way
+								const hosts = data.hosts || []
+								results.replaceChildren(...(hosts.length
+									? hosts.map(host => h('button', { type: 'button', class: 'kk-host', role: 'option', onclick: () => { w.host = host; render() } }, host.name))
+									: [h('p', { class: 'kk-text kk-muted' }, t('noHostFound'))]))
 							} catch (err) { /* ignore; the guest can pick "I'm not sure" */ }
 						}, 300)
 					},
@@ -418,21 +486,49 @@
 					h('button', { type: 'button', class: 'kk-link', onclick: () => { w.notSure = true; render() } }, t('notSure')))
 			}
 
+			// Purpose of visit: a drop-down from the settings, plus "Other" with a free text box.
+			const OTHER = '__other__'
+			const select = h('select', {
+				class: 'kk-input kk-select', 'aria-label': t('purpose'),
+				onchange: e => {
+					const other = e.target.value === OTHER
+					w.purposeOther = other
+					w.purpose = other ? '' : e.target.value
+					delete w.errors.purpose
+					render()
+					if (other) { const box = document.querySelector('#kv-kiosk .kk-purpose-other'); if (box) box.focus() }
+				},
+			},
+				h('option', { value: '' }, t('purposeChoose')),
+				purposes.map(p => h('option', { value: p.value, selected: !w.purposeOther && w.purpose === p.value }, (p.labels && p.labels[state.lang]) || p.value)),
+				h('option', { value: OTHER, selected: w.purposeOther }, t('purposeOther')))
+			const purposePart = h('div', { class: 'kk-purpose' },
+				select,
+				w.purposeOther ? h('input', {
+					class: 'kk-input kk-purpose-other', type: 'text', maxlength: 1000, autocomplete: 'off', value: w.purpose,
+					placeholder: t('purposeOtherHint'), 'aria-label': t('purposeOtherHint'), 'aria-invalid': mark('purpose'), oninput: bind('purpose'),
+				}) : null)
+
 			return h('main', { class: 'kk-main kk-main--form' },
 				h('h1', { class: 'kk-subtitle' }, t('walkIn')),
+				h('p', { class: 'kk-legend' }, h('span', { class: 'kk-req' }, '*'), ' ', t('requiredLegend').replace(/^\*\s*/, '')),
 				h('form', { class: 'kk-form', novalidate: true, onsubmit: e => { e.preventDefault(); submitWalkIn() } },
 					h('div', { class: 'kk-form__row' },
-						field(t('name'), h('input', { class: 'kk-input', type: 'text', maxlength: 255, autocomplete: 'off', value: w.guestName, oninput: bind('guestName') })),
-						field(t('company'), h('input', { class: 'kk-input', type: 'text', maxlength: 255, autocomplete: 'off', value: w.guestCompany, oninput: bind('guestCompany') })),
+						field('guestName', t('name'), text('guestName', 'text', 255), true),
+						field('guestCompany', t('company'), text('guestCompany', 'text', 255), true),
 					),
 					h('div', { class: 'kk-form__row' },
-						field(t('phone'), h('input', { class: 'kk-input', type: 'tel', maxlength: 64, autocomplete: 'off', value: w.guestPhone, oninput: bind('guestPhone') })),
-						h('div', { class: 'kk-field' }, h('span', { class: 'kk-field__label' }, t('host')), hostPart),
+						field('guestPhone', t('phone'), text('guestPhone', 'tel', 64), true),
+						h('div', { class: 'kk-field' }, h('span', { class: 'kk-field__label' }, t('host'), h('span', { class: 'kk-opt' }, ' ' + t('optional'))), hostPart),
 					),
-					field(t('purpose'), h('input', { class: 'kk-input', type: 'text', maxlength: 1000, autocomplete: 'off', value: w.purpose, oninput: bind('purpose') })),
-					h('label', { class: 'kk-consent' },
-						h('input', { type: 'checkbox', checked: w.consent, onchange: e => { w.consent = e.target.checked } }),
-						h('span', {}, t('consent'))),
+					h('div', { class: 'kk-field' + (w.errors.purpose ? ' has-error' : '') },
+						h('span', { class: 'kk-field__label' }, t('purpose'), h('span', { class: 'kk-opt' }, ' ' + t('optional'))),
+						purposePart,
+						errorLine('purpose')),
+					h('label', { class: 'kk-consent' + (w.errors.consent ? ' has-error' : '') },
+						h('input', { type: 'checkbox', checked: w.consent, 'aria-invalid': mark('consent'), onchange: e => { w.consent = e.target.checked; clearError('consent', e.target) } }),
+						h('span', {}, t('consent'), h('span', { class: 'kk-req', 'aria-hidden': 'true' }, ' *')),
+						errorLine('consent')),
 					w.error ? h('p', { class: 'kk-error', role: 'alert' }, w.error) : null,
 					h('button', { type: 'submit', class: 'kk-button' }, t('send')),
 				),

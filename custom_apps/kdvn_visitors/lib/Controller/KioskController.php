@@ -7,6 +7,7 @@ namespace OCA\KdvnVisitors\Controller;
 use OCA\KdvnVisitors\AppInfo\Application;
 use OCA\KdvnVisitors\Service\AppSettings;
 use OCA\KdvnVisitors\Service\Branding;
+use OCA\KdvnVisitors\Service\StaffDirectory;
 use OCA\KdvnVisitors\Service\UserError;
 use OCA\KdvnVisitors\Service\VisitService;
 use OCP\AppFramework\Controller;
@@ -65,6 +66,8 @@ class KioskController extends Controller {
 			'checkOutUrl' => $url('check_out'),
 			'hostsUrl' => $url('hosts'),
 			'walkInUrl' => $url('walk_in'),
+			'purposes' => $this->settings->purposes(),
+			'maskHosts' => $this->settings->hostNamePrivacy() === 'masked',
 			'appearance' => $this->settings->appearance() + [
 				'logoUrl' => $this->branding->logoUrl($this->settings->appearance()['showLogo']),
 			],
@@ -94,13 +97,13 @@ class KioskController extends Controller {
 		return $this->guarded($key, fn () => $this->visits->checkOut($value));
 	}
 
-	/** Staff names for the walk-in form: at least 2 letters, at most 5 results, names only. */
+	/** Staff names for the walk-in form: at least 2 letters (3 when masked), at most 8 results, names only. */
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[BruteForceProtection(action: 'kdvn_visitors_kiosk')]
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function hosts(string $key, string $q = ''): DataResponse {
-		return $this->guarded($key, fn () => ['hosts' => $this->visits->searchStaff($q, 5)]);
+		return $this->guarded($key, fn () => ['hosts' => $this->visits->searchStaff($q, 8, $this->settings->hostNamePrivacy() === 'masked')]);
 	}
 
 	#[PublicPage]
@@ -110,7 +113,11 @@ class KioskController extends Controller {
 	public function walkIn(string $key): DataResponse {
 		return $this->guarded($key, function () {
 			try {
-				return $this->visits->walkIn($this->request->getParams());
+				$result = $this->visits->walkIn($this->request->getParams());
+				if (!empty($result['hostName']) && $this->settings->hostNamePrivacy() === 'masked') {
+					$result['hostName'] = StaffDirectory::mask($result['hostName']);
+				}
+				return $result;
 			} catch (UserError $e) {
 				return ['ok' => false, 'error' => $e->getMessage() === 'consent' ? 'consent' : 'invalid', 'message' => $e->getMessage()];
 			}

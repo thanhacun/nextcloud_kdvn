@@ -41,6 +41,22 @@
 - Run Phase 1 tests, deploy 0.4.6 and set reception offices, then a go-live dry run on site
   before the office move.
 
+## Before upgrading to Nextcloud 35: PHP `intl` and Visitors name search
+- Visitors 0.5.0 (`custom_apps/kdvn_visitors/lib/Service/StaffDirectory.php`) ignores accents in
+  the "Who are you visiting?" search. It uses PHP's `intl` Transliterator when present, and falls
+  back to a Vietnamese letter table when not.
+- Found while testing: the PHP on the dev machine has no `intl`, so only the fallback was
+  tested. Whether the production nextcloud-app container has `intl` is NOT checked.
+- Check (read-only, needs approval): `docker exec -u www-data nextcloud-app php -m | grep -i intl`
+- If `intl` is missing: the fallback covers Vietnamese only (other accents, e.g. Japanese romaji
+  or "ü", are not folded). Install `intl` through the Dockerfile (nextcloud-app image), which
+  needs a rebuild and recreate of nextcloud-app, so take a fresh backup first (CLAUDE.md).
+- On the 35 upgrade: check the Nextcloud 35 admin manual for its PHP version and required
+  extensions, make sure `intl` is on the list for the new image, and re-test the walk-in host
+  search with "nguyen van a" against a user named "Nguyễn Văn A".
+- Also re-check the OCP calls added in 0.5.0 against stable35:
+  `IUserManager::searchDisplayName('')` (empty pattern = all users) and `ICacheFactory`.
+
 ## Cowork-only files to export into docs/
 - "Visitors and Meeting Rooms: Test and Upgrade Plan" (test cases R1-R12, V, T, W, P, C, D,
   J, S, upgrade rehearsal, production runbook, reception contingency plan)

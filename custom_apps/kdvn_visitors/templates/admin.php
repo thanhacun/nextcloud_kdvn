@@ -67,6 +67,23 @@
 			<input type="number" name="retentionDays" min="7" max="3650" value="<?php p((string)$_['retentionDays']); ?>">
 		</label>
 
+		<h3>Walk-in form on the tablet</h3>
+		<label>Purposes of visit (drop-down list)
+			<textarea name="purposes" rows="5" maxlength="2500"><?php p($_['purposesText']); ?></textarea>
+		</label>
+		<p class="settings-hint">
+			One purpose per line. Optionally add the Vietnamese and Japanese wording after a bar:
+			<code>Meeting | Họp | 会議</code>. Reception always sees the first (English) wording.
+			The tablet adds an "Other" choice with a free text box by itself. The staff invite form uses the same list.
+		</p>
+		<label>Staff names on the tablet
+			<select name="hostNamePrivacy">
+				<option value="full" <?php if ($_['hostNamePrivacy'] === 'full') { p('selected'); } ?>>Show full names</option>
+				<option value="masked" <?php if ($_['hostNamePrivacy'] === 'masked') { p('selected'); } ?>>Hide most letters (N*** V*** A***), search needs 3 letters</option>
+			</select>
+		</label>
+		<p class="settings-hint">The search ignores accents and capital letters either way: "nguyen van a" finds "Nguyễn Văn A".</p>
+
 		<h3>Calendar</h3>
 		<p class="settings-hint">
 			When someone invites outside guests to a meeting in Calendar, the guests can get a visitor pass automatically

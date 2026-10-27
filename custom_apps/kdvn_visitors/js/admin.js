@@ -44,6 +44,8 @@
 					retentionDays: parseInt(f.retentionDays.value, 10) || 90,
 					autoCheckoutMinutes: parseInt(f.autoCheckoutMinutes.value, 10),
 					autoPassMode: f.autoPassMode.value,
+					purposes: f.purposes.value,
+					hostNamePrivacy: f.hostNamePrivacy.value,
 					// null = leave unchanged (no buildings yet); [] would mean "no office has a reception"
 					receptionBuildings: root.querySelector('.kv-admin-workdays tr[data-building]')
 						? Array.from(root.querySelectorAll('.kv-admin-workdays tr[data-building]'))

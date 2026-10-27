@@ -49,6 +49,8 @@
 		if (!root) return
 		const cfg = root.dataset
 		const defaultLanguage = cfg.defaultLanguage || 'en'
+		let purposes = []
+		try { purposes = JSON.parse(cfg.purposes || '[]') } catch (e) { /* only free text */ }
 
 		const state = {
 			tab: 'mine',          // mine | reception
@@ -364,7 +366,7 @@
 				const results = h('div', { class: 'kv-host__results' })
 				let timer = null
 				const input = h('input', {
-					type: 'search', placeholder: 'Me. Or type 2+ letters of another host\'s name', autocomplete: 'off', 'aria-label': 'Host',
+					type: 'search', placeholder: 'Me. Or type 2+ letters of another host\'s name (accents optional)', autocomplete: 'off', 'aria-label': 'Host',
 					oninput: e => {
 						clearTimeout(timer)
 						const q = e.target.value.trim()
@@ -409,6 +411,22 @@
 				h('option', { value: '' }, 'No room / not decided'),
 				state.rooms.map(r => h('option', { value: r.label }, r.label)))
 
+			// Purpose: pick from the list set by the admin; "Other" shows a text box.
+			const OTHER = '__other__'
+			const purposeOther = h('textarea', { name: 'purposeOther', rows: 2, maxlength: 1000, hidden: true, placeholder: 'Tell us the purpose', 'aria-label': 'Purpose, in your words' })
+			const purposeSelect = h('select', {
+				name: 'purposeChoice',
+				onchange: e => {
+					purposeOther.hidden = e.target.value !== OTHER
+					if (!purposeOther.hidden) purposeOther.focus()
+				},
+			},
+				h('option', { value: '' }, 'Choose a purpose…'),
+				purposes.map(p => h('option', { value: p.value }, (p.labels && p.labels[defaultLanguage]) || p.value)),
+				h('option', { value: OTHER }, 'Other…'))
+			const purposeBox = h('div', { class: 'kv-purpose' }, purposeSelect, purposeOther)
+			const purposeValue = () => (purposeSelect.value === OTHER ? purposeOther.value : purposeSelect.value)
+
 			const form = h('form', { class: 'kv-form', novalidate: true },
 				h('h3', {}, 'Invite a guest'),
 				picker ? field('Host', picker.element, 'Reception can invite on behalf of someone else. They get the Talk message.') : null,
@@ -427,7 +445,7 @@
 				),
 				field('Meeting room', roomSelect, 'Shown to the guest, reception and the room display.'),
 				bookRow,
-				field('Purpose', h('textarea', { name: 'purpose', rows: 2, maxlength: 1000 }), 'Optional. Not shown to the guest.'),
+				field('Purpose', purposeBox, 'Optional. Not shown to the guest.'),
 				field('Email language', h('select', { name: 'language' },
 					LANGUAGES.map(([code, label]) => h('option', { value: code, selected: code === defaultLanguage }, label)))),
 				h('p', { class: 'kv-hint' }, 'Guest details are stored for reception and deleted automatically after the retention period.'),
@@ -461,7 +479,7 @@
 						endAt,
 						roomName: f.roomName.value,
 						bookRoom: !bookRow.hidden && bookBox.checked && !bookBox.disabled,
-						purpose: f.purpose.value,
+						purpose: purposeValue(),
 						language: f.language.value,
 					})
 					form.replaceWith(doneView(res, dialog))

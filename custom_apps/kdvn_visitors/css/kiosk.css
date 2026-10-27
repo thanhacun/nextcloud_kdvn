@@ -246,6 +246,34 @@ html, body#body-public.layout-base {
 	font-size: 1.25rem;
 }
 
+/* required fields: red star, legend at the top, message under the field */
+.kk-legend { margin: -4px 0 0; color: var(--kk-muted); font-size: 1.05rem; }
+.kk-req { color: var(--kk-warn); font-weight: 700; }
+.kk-opt { color: var(--kk-muted); font-weight: 400; font-size: 0.95rem; }
+.kk-field__error { color: var(--kk-warn); font-size: 1.05rem; font-weight: 600; }
+.kk-field.has-error input.kk-input,
+.kk-field.has-error select.kk-select { border-color: var(--kk-warn); background: #fff6f1; }
+.kk-consent { flex-wrap: wrap; }
+.kk-consent > span:not(.kk-field__error) { flex: 1 1 0; min-width: 0; }
+.kk-consent .kk-field__error { flex-basis: 100%; }
+.kk-consent.has-error { outline: 3px solid var(--kk-warn); outline-offset: 6px; border-radius: 8px; }
+.kk-purpose { display: flex; flex-direction: column; gap: 10px; }
+#kv-kiosk select.kk-select {
+	width: 100%;
+	height: auto;
+	min-height: 56px;
+	margin: 0;
+	padding: 10px 16px;
+	box-sizing: border-box;
+	border: 2px solid var(--kk-line);
+	border-radius: 14px;
+	background-color: var(--kk-panel);
+	color: var(--kk-ink);
+	font-size: 1.25rem;
+	cursor: pointer;
+}
+#kv-kiosk select.kk-select:focus-visible { outline: 4px solid var(--kk-accent); outline-offset: 3px; }
+
 .kk-host-pick { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .kk-host-results { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
 #kv-kiosk button.kk-host {

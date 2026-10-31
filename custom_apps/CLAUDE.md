@@ -12,7 +12,7 @@ Status: docs/progress.md. Before any deploy, read docs/deploy-apps.md.
   CLAUDE.md, so the critical rules are repeated below.
 
 ## Rules
-- Thanh commits and pushes himself. Source changes only through git; never edit files
+- Claude commits when Thanh asks; a push needs his explicit approval (show the command first). Source changes only through git; never edit files
   inside the container by hand.
 - Show every server command and wait for approval. Read-only checks are fine
   (`occ app:list`, `occ log:tail`). Always state the backup step before `occ upgrade`,

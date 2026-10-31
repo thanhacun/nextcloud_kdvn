@@ -14,7 +14,7 @@ content on the server, so apps installed from the app store land there too.
   `occ app:list`, `occ log:tail`.
 - Always state the backup step and wait for explicit approval before: `down`, `rm`,
   volume changes, recreating a service, `occ upgrade`, maintenance mode.
-- Thanh commits and pushes himself.
+- Claude commits when Thanh asks. Pushing: Claude shows the `git push` command and runs it only after Thanh approves.
 - Never ask for, print, commit or paste secrets: db.env, redis.env, nextcloud.env,
   notify-push.env, harp.env, stack-back.env, collabora.env (all git-ignored), nor tablet or
   display links, pass links and app passwords. Use placeholders.

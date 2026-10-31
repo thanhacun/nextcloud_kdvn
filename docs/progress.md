@@ -1,4 +1,4 @@
-# Nextcloud stack and apps: status (dated 2026-10-26)
+# Nextcloud stack and apps: status (dated 2026-10-31)
 
 ## Versions
 - Production runs Nextcloud 34.0.5 (checked on the server 2026-10-26: not in maintenance
@@ -11,10 +11,20 @@
   Dockerfile/nextcloud-app/Dockerfile via docker-compose.override.yml (NC_TAG 34-apache).
   Base docker-compose.yml still says nextcloud:32.0.15, which the override replaces. A
   recreate of nextcloud-app still needs a fresh backup.
-- Apps deployed on the server (checked 2026-10-26): kdvn_rooms 0.1.3 and kdvn_visitors
+- Apps as found on the server on 2026-10-26 (since upgraded, see next item): kdvn_rooms 0.1.3 and kdvn_visitors
   0.4.6, both declaring Nextcloud 30 to 34. Whether the 0.4.1 to 0.4.6 features work
   (readable room names, auto check-out, newest-first lists, readable errors, reception-office
   setting, display layouts) is not tested yet: see Phase 1 tests.
+- Apps in git, deployed to production (Thanh confirmed 2026-10-31):
+  - kdvn_rooms 0.2.0: admins and the kdvn_visitors reception group can manage rooms (top-bar
+    page plus every API call, via Service/Access.php). Delegating the old admin settings page
+    to a group no longer grants API access. Needs the reception_group setting of kdvn_visitors.
+  - kdvn_visitors 0.5.2: walk-in form with required-field marks and a purpose drop-down; accent-
+    insensitive host search (needs PHP `intl`, present in production); phone layout of the staff
+    page; Talk message to the inviter; the Talk reception account is searchable as a host;
+    "guest comes early" display message (0.4.x); External sites icons for the mobile app.
+  - Deployed, but not yet tested by Claude on the live server (Thanh's Phase 1 tests pending). Open: whether Visitors opens
+    inside the Nextcloud mobile app without a new login (test on one phone).
 - Earlier checks by Claude were only lint, API checks against stable32/34 and replayed
   scenarios with Sabre VObject; nothing was verified on a live server by Claude.
 
@@ -38,8 +48,8 @@
 
 ## Next
 - Re-run the quick re-test of the apps on 34 (docs/deploy-apps.md step 6) and note the result.
-- Run Phase 1 tests, deploy 0.4.6 and set reception offices, then a go-live dry run on site
-  before the office move.
+- kdvn_visitors 0.5.2 and kdvn_rooms 0.2.0 are deployed: run Phase 1 tests, set reception offices, then a go-live dry run on site before the office
+  move.
 
 ## Before upgrading to Nextcloud 35: PHP `intl` and Visitors name search
 - Visitors 0.5.0 (`custom_apps/kdvn_visitors/lib/Service/StaffDirectory.php`) ignores accents in

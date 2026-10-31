@@ -57,14 +57,13 @@ $groupOptions = function (string $selected, string $none) use ($_): string {
 		<label>Default reception group (for offices without their own, and visits of unknown office)
 			<select name="receptionGroup"><?php print_unescaped($groupOptions($_['receptionGroup'], 'None (admins only)')); ?></select>
 		</label>
-		<label>Hide these groups from the staff search (service accounts, shared mailboxes...)
-			<select name="staffHiddenGroups" multiple size="5">
-				<?php foreach ($_['groups'] as $group): ?>
-					<option value="<?php p($group['id']); ?>" <?php if (in_array($group['id'], $_['hiddenGroups'], true)) { p('selected'); } ?>><?php p($group['name']); ?></option>
-				<?php endforeach; ?>
-			</select>
-		</label>
-		<p class="settings-hint">Hold Ctrl (Cmd) to pick several. Members of these groups can't be chosen as a host on the tablet or when inviting on behalf of someone.</p>
+		<fieldset class="kv-admin-groups">
+			<legend>Hide these groups from the staff search (service accounts, shared mailboxes...)</legend>
+			<?php foreach ($_['groups'] as $group): ?>
+				<label class="kv-admin-check"><input type="checkbox" class="kv-hidden-group" value="<?php p($group['id']); ?>" <?php if (in_array($group['id'], $_['hiddenGroups'], true)) { p('checked'); } ?>> <?php p($group['name']); ?></label>
+			<?php endforeach; ?>
+		</fieldset>
+		<p class="settings-hint">Members of the ticked groups can't be chosen as a host on the tablet or when inviting on behalf of someone. Click Save settings to apply.</p>
 		<label>Office time zone (for "today" and the end-of-day check-out)
 			<input type="text" name="officeTimezone" value="<?php p($_['officeTimezone']); ?>" placeholder="Asia/Ho_Chi_Minh">
 		</label>

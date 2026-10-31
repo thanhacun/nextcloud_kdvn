@@ -39,6 +39,10 @@
 #kv-admin .kv-admin-upload .button { cursor: pointer; }
 
 #kv-admin .kv-admin-form select { width: 100%; max-width: 560px; margin: 0; font-weight: normal; }
+/* Groups to hide from the staff search: a scrollable list of tick boxes (a multi-select is squashed by Nextcloud's CSS). */
+#kv-admin .kv-admin-groups { max-width: 560px; max-height: 14em; overflow-y: auto; margin: 0 0 8px; padding: 8px 12px; border: 1px solid var(--color-border-maxcontrast, #767676); border-radius: var(--border-radius-large, 8px); }
+#kv-admin .kv-admin-groups legend { font-weight: bold; padding: 0 4px; }
+#kv-admin .kv-admin-groups .kv-admin-check { display: block; margin: 4px 0; font-weight: normal; }
 #kv-admin .kv-display-links { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; }
 #kv-admin .kv-display-links li { display: grid; grid-template-columns: 10em 1fr auto; gap: 8px; align-items: center; }
 #kv-admin .kv-display-links input { margin: 0; width: 100%; }

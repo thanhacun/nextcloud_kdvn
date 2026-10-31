@@ -40,7 +40,7 @@
 					talkUser: f.talkUser.value,
 					talkPassword: f.talkPassword.value,
 					receptionGroup: f.receptionGroup.value,
-					staffHiddenGroups: Array.from(f.staffHiddenGroups.selectedOptions).map(o => o.value),
+					staffHiddenGroups: Array.from(root.querySelectorAll('.kv-hidden-group:checked')).map(box => box.value),
 					officeGroups: Object.fromEntries(Array.from(root.querySelectorAll('.kv-admin-workdays tr[data-building]'))
 						.map(row => [row.dataset.building, row.querySelector('.kv-office-group').value])),
 					officeStaffGroups: Object.fromEntries(Array.from(root.querySelectorAll('.kv-admin-workdays tr[data-building]'))

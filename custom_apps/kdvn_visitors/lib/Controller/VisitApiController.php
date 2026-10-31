@@ -19,7 +19,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * JSON API for the Visitors page. Hosts see and change their own visits;
- * reception (admins + the reception group) can see and change all of them.
+ * reception (admins + the reception group of the visit's office) can see and change that office's.
  * The permission checks live in VisitService.
  */
 class VisitApiController extends Controller {
@@ -42,7 +42,10 @@ class VisitApiController extends Controller {
 			'rooms' => array_map(fn ($r) => [
 				'label' => $r['label'],
 				'bookable' => $r['email'] !== '' && filter_var($r['email'], FILTER_VALIDATE_EMAIL) !== false,
+				'buildingId' => $r['buildingId'],
 			], array_values(array_filter($this->rooms->rooms(), fn ($r) => $this->settings->hasReception($r['buildingId'])))),
+			'offices' => $this->visits->offices(),
+			'defaultOffice' => $this->visits->defaultOffice($this->uid()),
 			'isReception' => $this->visits->isReception($this->uid()),
 		]);
 	}

@@ -13,11 +13,13 @@ use OCP\Notification\IManager as INotificationManager;
 /**
  * Who hears about what:
  *  - guest invited by hand     -> the person who invited (Talk, with the code and the pass link)
- *  - invited guest arrives     -> host (Talk; Nextcloud notification + Reception desk if Talk fails)
+ *  - invited guest arrives     -> host (Talk; Nextcloud notification if Talk fails) + Reception desk
  *  - walk-in guest arrives     -> host (Talk, with a link to decide) + Reception desk
  *  - walk-in let in / declined -> Reception desk + host (if someone else decided)
  *  - problem at the tablet     -> Reception desk (at most once per visit and reason per 10 minutes)
  *
+ * "Reception desk" is the conversation of the visit's own office (its reception group), so Hanoi
+ * reception never hears about guests of another office.
  * Host messages use the host's Nextcloud language; Reception desk messages use the
  * language of the Talk sender account (set it on that user's Personal settings).
  */
@@ -78,6 +80,8 @@ class Messenger {
 		if ($this->talk->send($host, implode("\n", $lines)) !== null) {
 			$this->bell($host, 'guest_arrived', $visit);
 			$this->toReception('rc_host_unreachable', $visit);
+		} else {
+			$this->toReception('rc_arrived', $visit);
 		}
 	}
 
@@ -127,7 +131,8 @@ class Messenger {
 	// ------------------------------------------------------------ helpers
 
 	private function toReception(string $key, array $visit, array $extra = [], bool $withDetails = false): void {
-		if ($this->settings->receptionGroup() === '') {
+		$buildingId = $visit['building_id'] ?? null;
+		if ($this->settings->receptionGroupFor($buildingId) === '') {
 			return;
 		}
 		$lang = $this->receptionLang();
@@ -138,7 +143,7 @@ class Messenger {
 				$lines[] = Texts::get($lang, 'talk_purpose', ['purpose' => $visit['purpose']]);
 			}
 		}
-		$this->talk->sendToReception(implode("\n", $lines));
+		$this->talk->sendToReception(implode("\n", $lines), $buildingId);
 	}
 
 	private function t(string $lang, string $key, array $visit, array $extra = []): string {

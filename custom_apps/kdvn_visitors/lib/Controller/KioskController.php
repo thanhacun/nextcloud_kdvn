@@ -48,7 +48,7 @@ class KioskController extends Controller {
 	#[NoCSRFRequired]
 	#[BruteForceProtection(action: 'kdvn_visitors_kiosk')]
 	public function show(string $key): Response {
-		if (!$this->isValidKey($key)) {
+		if ($this->settings->kioskOffice($key) === null) {
 			$response = new DataDisplayResponse('This reception tablet link is not valid. Ask IT for a new one.', Http::STATUS_FORBIDDEN, ['Content-Type' => 'text/plain; charset=utf-8']);
 			$response->throttle();
 			return $response;
@@ -111,9 +111,10 @@ class KioskController extends Controller {
 	#[BruteForceProtection(action: 'kdvn_visitors_kiosk')]
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function walkIn(string $key): DataResponse {
-		return $this->guarded($key, function () {
+		return $this->guarded($key, function () use ($key) {
 			try {
-				$result = $this->visits->walkIn($this->request->getParams());
+				$office = $this->settings->kioskOffice($key); // this tablet's office
+				$result = $this->visits->walkIn($this->request->getParams(), $office['building'] ?? null);
 				if (!empty($result['hostName']) && $this->settings->hostNamePrivacy() === 'masked') {
 					$result['hostName'] = StaffDirectory::mask($result['hostName']);
 				}
@@ -125,7 +126,7 @@ class KioskController extends Controller {
 	}
 
 	private function guarded(string $key, callable $action): DataResponse {
-		if (!$this->isValidKey($key)) {
+		if ($this->settings->kioskOffice($key) === null) {
 			$response = new DataResponse(['ok' => false, 'error' => 'not_paired'], Http::STATUS_FORBIDDEN);
 			$response->throttle();
 			return $response;
@@ -136,10 +137,5 @@ class KioskController extends Controller {
 			$this->logger->error('kdvn_visitors kiosk: ' . $e->getMessage(), ['exception' => $e]);
 			return new DataResponse(['ok' => false, 'error' => 'network'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
-	}
-
-	private function isValidKey(string $key): bool {
-		$stored = $this->settings->kioskKeyHash();
-		return $stored !== '' && hash_equals($stored, hash('sha256', $key));
 	}
 }

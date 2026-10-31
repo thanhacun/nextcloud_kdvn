@@ -6,6 +6,7 @@ namespace OCA\KdvnVisitors\Service;
 
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IGroupManager;
 use OCP\IUserManager;
 
 /**
@@ -16,7 +17,7 @@ use OCP\IUserManager;
  * The whole list (about 500 names) is searched in PHP and kept in the cache for two minutes.
  */
 class StaffDirectory {
-	private const CACHE_KEY = 'staff_v1';
+	private const CACHE_KEY = 'staff_v2_';
 	private const CACHE_SECONDS = 120;
 
 	/** Lower-case Vietnamese letters with their plain form (the fallback when PHP has no intl). */
@@ -41,7 +42,9 @@ class StaffDirectory {
 
 	public function __construct(
 		private IUserManager $userManager,
+		private IGroupManager $groupManager,
 		private ICacheFactory $cacheFactory,
+		private AppSettings $settings,
 	) {
 		if ($this->cacheFactory->isAvailable()) {
 			$this->cache = $this->cacheFactory->createDistributed('kdvn_visitors');
@@ -115,23 +118,35 @@ class StaffDirectory {
 		return $score;
 	}
 
-	/** @return list<array{id: string, name: string, folded: string}> */
+	/**
+	 * Everyone who can be picked as a host, except the Talk sender account (a bot) and members of the
+	 * groups ticked under "Hide from the staff search" (other service accounts, shared mailboxes...).
+	 * @return list<array{id: string, name: string, folded: string}>
+	 */
 	private function all(): array {
-		$cached = $this->cache?->get(self::CACHE_KEY);
+		$hiddenGroups = $this->settings->staffHiddenGroups();
+		$sender = $this->settings->talkUser();
+		// The cache key changes with the settings, so a change applies at once.
+		$cacheKey = self::CACHE_KEY . md5(json_encode([$hiddenGroups, $sender]));
+		$cached = $this->cache?->get($cacheKey);
 		if (is_array($cached)) {
 			return $cached;
 		}
-		// The Talk reception account is listed too: at KDVN it is a real person's account. If a guest
-		// picks it, Messenger falls back to a Nextcloud notification (Talk can't message itself).
+		$hidden = $sender !== '' ? [$sender => true] : [];
+		foreach ($hiddenGroups as $gid) {
+			foreach ($this->groupManager->get($gid)?->searchUsers('') ?? [] as $user) {
+				$hidden[$user->getUID()] = true;
+			}
+		}
 		$people = [];
 		foreach ($this->userManager->searchDisplayName('') as $user) {
-			if (!$user->isEnabled()) {
+			if (!$user->isEnabled() || isset($hidden[$user->getUID()])) {
 				continue;
 			}
 			$name = $user->getDisplayName();
 			$people[] = ['id' => $user->getUID(), 'name' => $name, 'folded' => $this->fold($name)];
 		}
-		$this->cache?->set(self::CACHE_KEY, $people, self::CACHE_SECONDS);
+		$this->cache?->set($cacheKey, $people, self::CACHE_SECONDS);
 		return $people;
 	}
 }

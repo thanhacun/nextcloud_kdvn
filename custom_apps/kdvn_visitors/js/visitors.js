@@ -56,6 +56,8 @@
 			tab: 'mine',          // mine | reception
 			visits: [],
 			rooms: [],
+			offices: [],
+			defaultOffice: null,
 			isReception: false,
 			desk: { date: dayKey(new Date()), visits: [], filter: '' },
 		}
@@ -96,6 +98,8 @@
 			const data = await api('GET', '')
 			state.visits = data.visits
 			state.rooms = data.rooms
+			state.offices = data.offices || []
+			state.defaultOffice = data.defaultOffice || null
 			state.isReception = data.isReception
 			if (state.tab === 'reception' && state.isReception) await loadDesk()
 			const signature = JSON.stringify([state.visits, state.tab === 'reception' ? state.desk.visits : null])
@@ -293,7 +297,7 @@
 					'Cancel the visit of ' + v.guestName + '? Their pass will stop working. They are not notified automatically.'), 'kv-link kv-danger'))
 			}
 
-			const meta = [v.guestCompany, v.roomName].filter(Boolean).join(', ')
+			const meta = [v.guestCompany, v.roomName || v.officeName].filter(Boolean).join(', ')
 			return h('li', { class: 'kv-visit kv-visit--' + v.status },
 				h('div', { class: 'kv-visit__when' },
 					h('span', { class: 'kv-visit__time' }, time),
@@ -396,10 +400,16 @@
 			const submit = h('button', { type: 'submit', class: 'primary' }, 'Send invitation')
 			const bookBox = h('input', { type: 'checkbox', name: 'bookRoom', checked: true })
 			const bookRow = h('label', { class: 'kv-check', hidden: true }, bookBox, ' Book the room in Calendar (in the host\'s calendar, like a normal meeting)')
+			// Office: a chosen room decides it; without a room, pick it (default: your own office).
+			const officeSelect = h('select', { name: 'officeId' },
+				state.offices.length === 1 ? null : h('option', { value: '' }, 'Choose an office…'),
+				state.offices.map(o => h('option', { value: o.id, selected: o.id === state.defaultOffice || state.offices.length === 1 }, o.name)))
 			const roomSelect = h('select', {
 				name: 'roomName',
 				onchange: e => {
 					const room = state.rooms.find(r => r.label === e.target.value)
+					if (room && room.buildingId) officeSelect.value = String(room.buildingId)
+					officeSelect.disabled = !!room
 					bookRow.hidden = !room
 					bookBox.disabled = !!room && !room.bookable
 					bookBox.checked = !!room && room.bookable
@@ -443,6 +453,7 @@
 					field('From', h('input', { type: 'time', name: 'from', value: pad(next.getHours()) + ':00' })),
 					field('To', h('input', { type: 'time', name: 'to' }), 'Optional.'),
 				),
+				field('Office', officeSelect, 'Which reception the guest will come to. Choosing a room sets it. You can invite to another office, e.g. on a business trip.'),
 				field('Meeting room', roomSelect, 'Shown to the guest, reception and the room display.'),
 				bookRow,
 				field('Purpose', purposeBox, 'Optional. Not shown to the guest.'),
@@ -478,6 +489,7 @@
 						startAt,
 						endAt,
 						roomName: f.roomName.value,
+						officeId: f.roomName.value ? '' : f.officeId.value,
 						bookRoom: !bookRow.hidden && bookBox.checked && !bookBox.disabled,
 						purpose: purposeValue(),
 						language: f.language.value,

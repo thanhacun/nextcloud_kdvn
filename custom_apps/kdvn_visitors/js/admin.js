@@ -40,6 +40,11 @@
 					talkUser: f.talkUser.value,
 					talkPassword: f.talkPassword.value,
 					receptionGroup: f.receptionGroup.value,
+					staffHiddenGroups: Array.from(f.staffHiddenGroups.selectedOptions).map(o => o.value),
+					officeGroups: Object.fromEntries(Array.from(root.querySelectorAll('.kv-admin-workdays tr[data-building]'))
+						.map(row => [row.dataset.building, row.querySelector('.kv-office-group').value])),
+					officeStaffGroups: Object.fromEntries(Array.from(root.querySelectorAll('.kv-admin-workdays tr[data-building]'))
+						.map(row => [row.dataset.building, row.querySelector('.kv-staff-group').value])),
 					officeTimezone: f.officeTimezone.value,
 					retentionDays: parseInt(f.retentionDays.value, 10) || 90,
 					autoCheckoutMinutes: parseInt(f.autoCheckoutMinutes.value, 10),
@@ -79,7 +84,7 @@
 			say('Sending…')
 			try {
 				await post(root.dataset.testTalkUrl)
-				say('Test message sent. Check Talk: you should have a message from the reception user.')
+				say('Test message sent. Check Talk: you should have a message from the sender account.')
 			} catch (e) { say(e.message + ' (Did you save the settings first?)', true) }
 		})
 
@@ -87,7 +92,7 @@
 			say('Sending…')
 			try {
 				await post(root.dataset.testReceptionUrl)
-				say('Test message posted in the "Reception desk" conversation.')
+				say('Test message posted in the Reception desk conversation of every reception group.')
 			} catch (e) { say(e.message + ' (Did you save the reception group and Talk user first?)', true) }
 		})
 
@@ -169,15 +174,19 @@
 
 		const result = document.getElementById('kv-kiosk-result')
 		const linkInput = document.getElementById('kv-kiosk-link')
-		document.getElementById('kv-new-kiosk').addEventListener('click', async () => {
-			if (!window.confirm('Create a new tablet link? Any tablet using the old link will stop working until you open the new one on it.')) return
+		root.querySelectorAll('.kv-new-kiosk').forEach(button => button.addEventListener('click', async () => {
+			const name = button.dataset.name
+			if (!window.confirm('Create a new tablet link for ' + name + '? A tablet using the old link of this office will stop working until you open the new one on it.')) return
 			try {
-				const res = await post(root.dataset.kioskUrl)
+				const res = await post(root.dataset.kioskUrl, { buildingId: parseInt(button.dataset.building, 10) })
 				linkInput.value = res.url
+				document.getElementById('kv-kiosk-title').textContent = 'Tablet link for ' + name + ': open it on that office\'s reception tablet and bookmark it.'
 				result.hidden = false
+				button.textContent = 'New link'
 				linkInput.select()
+				result.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
 			} catch (e) { window.alert(e.message) }
-		})
+		}))
 		document.getElementById('kv-copy-kiosk').addEventListener('click', async () => {
 			try { await navigator.clipboard.writeText(linkInput.value) } catch (e) { linkInput.select() }
 		})

@@ -23,3 +23,9 @@ command and wait for approval. Steps 2 to 4 change the server.
    - book a test meeting with a room and an outside email (pass arrives in about 5 minutes)
    - the meeting shows on the display
    - tablet check-in notifies the host in Talk
+   - from 0.6 (offices): the migration adds oc_kdvnv_visits.building_id, so take a fresh backup first
+     (backup.sh). Deploy kdvn_visitors and kdvn_rooms together (kdvn_rooms 0.2.1 reads office_groups).
+     Then in Administration settings > Visitors: set each office's reception group, create each
+     office's tablet link, tick the groups to hide from the staff search, and click "Test the
+     Reception desk conversation". An invited guest arriving must reach the host and only that
+     office's reception group; a Hanoi reception user must not see another office's guests.

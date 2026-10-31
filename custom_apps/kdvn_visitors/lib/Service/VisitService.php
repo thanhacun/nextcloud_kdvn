@@ -21,7 +21,8 @@ use Psr\Log\LoggerInterface;
  *            waiting  -> declined
  *            invited  -> cancelled
  *
- * Who may do what: the host on their own visits; reception (admins + the reception group) on all.
+ * Who may do what: the host on their own visits; reception (admins + the reception group of the
+ * visit's office) on that office's visits.
  */
 class VisitService {
 	/** Check-in opens this long before the start time... */
@@ -54,12 +55,54 @@ class VisitService {
 
 	// ------------------------------------------------------------ roles
 
+	/** Admins and members of any office's reception group. Which guests they may handle: canHandle(). */
 	public function isReception(string $uid): bool {
 		if ($this->groupManager->isAdmin($uid)) {
 			return true;
 		}
-		$group = $this->settings->receptionGroup();
+		foreach ($this->settings->allReceptionGroups() as $group) {
+			if ($this->groupManager->isInGroup($uid, $group)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * May this user act as reception for guests of this office? Admins: all. Others: members of the
+	 * office's reception group. Visits whose office is unknown are open to every reception.
+	 */
+	public function canHandle(string $uid, ?int $buildingId): bool {
+		if ($this->groupManager->isAdmin($uid)) {
+			return true;
+		}
+		if ($buildingId === null) {
+			return $this->isReception($uid);
+		}
+		$group = $this->settings->receptionGroupFor($buildingId);
 		return $group !== '' && $this->groupManager->isInGroup($uid, $group);
+	}
+
+	/** Offices a guest can be invited to: buildings with a visitor reception. @return list<array{id: int, name: string}> */
+	public function offices(): array {
+		return array_values(array_filter($this->rooms->buildings(), fn ($b) => $this->settings->hasReception($b['id'])));
+	}
+
+	/** Office preselected in the invite form: the only office, else the office of the user's area group. */
+	public function defaultOffice(string $uid): ?int {
+		$offices = $this->offices();
+		if (count($offices) === 1) {
+			return $offices[0]['id'];
+		}
+		$ids = array_column($offices, 'id');
+		foreach ([$this->settings->officeStaffGroups(), $this->settings->officeGroups()] as $map) {
+			foreach ($map as $buildingId => $gid) {
+				if (in_array($buildingId, $ids, true) && $this->groupManager->isInGroup($uid, $gid)) {
+					return $buildingId;
+				}
+			}
+		}
+		return null;
 	}
 
 	// ------------------------------------------------------------ lists
@@ -77,7 +120,9 @@ class VisitService {
 		$to = $day->modify('+1 day')->getTimestamp();
 		return [
 			'date' => $day->format('Y-m-d'),
-			'visits' => array_map([$this, 'toView'], $this->store->listForReception($from, $to)),
+			'visits' => array_map([$this, 'toView'], array_values(array_filter(
+				$this->store->listForReception($from, $to),
+				fn ($v) => $this->canHandle($uid, $v['building_id'] ?? null)))),
 		];
 	}
 
@@ -120,6 +165,10 @@ class VisitService {
 			if ($chosen !== null && !$this->settings->hasReception($chosen['buildingId'])) {
 				throw new UserError($chosen['building'] . ' has no visitor reception, so visitor passes are not used there.');
 			}
+			$visit['building_id'] = $chosen['buildingId'] ?? null; // the room decides the office
+		}
+		if (!isset($visit['building_id'])) {
+			$visit['building_id'] = $this->pickOffice($in, $uid);
 		}
 
 		// "Book the room in Calendar": done first, so a taken room stops the invitation before any email.
@@ -152,6 +201,23 @@ class VisitService {
 		return ['visit' => $this->toView($visit), 'passUrl' => $passUrl, 'emailError' => $emailError, 'roomBooked' => $eventUid !== null];
 	}
 
+	/** Office of an invitation without a room: the one chosen on the form, else the inviter's own. */
+	private function pickOffice(array $in, string $uid): int {
+		$offices = array_column($this->offices(), 'name', 'id');
+		$chosen = (int)($in['officeId'] ?? 0);
+		if ($chosen !== 0) {
+			if (!isset($offices[$chosen])) {
+				throw new UserError('That office has no visitor reception.');
+			}
+			return $chosen;
+		}
+		$default = $this->defaultOffice($uid);
+		if ($default === null) {
+			throw new UserError('Choose the office the guest is visiting.');
+		}
+		return $default;
+	}
+
 	private function roomByLabel(string $label): ?array {
 		foreach ($this->rooms->rooms() as $room) {
 			if ($room['label'] === $label) {
@@ -182,7 +248,7 @@ class VisitService {
 	// ------------------------------------------------------------ calendar
 
 	/** A visit for an outside guest of a calendar meeting. The email goes out later (SendInvitationJob). */
-	public function createFromCalendar(string $hostUid, array $guest, array $event, ?string $roomName): int {
+	public function createFromCalendar(string $hostUid, array $guest, array $event, ?string $roomName, ?int $buildingId = null): int {
 		$email = strtolower($guest['email']);
 		$domain = substr(strrchr($email, '@') ?: '', 1);
 		$name = $guest['name'] !== '' ? $guest['name'] : ucwords(str_replace(['.', '_', '-'], ' ', strstr($email, '@', true) ?: $email));
@@ -197,6 +263,7 @@ class VisitService {
 			'guest_phone' => '',
 			'purpose' => $event['summary'] !== '' ? mb_substr($event['summary'], 0, 1000) : null,
 			'room_name' => $roomName,
+			'building_id' => $buildingId,
 			'language' => Texts::normalize($this->config->getUserValue($hostUid, 'core', 'lang', 'en')),
 			'status' => 'invited',
 			'start_at' => $event['start'],
@@ -325,7 +392,7 @@ class VisitService {
 	}
 
 	/** A guest without an appointment registers at the tablet. */
-	public function walkIn(array $in): array {
+	public function walkIn(array $in, ?int $buildingId = null): array {
 		if (empty($in['consent'])) {
 			throw new UserError('consent');
 		}
@@ -343,6 +410,7 @@ class VisitService {
 			'guest_phone' => $this->phone($in),
 			'purpose' => $this->text($in, 'purpose', 'Purpose', 1000, false),
 			'room_name' => null,
+			'building_id' => $buildingId, // the office of the tablet
 			'language' => Texts::normalize($in['language'] ?? 'vi'),
 			'status' => 'waiting',
 			'start_at' => $now,
@@ -409,6 +477,8 @@ class VisitService {
 			'guestPhone' => $v['guest_phone'],
 			'purpose' => (string)($v['purpose'] ?? ''),
 			'roomName' => (string)($v['room_name'] ?? ''),
+			'officeId' => $v['building_id'] ?? null,
+			'officeName' => $this->officeName($v['building_id'] ?? null),
 			'language' => $v['language'],
 			'startAt' => $v['start_at'],
 			'endAt' => $v['end_at'],
@@ -427,6 +497,15 @@ class VisitService {
 		return $uid === '' ? '' : ($this->userManager->get($uid)?->getDisplayName() ?? $uid);
 	}
 
+	private function officeName(?int $buildingId): string {
+		foreach ($this->rooms->buildings() as $b) {
+			if ($b['id'] === $buildingId) {
+				return $b['name'];
+			}
+		}
+		return '';
+	}
+
 	private function requireReception(string $uid): void {
 		if (!$this->isReception($uid)) {
 			throw new UserError('Only reception can do this.', 403);
@@ -435,7 +514,7 @@ class VisitService {
 
 	private function requireAccess(string $uid, int $id): array {
 		$visit = $this->store->find($id);
-		if ($visit === null || ($visit['host_uid'] !== $uid && !$this->isReception($uid))) {
+		if ($visit === null || ($visit['host_uid'] !== $uid && !$this->canHandle($uid, $visit['building_id'] ?? null))) {
 			throw new UserError('Visit not found.', 404);
 		}
 		return $visit;

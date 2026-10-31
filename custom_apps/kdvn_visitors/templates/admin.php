@@ -1,6 +1,15 @@
 <?php
 /** @var array $_ */
 ?>
+<?php
+$groupOptions = function (string $selected, string $none) use ($_): string {
+	$html = '<option value="">' . htmlspecialchars($none) . '</option>';
+	foreach ($_['groups'] as $group) {
+		$html .= '<option value="' . htmlspecialchars($group['id']) . '"' . ($group['id'] === $selected ? ' selected' : '') . '>' . htmlspecialchars($group['name']) . '</option>';
+	}
+	return $html;
+};
+?>
 <div id="kv-admin" class="section"
 	data-save-url="<?php p($_['saveUrl']); ?>"
 	data-kiosk-url="<?php p($_['kioskUrl']); ?>"
@@ -25,32 +34,37 @@
 			<p class="kv-warn">The Talk app is not enabled, so hosts will get a Nextcloud notification instead.</p>
 		<?php endif; ?>
 		<p class="settings-hint">
-			Create a normal Nextcloud user for reception (for example "reception", display name "Lễ tân / Reception").
+			Use the Nextcloud account that already sends our notifications (a bot, not a real person's account).
 			Log in as that user once, then go to Personal settings &gt; Security and create an app password named "Visitors".
+			The bot never appears in the "Who are you visiting?" search.
 		</p>
-		<label>Reception user ID
+		<label>Notification sender account (user ID)
 			<input type="text" name="talkUser" autocomplete="off" value="<?php p($_['talkUser']); ?>">
 		</label>
-		<label>App password of that user
+		<label>App password of that account
 			<input type="password" name="talkPassword" autocomplete="new-password"
 				placeholder="<?php p($_['hasTalkPassword'] ? 'Saved. Type a new one to replace it.' : 'Not set'); ?>">
 		</label>
 
 		<h3>Reception</h3>
 		<p class="settings-hint">
-			Members of this group see the Reception tab in Visitors: all guests, walk-ins waiting,
-			manual check-in and check-out, and inviting on behalf of others. They also get the
-			"Reception desk" Talk conversation for walk-ins and check-in problems.
-			Messages there use the Nextcloud language of the reception user above.
+			Each office has its own reception group (set in the Offices table below). Members see the Reception tab with
+			the guests of their own office only: waiting walk-ins, manual check-in and check-out, inviting on behalf of
+			others. They also get that office's "Reception desk" Talk conversation: arrivals, walk-ins and check-in problems.
+			Anyone can still invite a guest to any office. Messages there use the Nextcloud language of the sender account above.
+			Administrators see every office.
 		</p>
-		<label>Reception group
-			<select name="receptionGroup">
-				<option value="">None (admins only)</option>
+		<label>Default reception group (for offices without their own, and visits of unknown office)
+			<select name="receptionGroup"><?php print_unescaped($groupOptions($_['receptionGroup'], 'None (admins only)')); ?></select>
+		</label>
+		<label>Hide these groups from the staff search (service accounts, shared mailboxes...)
+			<select name="staffHiddenGroups" multiple size="5">
 				<?php foreach ($_['groups'] as $group): ?>
-					<option value="<?php p($group['id']); ?>" <?php if ($group['id'] === $_['receptionGroup']) { p('selected'); } ?>><?php p($group['name']); ?></option>
+					<option value="<?php p($group['id']); ?>" <?php if (in_array($group['id'], $_['hiddenGroups'], true)) { p('selected'); } ?>><?php p($group['name']); ?></option>
 				<?php endforeach; ?>
 			</select>
 		</label>
+		<p class="settings-hint">Hold Ctrl (Cmd) to pick several. Members of these groups can't be chosen as a host on the tablet or when inviting on behalf of someone.</p>
 		<label>Office time zone (for "today" and the end-of-day check-out)
 			<input type="text" name="officeTimezone" value="<?php p($_['officeTimezone']); ?>" placeholder="Asia/Ho_Chi_Minh">
 		</label>
@@ -103,17 +117,26 @@
 			Displays are in English; add <code>&amp;lang=vi</code> or <code>&amp;lang=ja</code> to a link for Vietnamese or Japanese, <code>&amp;theme=light</code> for light colors,
 			and <code>&amp;layout=condensed</code>, <code>pages</code> or <code>timeline</code> for another layout (you can pick one when creating the links).
 		</p>
-		<p class="settings-hint"><strong>Visitor reception:</strong> tick the offices that have the reception tablet. Only their rooms
-			create visitor passes from Calendar and appear in the invite form; meetings in other offices are left alone.</p>
+		<p class="settings-hint"><strong>Offices:</strong> tick the offices that have a visitor reception. Only their rooms
+			create visitor passes from Calendar and appear in the invite form; meetings in other offices are left alone.
+			For each office pick its <em>reception group</em> (sees that office's guests and its Talk conversation) and,
+			optionally, its <em>area group</em> (the people working there: the invite form preselects their office for them).
+			Each office has its own tablet link, so walk-ins reach the right reception.</p>
 		<p class="settings-hint">The displays show today and the next 5 working days of each building (add <code>&amp;days=3</code> to a link for fewer).</p>
 		<?php if ($_['buildings'] !== []): ?>
 		<table class="kv-admin-workdays">
-			<thead><tr><th>Office</th><th>Visitor reception</th><?php foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $d): ?><th><?php p($d); ?></th><?php endforeach; ?></tr></thead>
+			<thead><tr><th>Office</th><th>Visitor reception</th><th>Reception group</th><th>Area group</th><th>Tablet</th><?php foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $d): ?><th><?php p($d); ?></th><?php endforeach; ?></tr></thead>
 			<tbody>
 			<?php foreach ($_['buildings'] as $b): ?>
 				<tr data-building="<?php p((string)$b['id']); ?>">
 					<th scope="row"><?php p($b['name']); ?></th>
 					<td><input type="checkbox" class="kv-reception" aria-label="<?php p($b['name'] . ' has a visitor reception'); ?>" <?php if ($b['reception']) { p('checked'); } ?>></td>
+					<td><select class="kv-office-group" aria-label="<?php p($b['name'] . ' reception group'); ?>"><?php print_unescaped($groupOptions($b['receptionGroup'], 'Default group')); ?></select></td>
+					<td><select class="kv-staff-group" aria-label="<?php p($b['name'] . ' area group'); ?>"><?php print_unescaped($groupOptions($b['staffGroup'], 'None')); ?></select></td>
+					<td>
+						<button type="button" class="kv-new-kiosk" data-building="<?php p((string)$b['id']); ?>" data-name="<?php p($b['name']); ?>"><?php p($b['kioskAt'] > 0 ? 'New link' : 'Create link'); ?></button>
+						<?php if ($b['kioskAt'] > 0): ?><span class="settings-hint"><?php p(date('Y-m-d', $b['kioskAt'])); ?></span><?php endif; ?>
+					</td>
 					<?php for ($d = 1; $d <= 7; $d++): ?>
 						<td><input type="checkbox" class="kv-workday" value="<?php p((string)$d); ?>" aria-label="<?php p($b['name'] . ' ' . ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][$d]); ?>" <?php if (in_array($d, $b['workdays'], true)) { p('checked'); } ?>></td>
 					<?php endfor; ?>
@@ -205,16 +228,15 @@
 
 	<h3>Reception tablet</h3>
 	<p class="settings-hint">
-		<?php if ($_['kioskCreatedAt'] > 0): ?>
-			A tablet link was created on <?php p(date('Y-m-d H:i', $_['kioskCreatedAt'])); ?> (server time).
-			For security it can't be shown again. If you lost it, create a new one: the old link stops working.
-		<?php else: ?>
-			No tablet link yet. Create one and open it on the reception tablet.
+		One tablet link per office: use the "Create link" button in the Offices table above. A walk-in on that tablet
+		is sent to that office's reception only. A link is shown only once; creating a new one stops the office's old link.
+		<?php if ($_['kioskUnassignedAt'] > 0): ?>
+			The link made before version 0.6 (<?php p(date('Y-m-d', $_['kioskUnassignedAt'])); ?>) still works but belongs to no office:
+			its walk-ins go to the default reception group. Replace it with an office link, then it stops working.
 		<?php endif; ?>
 	</p>
-	<button type="button" id="kv-new-kiosk">Create new tablet link</button>
 	<div id="kv-kiosk-result" class="kv-kiosk-result" hidden>
-		<p><strong>Open this link on the reception tablet and bookmark it. It is shown only once.</strong></p>
+		<p><strong id="kv-kiosk-title">Open this link on the reception tablet and bookmark it.</strong> It is shown only once.</p>
 		<input type="text" readonly id="kv-kiosk-link">
 		<button type="button" id="kv-copy-kiosk">Copy</button>
 	</div>

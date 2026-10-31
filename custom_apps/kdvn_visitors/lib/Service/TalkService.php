@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\KdvnVisitors\Service;
 
 use OCP\Http\Client\IClientService;
+use OCP\IGroupManager;
 use OCP\IURLGenerator;
 use Psr\Log\LoggerInterface;
 
@@ -13,8 +14,8 @@ use Psr\Log\LoggerInterface;
  * (the API the Talk mobile apps use), so we don't depend on Talk's internal PHP code.
  *
  *  - send():          one-to-one message to a user (the host)
- *  - sendToReception(): message in the "Reception desk" group conversation,
- *                     created on first use with the reception group as members
+ *  - sendToReception(): message in the "Reception desk" group conversation of an office,
+ *                     created on first use with that office's reception group as members
  */
 class TalkService {
 	private const ROOM_ONE_TO_ONE = 1;
@@ -24,6 +25,7 @@ class TalkService {
 		private AppSettings $settings,
 		private IClientService $clientService,
 		private IURLGenerator $urlGenerator,
+		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 	) {
 	}
@@ -52,14 +54,22 @@ class TalkService {
 		}
 	}
 
-	/** @return string|null null on success, otherwise a short error description */
-	public function sendToReception(string $message): ?string {
-		$group = $this->settings->receptionGroup();
+	/**
+	 * Message to the reception desk of an office ($buildingId null = office unknown: default group).
+	 * @return string|null null on success, otherwise a short error description
+	 */
+	public function sendToReception(string $message, ?int $buildingId = null): ?string {
+		$group = $this->settings->receptionGroupFor($buildingId);
 		if ($group === '') {
 			return 'No reception group is set (Administration settings > Visitors).';
 		}
+		return $this->sendToGroupDesk($group, $message);
+	}
+
+	/** @return string|null null on success, otherwise a short error description */
+	public function sendToGroupDesk(string $group, string $message): ?string {
 		try {
-			$token = $this->settings->receptionRoomToken();
+			$token = $this->settings->receptionRoomToken($group);
 			if ($token !== '') {
 				try {
 					$this->postMessage($token, $message);
@@ -71,21 +81,25 @@ class TalkService {
 					// The conversation was deleted in Talk: make a new one below.
 				}
 			}
+			$name = 'Reception desk';
+			if ($group !== $this->settings->receptionGroup()) {
+				$name .= ' – ' . ($this->groupManager->get($group)?->getDisplayName() ?? $group);
+			}
 			$room = $this->request('POST', '/ocs/v2.php/apps/spreed/api/v4/room', [
 				'roomType' => self::ROOM_GROUP,
 				'invite' => $group,
 				'source' => 'groups', // members of the group are added, also people who join it later
-				'roomName' => 'Reception desk',
+				'roomName' => $name,
 			]);
 			$token = $room['token'] ?? '';
 			if (!is_string($token) || $token === '') {
 				return 'Talk did not return a conversation.';
 			}
-			$this->settings->setReceptionRoomToken($token);
+			$this->settings->setReceptionRoomToken($group, $token);
 			$this->postMessage($token, $message);
 			return null;
 		} catch (\Throwable $e) {
-			$this->logger->warning('kdvn_visitors: Talk message to the reception desk failed: ' . $e->getMessage(), ['exception' => $e]);
+			$this->logger->warning('kdvn_visitors: Talk message to the reception desk of group ' . $group . ' failed: ' . $e->getMessage(), ['exception' => $e]);
 			return 'Talk request failed: ' . $e->getMessage();
 		}
 	}

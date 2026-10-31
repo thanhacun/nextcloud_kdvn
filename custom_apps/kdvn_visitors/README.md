@@ -1,9 +1,30 @@
-# Visitors (kdvn_visitors) – version 0.5
+# Visitors (kdvn_visitors) – version 0.6
 
 Staff invite guests → guests get a QR visitor pass by email → guests check in at the reception
 tablet → the host gets a Talk message. Walk-in guests register on the tablet. Meetings booked in
 Calendar with outside guests create visitor passes automatically, and public room displays show
 the bookings per building.
+
+## What's new in 0.6
+- One app, several offices. An office is a building of Calendar Resource Management. Every visit now
+  has an office: from the booked room (Calendar passes and invitations with a room), from the tablet
+  link (walk-ins), or from the new Office field of the invite form (default: the office of your
+  area group, or the only office with a reception). Anyone can invite to any office.
+- Each office has its own reception group (Administration settings > Visitors > Room displays >
+  Offices table). Its members see only that office's guests on the Reception tab, can check them
+  in/out, and get that office's "Reception desk" Talk conversation (one per group, named
+  "Reception desk – <group>"). Offices without a group use the default reception group. Visits of
+  unknown office (made before 0.6 without a room) are open to every reception. Admins see all.
+  kdvn_rooms 0.2.1: members of any office's reception group may manage meeting rooms.
+- One tablet link per office (button in the Offices table). The link from before 0.6 keeps working
+  as "no office" (walk-ins go to the default reception group); replace it with an office link.
+- The reception desk now also gets a Talk message when an invited guest arrives (before: only when
+  the Talk message to the host failed, in which case the message still says to call the host).
+- The Talk sender is a bot (the account that sends our other notifications): it never appears in
+  the "Who are you visiting?" search. Other service accounts: tick their group under "Hide these
+  groups from the staff search".
+- Database: new column building_id on oc_kdvnv_visits (migration runs on enabling the update; old
+  visits with a room get their office from the room name).
 
 ## What's new in 0.5
 - Walk-in form on the tablet: required fields carry a red star and a "* Required" legend from the
@@ -19,7 +40,7 @@ the bookings per building.
 - Talk message to the inviter: right after a manual invitation (not Calendar-created passes) the
   person who invited gets a Talk message with guest, time, room, phone, email, purpose, the 6-letter
   code and the pass link, in their own Nextcloud language. If Talk fails the invitation still
-  goes out. If the inviter is the Talk reception account itself, no message is sent.
+  goes out. If the inviter is the Talk sender account itself, no message is sent.
 - Nextcloud mobile app: the Android app's menu lists the "External sites" links (ATT Hanoi, GLPI...),
   not custom apps. Add Visitors there: Administration settings > External sites > add a site named
   Visitors, URL `https://<our domain>/apps/kdvn_visitors/`, for all users. Opening it inside the
@@ -33,8 +54,7 @@ the bookings per building.
   `name-dark.png` instead of `name.png` to the Android, iOS and desktop apps, so upload both:
   `img/visitors.png` (white glyph) and `img/visitors-dark.png` (black glyph). If the icon is
   invisible in the app, swap the two files.
-- The Talk reception account is searchable as a host (it is a real person at KDVN). Picking it
-  gives her a Nextcloud notification instead of a Talk message.
+- (Changed in 0.6: the Talk sender account is now a bot and is hidden from the host search.)
 
 ## What's new in 0.4
 - "Book the room in Calendar" on the invite form (ticked by default when a room is chosen): creates

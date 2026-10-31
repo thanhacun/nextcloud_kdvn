@@ -158,7 +158,7 @@ class VisitStore {
 		foreach (['id', 'start_at', 'created_at'] as $column) {
 			$row[$column] = (int)$row[$column];
 		}
-		foreach (['end_at', 'checked_in_at', 'checked_out_at', 'consent_at'] as $column) {
+		foreach (['end_at', 'checked_in_at', 'checked_out_at', 'consent_at', 'building_id'] as $column) {
 			$row[$column] = ($row[$column] ?? null) === null ? null : (int)$row[$column];
 		}
 		$row['kind'] ??= 'invited';

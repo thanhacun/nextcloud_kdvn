@@ -4,8 +4,8 @@ Web page to manage Calendar Resource Management buildings, floors and meeting ro
 non-IT staff do not need occ.
 
 ## Rules
-- Who may manage rooms: admins and the kdvn_visitors reception group (appconfig
-  kdvn_visitors/reception_group), checked in Service/Access.php for both the top-bar page
+- Who may manage rooms: admins and the kdvn_visitors reception groups (appconfig
+  kdvn_visitors/reception_group and office_groups, any of them), checked in Service/Access.php for both the top-bar page
   (PageController, entry added in Application::boot) and every ApiController call.
   The API methods are #[NoAdminRequired]; never drop the Access check. The old admin settings
   page stays for admins, but delegating it to a group no longer grants API access.

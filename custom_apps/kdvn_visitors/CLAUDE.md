@@ -19,8 +19,17 @@ alerts, passes created from Calendar, and public meeting-room displays.
   oc_appconfig.
 - Talk: TalkService calls the REST API at the public URL as a reception user (appconfig
   talk_user, talk_password encrypted, optional talk_base_url such as http://localhost).
-  Hosts get 1:1 messages; walk-ins and problems go to the group conversation
-  "Reception desk". Fallback: Nextcloud notification.
+  talk_user is a bot account (never a real person; hidden from the staff search).
+  Hosts get 1:1 messages; arrivals, walk-ins and problems also go to the "Reception desk" group
+  conversation of the visit's office (one per reception group, token by group in
+  reception_room_tokens). Fallback: Nextcloud notification.
+- Offices: an office = a calresources building. Every visit has building_id (null = unknown, open
+  to every reception). Reception group per office: appconfig office_groups (building id => group),
+  fallback reception_group. Access check is VisitService::canHandle(); never list or act on visits
+  without it. Office comes from the room (CalendarSync, invite with room), the tablet key
+  (kiosk_keys, per building; legacy kiosk_key_hash = no office) or the invite form's officeId.
+  office_staff_groups only preselects the office in the invite form. kdvn_rooms Access.php reads
+  reception_group and office_groups.
 - Email uses Nextcloud's SMTP (IMailer). Calendar's invitation email and the visitor pass
   email are separate messages. The pass email is sent by queued job SendInvitationJob via
   the host crontab (cron.php every 5 minutes).

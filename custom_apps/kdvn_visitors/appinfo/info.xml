@@ -5,7 +5,7 @@
 	<name>Visitors</name>
 	<summary>Invite guests, give them a QR pass, and let them check in at a reception tablet</summary>
 	<description>Staff invite guests, guests receive a QR visitor pass by email, and check in at a reception tablet. The host gets a Talk message when the guest arrives.</description>
-	<version>0.5.2</version>
+	<version>0.6.0</version>
 	<licence>agpl</licence>
 	<author>KDVN IT</author>
 	<namespace>KdvnVisitors</namespace>

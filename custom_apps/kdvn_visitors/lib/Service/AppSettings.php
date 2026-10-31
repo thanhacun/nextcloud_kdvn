@@ -55,6 +55,73 @@ class AppSettings {
 		return $this->config->getValueString(self::APP, 'reception_group', '');
 	}
 
+	/**
+	 * Reception group of each office: building id => group id. Offices not listed use the default
+	 * group above. @return array<int, string>
+	 */
+	public function officeGroups(): array {
+		$raw = json_decode($this->config->getValueString(self::APP, 'office_groups', '{}'), true);
+		$out = [];
+		foreach (is_array($raw) ? $raw : [] as $buildingId => $gid) {
+			if (is_string($gid) && $gid !== '') {
+				$out[(int)$buildingId] = $gid;
+			}
+		}
+		return $out;
+	}
+
+	/** The reception group that serves an office: its own, else the default group. '' = nobody but admins. */
+	public function receptionGroupFor(?int $buildingId): string {
+		return ($buildingId !== null ? ($this->officeGroups()[$buildingId] ?? '') : '') ?: $this->receptionGroup();
+	}
+
+	/** Every group that counts as reception somewhere (the default one and each office's). @return string[] */
+	public function allReceptionGroups(): array {
+		return array_values(array_unique(array_filter([$this->receptionGroup(), ...array_values($this->officeGroups())])));
+	}
+
+	public function setOfficeGroups(array $map): void {
+		$clean = [];
+		foreach ($map as $buildingId => $gid) {
+			if (is_string($gid) && $gid !== '') {
+				$clean[(int)$buildingId] = $gid;
+			}
+		}
+		$this->config->setValueString(self::APP, 'office_groups', json_encode($clean, JSON_FORCE_OBJECT));
+	}
+
+	/** Staff group of each office (the people working there): building id => group id. Only used to preselect the office in the invite form. @return array<int, string> */
+	public function officeStaffGroups(): array {
+		$raw = json_decode($this->config->getValueString(self::APP, 'office_staff_groups', '{}'), true);
+		$out = [];
+		foreach (is_array($raw) ? $raw : [] as $buildingId => $gid) {
+			if (is_string($gid) && $gid !== '') {
+				$out[(int)$buildingId] = $gid;
+			}
+		}
+		return $out;
+	}
+
+	public function setOfficeStaffGroups(array $map): void {
+		$clean = [];
+		foreach ($map as $buildingId => $gid) {
+			if (is_string($gid) && $gid !== '') {
+				$clean[(int)$buildingId] = $gid;
+			}
+		}
+		$this->config->setValueString(self::APP, 'office_staff_groups', json_encode($clean, JSON_FORCE_OBJECT));
+	}
+
+	/** Users in these groups never show up in the staff search (service accounts, bots, ...). @return string[] */
+	public function staffHiddenGroups(): array {
+		$raw = json_decode($this->config->getValueString(self::APP, 'staff_hidden_groups', '[]'), true);
+		return is_array($raw) ? array_values(array_filter($raw, 'is_string')) : [];
+	}
+
+	public function setStaffHiddenGroups(array $gids): void {
+		$this->config->setValueString(self::APP, 'staff_hidden_groups', json_encode(array_values(array_unique(array_filter($gids, 'is_string')))));
+	}
+
 	public function retentionDays(): int {
 		return max(7, $this->config->getValueInt(self::APP, 'retention_days', 90));
 	}
@@ -71,14 +138,19 @@ class AppSettings {
 		return $this->officeTimezone()->getName();
 	}
 
-	/** Token of the "Reception desk" Talk conversation, created on first use. */
-	public function receptionRoomToken(): string {
-		return $this->config->getValueString(self::APP, 'reception_room_token', '');
+	/** Token of the "Reception desk" Talk conversation of a reception group, created on first use. */
+	public function receptionRoomToken(string $gid): string {
+		$tokens = json_decode($this->config->getValueString(self::APP, 'reception_room_tokens', '{}'), true);
+		if (is_array($tokens) && isset($tokens[$gid]) && is_string($tokens[$gid])) {
+			return $tokens[$gid];
+		}
+		// Before 0.6 there was one conversation, for the one reception group.
+		return $gid === $this->receptionGroup() ? $this->config->getValueString(self::APP, 'reception_room_token', '') : '';
 	}
 
 	public function setReceptionGroup(string $gid): void {
 		if ($gid !== $this->receptionGroup()) {
-			$this->setReceptionRoomToken(''); // a new group needs a new conversation
+			$this->config->setValueString(self::APP, 'reception_room_token', ''); // the old conversation was for the old group
 		}
 		$this->config->setValueString(self::APP, 'reception_group', $gid);
 	}
@@ -92,8 +164,11 @@ class AppSettings {
 		$this->config->setValueString(self::APP, 'office_timezone', $name);
 	}
 
-	public function setReceptionRoomToken(string $token): void {
-		$this->config->setValueString(self::APP, 'reception_room_token', $token);
+	public function setReceptionRoomToken(string $gid, string $token): void {
+		$tokens = json_decode($this->config->getValueString(self::APP, 'reception_room_tokens', '{}'), true);
+		$tokens = is_array($tokens) ? $tokens : [];
+		$tokens[$gid] = $token;
+		$this->config->setValueString(self::APP, 'reception_room_tokens', json_encode($tokens, JSON_FORCE_OBJECT));
 	}
 
 	// ---------------------------------------------- calendar sync and display
@@ -320,12 +395,38 @@ class AppSettings {
 		$this->config->setValueString(self::APP, 'host_name_privacy', $mode);
 	}
 
-	public function kioskKeyHash(): string {
-		return $this->config->getValueString(self::APP, 'kiosk_key_hash', '');
+	/**
+	 * Tablet keys: one per office (building id => [hash, createdAt]). The key from before 0.6 has
+	 * no office: it counts as "unassigned" (office unknown, default reception group).
+	 * @return array<string, array{hash: string, at: int}> keyed by building id, '' = unassigned
+	 */
+	public function kioskKeys(): array {
+		$out = [];
+		$legacy = $this->config->getValueString(self::APP, 'kiosk_key_hash', '');
+		if ($legacy !== '') {
+			$out[''] = ['hash' => $legacy, 'at' => $this->config->getValueInt(self::APP, 'kiosk_key_created_at', 0)];
+		}
+		$raw = json_decode($this->config->getValueString(self::APP, 'kiosk_keys', '{}'), true);
+		foreach (is_array($raw) ? $raw : [] as $buildingId => $entry) {
+			if (is_array($entry) && is_string($entry['hash'] ?? null) && $entry['hash'] !== '') {
+				$out[(string)(int)$buildingId] = ['hash' => $entry['hash'], 'at' => (int)($entry['at'] ?? 0)];
+			}
+		}
+		return $out;
 	}
 
-	public function kioskKeyCreatedAt(): int {
-		return $this->config->getValueInt(self::APP, 'kiosk_key_created_at', 0);
+	/**
+	 * Which office a tablet key belongs to. null = key not valid.
+	 * @return array{building: ?int}|null
+	 */
+	public function kioskOffice(string $key): ?array {
+		$hash = hash('sha256', $key);
+		foreach ($this->kioskKeys() as $buildingId => $entry) {
+			if (hash_equals($entry['hash'], $hash)) {
+				return ['building' => $buildingId === '' ? null : (int)$buildingId];
+			}
+		}
+		return null;
 	}
 
 	public function setCompanyName(string $value): void {
@@ -345,8 +446,11 @@ class AppSettings {
 		$this->config->setValueString(self::APP, 'talk_password', $this->crypto->encrypt($plain), false, true);
 	}
 
-	public function setKioskKeyHash(string $hash): void {
-		$this->config->setValueString(self::APP, 'kiosk_key_hash', $hash, false, true);
-		$this->config->setValueInt(self::APP, 'kiosk_key_created_at', time());
+	/** Replaces the tablet key of an office (the old link stops working). */
+	public function setKioskKeyHash(int $buildingId, string $hash): void {
+		$raw = json_decode($this->config->getValueString(self::APP, 'kiosk_keys', '{}'), true);
+		$raw = is_array($raw) ? $raw : [];
+		$raw[(string)$buildingId] = ['hash' => $hash, 'at' => time()];
+		$this->config->setValueString(self::APP, 'kiosk_keys', json_encode($raw, JSON_FORCE_OBJECT), false, true);
 	}
 }

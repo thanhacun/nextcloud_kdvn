@@ -41,6 +41,17 @@
 - Retention and consent wording with HR/legal. IT contact in the reception plan.
 - Test plan Phase 1 not run yet (Thanh is starting careful testing).
 
+## In git, not deployed: offices (kdvn_visitors 0.6.0, kdvn_rooms 0.2.1)
+- Each visit has an office (building). Per-office reception group, Talk "Reception desk" conversation
+  and tablet link; reception sees only its own office's guests; anyone can invite to any office
+  (new Office field). Reception desk also gets a Talk message when an invited guest arrives.
+- The Talk sender is now a bot account (hidden from the host search); more service accounts can be
+  hidden by group. The 0.5.2 "reception account is searchable" behaviour is gone.
+- Needs a DB migration (new column building_id): fresh backup first, deploy both apps together,
+  then settings as in docs/deploy-apps.md step 6. Only PHP lint and JS syntax were checked
+  (no PHP/Nextcloud on the dev machine); nothing tested live yet.
+- To decide at deploy: create the Head Office tablet link (the old link keeps working as "no office").
+
 ## Hardware plan
 - Reception tablet: iPad 10th generation or newer (or Galaxy Tab A9+ with Fully Kiosk).
 - 15-inch screen as plain monitor plus Raspberry Pi 5 2 GB running Chromium kiosk with

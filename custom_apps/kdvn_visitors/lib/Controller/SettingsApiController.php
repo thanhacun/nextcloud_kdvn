@@ -56,11 +56,19 @@ class SettingsApiController extends Controller {
 		?array $receptionBuildings = null,
 		?string $purposes = null,
 		string $hostNamePrivacy = 'full',
+		?array $officeGroups = null,
+		?array $officeStaffGroups = null,
+		?array $staffHiddenGroups = null,
 	): DataResponse {
 		$companyName = trim($companyName);
 		$talkUser = trim($talkUser);
 		if ($receptionGroup !== '' && !$this->groupManager->groupExists($receptionGroup)) {
 			return new DataResponse(['message' => "There is no group \"$receptionGroup\"."], Http::STATUS_BAD_REQUEST);
+		}
+		foreach (array_merge($officeGroups ?? [], $officeStaffGroups ?? [], $staffHiddenGroups ?? []) as $gid) {
+			if ($gid !== '' && !$this->groupManager->groupExists((string)$gid)) {
+				return new DataResponse(['message' => "There is no group \"$gid\"."], Http::STATUS_BAD_REQUEST);
+			}
 		}
 		if (!in_array($officeTimezone, \DateTimeZone::listIdentifiers(), true)) {
 			return new DataResponse(['message' => 'Unknown time zone. Use a name like Asia/Ho_Chi_Minh.'], Http::STATUS_BAD_REQUEST);
@@ -88,6 +96,15 @@ class SettingsApiController extends Controller {
 			if ($purposes !== null) {
 				$this->settings->setPurposesText($purposes);
 			}
+			if ($officeGroups !== null) {
+				$this->settings->setOfficeGroups($officeGroups);
+			}
+			if ($officeStaffGroups !== null) {
+				$this->settings->setOfficeStaffGroups($officeStaffGroups);
+			}
+			if ($staffHiddenGroups !== null) {
+				$this->settings->setStaffHiddenGroups($staffHiddenGroups);
+			}
 			if ($receptionBuildings !== null) {
 				$this->settings->setReceptionBuildings($receptionBuildings);
 			}
@@ -100,10 +117,17 @@ class SettingsApiController extends Controller {
 		return new DataResponse(['ok' => true, 'hasTalkPassword' => $this->settings->hasTalkPassword()]);
 	}
 
-	/** Creates a new tablet link. The old one stops working. Only the hash is stored, so this is the only time it is shown. */
-	public function newKioskLink(): DataResponse {
+	/**
+	 * Creates a new tablet link for an office. The office's old link stops working. Only the hash is
+	 * stored, so this is the only time it is shown.
+	 */
+	public function newKioskLink(int $buildingId = 0): DataResponse {
+		$known = array_column($this->rooms->buildings(), 'id');
+		if (!in_array($buildingId, $known, true)) {
+			return new DataResponse(['message' => 'Unknown office.'], Http::STATUS_BAD_REQUEST);
+		}
 		$key = $this->random->generate(48, ISecureRandom::CHAR_ALPHANUMERIC);
-		$this->settings->setKioskKeyHash(hash('sha256', $key));
+		$this->settings->setKioskKeyHash($buildingId, hash('sha256', $key));
 		return new DataResponse([
 			'url' => $this->urlGenerator->linkToRouteAbsolute('kdvn_visitors.kiosk.show', ['key' => $key]),
 		]);
@@ -136,12 +160,19 @@ class SettingsApiController extends Controller {
 		return new DataResponse(['logoUrl' => $this->branding->logoUrl(true)]);
 	}
 
-	/** Posts a test message in the "Reception desk" conversation (creates it if needed). */
+	/** Posts a test message in every "Reception desk" conversation (one per reception group; creates them if needed). */
 	public function testReception(): DataResponse {
-		$error = $this->talk->sendToReception('✅ Test from the Visitors app: walk-in guests and check-in problems will appear in this conversation.');
-		return $error === null
-			? new DataResponse(['ok' => true])
-			: new DataResponse(['message' => $error], Http::STATUS_BAD_GATEWAY);
+		$groups = $this->settings->allReceptionGroups();
+		if ($groups === []) {
+			return new DataResponse(['message' => 'No reception group is set.'], Http::STATUS_BAD_REQUEST);
+		}
+		foreach ($groups as $gid) {
+			$error = $this->talk->sendToGroupDesk($gid, '✅ Test from the Visitors app: walk-in guests, arrivals and check-in problems of your office will appear in this conversation.');
+			if ($error !== null) {
+				return new DataResponse(['message' => "Group \"$gid\": $error"], Http::STATUS_BAD_GATEWAY);
+			}
+		}
+		return new DataResponse(['ok' => true, 'groups' => count($groups)]);
 	}
 
 	/** Sends a test Talk message to the admin who clicks the button. */

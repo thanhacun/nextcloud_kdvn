@@ -66,6 +66,7 @@ class CalendarSync {
 		$receptionRooms = array_values(array_filter($bookedRooms,
 			fn ($a) => $this->settings->hasReception($roomsByEmail[$a['email']]['buildingId'])));
 		$roomName = $receptionRooms ? $roomsByEmail[$receptionRooms[0]['email']]['label'] : null;
+		$buildingId = $receptionRooms ? $roomsByEmail[$receptionRooms[0]['email']]['buildingId'] : null; // the room's office
 		$elsewhere = $bookedRooms !== [] && $receptionRooms === [];
 
 		$guests = [];
@@ -84,7 +85,7 @@ class CalendarSync {
 				// Created in Visitors (e.g. "Book the room in Calendar"): the guest isn't an attendee of
 				// that event, so only follow time and room changes; cancelling stays with the host.
 				if ($visit['status'] === 'invited') {
-					$this->store->update($visit['id'], array_diff_key($this->eventValues($event, $roomName ?? $visit['room_name']), ['purpose' => 1]));
+					$this->store->update($visit['id'], array_diff_key($this->eventValues($event, $roomName ?? $visit['room_name'], $roomName !== null ? $buildingId : ($visit['building_id'] ?? null)), ['purpose' => 1]));
 				}
 				unset($guests[$email]);
 				continue;
@@ -95,7 +96,7 @@ class CalendarSync {
 				}
 				continue;
 			}
-			$changes = $this->eventValues($event, $roomName);
+			$changes = $this->eventValues($event, $roomName, $buildingId);
 			if ($visit['status'] === 'cancelled' && $visit['source'] === 'calendar') {
 				$changes['status'] = 'invited'; // guest was added back to the meeting
 			}
@@ -110,10 +111,10 @@ class CalendarSync {
 			$manual = $this->store->findManualMatch($owner, $email, $event['start']);
 			if ($manual !== null) {
 				// The host already invited this guest by hand: link it, don't send a second pass.
-				$this->store->update($manual['id'], ['event_uid' => $event['uid']] + $this->eventValues($event, $roomName ?? $manual['room_name']));
+				$this->store->update($manual['id'], ['event_uid' => $event['uid']] + $this->eventValues($event, $roomName ?? $manual['room_name'], $roomName !== null ? $buildingId : ($manual['building_id'] ?? null)));
 				continue;
 			}
-			$visitId = $this->visits->createFromCalendar($owner, $guest, $event, $roomName);
+			$visitId = $this->visits->createFromCalendar($owner, $guest, $event, $roomName, $buildingId);
 			// The email is sent by the next cron run (within ~5 minutes), so saving the event stays fast.
 			$this->jobList->add(SendInvitationJob::class, ['visitId' => $visitId]);
 		}
@@ -137,8 +138,9 @@ class CalendarSync {
 
 	// -------------------------------------------------------------- helpers
 
-	private function eventValues(array $event, ?string $roomName): array {
+	private function eventValues(array $event, ?string $roomName, ?int $buildingId): array {
 		return [
+			'building_id' => $buildingId,
 			'start_at' => $event['start'],
 			'end_at' => $event['end'],
 			'room_name' => $roomName,

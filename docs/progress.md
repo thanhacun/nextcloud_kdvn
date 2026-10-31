@@ -15,7 +15,7 @@
   0.4.6, both declaring Nextcloud 30 to 34. Whether the 0.4.1 to 0.4.6 features work
   (readable room names, auto check-out, newest-first lists, readable errors, reception-office
   setting, display layouts) is not tested yet: see Phase 1 tests.
-- Apps in git, deployed to production (Thanh confirmed 2026-10-31):
+- Apps as of 0.5.2 / 0.2.0 (superseded by 0.6.0 / 0.2.1 below, deployed 2026-10-31):
   - kdvn_rooms 0.2.0: admins and the kdvn_visitors reception group can manage rooms (top-bar
     page plus every API call, via Service/Access.php). Delegating the old admin settings page
     to a group no longer grants API access. Needs the reception_group setting of kdvn_visitors.
@@ -41,16 +41,18 @@
 - Retention and consent wording with HR/legal. IT contact in the reception plan.
 - Test plan Phase 1 not run yet (Thanh is starting careful testing).
 
-## In git, not deployed: offices (kdvn_visitors 0.6.0, kdvn_rooms 0.2.1)
+## Offices (kdvn_visitors 0.6.0, kdvn_rooms 0.2.1): deployed 2026-10-31
+- Deployed to production on 2026-10-31 (backup.sh at 11:06, files copied with docker cp, `occ upgrade`
+  successful, migration added building_id; 16 of 31 old visits got an office from their room).
+  Thanh's first checks: "so far so good". Full Phase 1 and cross-office tests still to do.
 - Each visit has an office (building). Per-office reception group, Talk "Reception desk" conversation
   and tablet link; reception sees only its own office's guests; anyone can invite to any office
   (new Office field). Reception desk also gets a Talk message when an invited guest arrives.
 - The Talk sender is now a bot account (hidden from the host search); more service accounts can be
   hidden by group. The 0.5.2 "reception account is searchable" behaviour is gone.
-- Needs a DB migration (new column building_id): fresh backup first, deploy both apps together,
-  then settings as in docs/deploy-apps.md step 6. Only PHP lint and JS syntax were checked
-  (no PHP/Nextcloud on the dev machine); nothing tested live yet.
-- To decide at deploy: create the Head Office tablet link (the old link keeps working as "no office").
+- Settings to finish in Administration settings > Visitors (see docs/deploy-apps.md step 6): office
+  reception groups, hidden groups, a tablet link per office (the old link works as "no office").
+- Not tested by Claude on the live server; the 15 old visits without an office are open to every reception.
 
 ## Hardware plan
 - Reception tablet: iPad 10th generation or newer (or Galaxy Tab A9+ with Fully Kiosk).
@@ -59,7 +61,7 @@
 
 ## Next
 - Re-run the quick re-test of the apps on 34 (docs/deploy-apps.md step 6) and note the result.
-- kdvn_visitors 0.5.2 and kdvn_rooms 0.2.0 are deployed: run Phase 1 tests, set reception offices, then a go-live dry run on site before the office
+- kdvn_visitors 0.6.0 and kdvn_rooms 0.2.1 are deployed: run Phase 1 tests, set reception offices, then a go-live dry run on site before the office
   move.
 
 ## Before upgrading to Nextcloud 35: PHP `intl` and Visitors name search

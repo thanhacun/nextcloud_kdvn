@@ -45,51 +45,83 @@
 - Test plan Phase 1 not run yet (Thanh is starting careful testing).
 
 ## SMB external storage broken after the 34 image (found 2026-11-13)
-- Symptom: after the upgrade every SMB/CIFS external storage fails (`occ files_external:verify <id>`
-  prints `Bad SMB2 (sign_algo_id=N) signature for message`, with an all-zero signature in the first
+Status 2026-11-13: workaround applied on the server (PHP smbclient extension off). /vtrm works again.
+/scan-ho (mount 19) still fails and waits for a decision (see "Open decision" below).
+
+- Symptom: after the upgrade every SMB/CIFS external storage failed (`occ files_external:verify <id>`
+  printed `Bad SMB2 (sign_algo_id=N) signature for message`, with an all-zero signature in the first
   dump). The edit form in the web UI has no Save button; the blue "Edit" button at the bottom is it.
   Everything can be done with `occ files_external:*` (list, config, option, applicable, verify,
   create, delete, export, import).
 - Cause found: the image is now Debian 13 with Samba 4.22.11 (libsmbclient, smbclient) and PECL
   `smbclient` 1.2.0dev. Nextcloud's SMB library (icewind/smb, `Native/NativeState.php` line 111) always
   sets `SMBCLIENT_OPT_ENCRYPT_LEVEL` to `SMBCLIENT_ENCRYPTLEVEL_REQUEST`. A small PHP test against
-  one share gave: encrypt NONE works, REQUEST fails, REQUIRE fails (errno 13). The `smbclient`
+  192.168.100.4 gave: encrypt NONE works, REQUEST fails, REQUIRE fails (errno 13). The `smbclient`
   command line works on the same share with the same login. So it is not the servers, the
   credentials, the mount config, nor the signing algorithm.
 - Dead ends (do not repeat): re-entering the password, deleting and recreating the mount,
-  `client smb3 signing algorithms = AES-128-CMAC HMAC-SHA256` in a mounted /etc/samba/smb.conf (the
-  error then showed sign_algo_id=1 but still failed), Samba debug log level 3 (nothing useful). An
-  smb.conf setting cannot override the encryption level that the extension sets through its API.
-- Workaround (prepared in docker-compose.override.yml, applying it recreates nextcloud-app: backup
-  first, short downtime for everyone): bind-mount an empty file over
-  `/usr/local/etc/php/conf.d/docker-php-ext-smbclient.ini`. Without the PHP extension Nextcloud uses the
-  `smbclient` binary, which asks for no encryption (`Wrapped/Server.php` only passes min/max protocol).
-  Slower, and it affects every SMB mount. Remove the line when the extension works again.
-  Status: TODO confirm whether it is applied on the server (check with `docker compose config | grep smbclient`).
-- SMB mounts (ids from `occ files_external:list`): 19 /scan-ho (Thanh's own test mount, keep), 3 /vtrm,
-  6 /hcmc-tamada, 17 /tamada-it. 15 was a duplicate of 19 and is deleted. 6 and 17 (HCMC server)
-  return an empty message instead of the signature error: not investigated, may have other causes.
-  Mount 4 /kdvn_db is Local storage, not SMB, and did not work before the upgrade either: ignore.
-- Re-test on the 35 image (and whenever the Samba version changes), password typed at the prompt,
-  nothing stored. Needs `read -rs` in bash, not sh:
-  ```
-  read -rs -p "Password: " SMBP; echo; export SMBP
-  docker exec -i -u www-data -e SMBP nextcloud-app php 2>&1 <<'EOF2'
-  <?php
-  foreach (['NONE'=>SMBCLIENT_ENCRYPTLEVEL_NONE,'REQUEST'=>SMBCLIENT_ENCRYPTLEVEL_REQUEST] as $n=>$l) {
-      $s = smbclient_state_new();
-      smbclient_option_set($s, SMBCLIENT_OPT_AUTO_ANONYMOUS_LOGIN, false);
-      smbclient_option_set($s, SMBCLIENT_OPT_ENCRYPT_LEVEL, $l);
-      smbclient_state_init($s, 'WORKGROUP', '<user>', getenv('SMBP'));
-      $d = @smbclient_opendir($s, 'smb://<host>/<share>');
-      echo "encrypt=$n => ".($d ? 'OK' : 'FAIL errno='.smbclient_state_errno($s)).PHP_EOL;
-  }
-  EOF2
-  unset SMBP
-  ```
-  If REQUEST works on the new image, remove the /dev/null line from the override. If not, fix it in
-  the Dockerfile (nextcloud-app): a different Samba or `smbclient` extension version, or the
-  upstream fix, rehearsed on the test server first. Do not edit vendored PHP inside the container.
+  `client smb3 signing algorithms = AES-128-CMAC HMAC-SHA256` in a mounted /etc/samba/smb.conf (error
+  then showed sign_algo_id=1 but still failed), Samba debug log level 3 (nothing useful), capping the
+  protocol (PHP test with encryption REQUEST and max protocol SMB3_02, SMB3_00 and SMB2_10: all fail,
+  so a `client max protocol` in smb.conf cannot fix it). An smb.conf setting cannot override the
+  encryption level that the extension sets through its API.
+- Workaround, applied 2026-11-13 (docker-compose.override.yml, commit 35155d2): an empty file is
+  bind-mounted over `/usr/local/etc/php/conf.d/docker-php-ext-smbclient.ini`. Without the PHP extension
+  Nextcloud uses the `smbclient` binary, which asks for no encryption (`Wrapped/Server.php` only passes
+  min/max protocol). Check: `php -m | grep -i smbclient` prints nothing, `which smbclient` prints
+  /usr/bin/smbclient. The Settings page now shows "The php-smbclient library provides improved
+  compatibility and performance": expected. Slower, and it affects every SMB mount. Remove the line when
+  the extension works again.
+- Results after the workaround: /vtrm (mount 3) is green in the UI. /scan-ho (mount 19) fails:
+  `verify` says `NT_STATUS_OBJECT_NAME_INVALID for /` and the Files app shows "External mount error".
+  Reason: the command-line backend cannot stat the root of that Windows share (`stat('')` and `stat('/')`
+  fail; listing the share works, 29 entries). Plain `smbclient -c 'allinfo ...'` on the root gives
+  `NT_STATUS_OBJECT_NAME_NOT_FOUND getting alt name for \` or INVALID for `.`, so no other spelling
+  helps. The share root is a flat scan folder (PDFs only, no subfolders), so a Remote subfolder on the
+  same share is not possible.
+- SMB mounts (ids from `occ files_external:list`): 19 /scan-ho (Thanh's own test mount, keep), 3 /vtrm
+  (works now), 6 /hcmc-tamada and 17 /tamada-it (HCMC server, skipped by Thanh, not re-checked; they
+  returned an empty message before the workaround). 15 was a duplicate of 19 and is deleted. Mount 4
+  /kdvn_db is Local storage, not SMB, and did not work before the upgrade either: ignore.
+
+### Open decision: /scan-ho (waiting for answers from the Windows PC at 192.168.100.4)
+Questions to ask: (1) the local path of the "Admin" share on that PC (for example D:\Scan); (2) whether the
+account used (tqhanh) is an administrator on that PC (needed for C$).
+- A. Windows side: share the parent folder (or use C$ if admin), then `occ files_external:config 19 share
+  <share>` and `... root <path to the scan folder>`. The mount root becomes a normal subfolder, so no share
+  root is stat'd. No downtime, reversible. Not proven yet: first test that `stat` of a real subfolder works
+  through the command-line backend (read-only PHP script with `Icewind\SMB\ServerFactory`, as used on
+  2026-11-13). With C$ Nextcloud gets admin access to that drive (Remote subfolder limits what is shown).
+- D. Host mount: mount the share on the Docker host with the kernel CIFS client (it handles encryption)
+  and bind it into nextcloud-app as local storage, like /kdvn_db. Host-level change plus a volume line in the
+  override: recreate of nextcloud-app (backup, approval, downtime).
+- B. Fix the image on the 35 upgrade: try another PECL `smbclient` version (1.2.0dev may be at fault, not
+  sure) or another Samba version, rehearsed on the test server (restore.sh) first, then remove the
+  /dev/null line. Needs backup, approval and downtime for everyone.
+
+### Re-test on the 35 image (and whenever the Samba version changes)
+Password typed at the prompt, nothing stored. Needs `read -rs` in bash, not sh. The extension is off in the
+container while the workaround is in the override, so load it for the test with `-d extension=smbclient.so`
+(or remove the /dev/null line first):
+```
+read -rs -p "Password: " SMBP; echo; export SMBP
+docker exec -i -u www-data -e SMBP nextcloud-app php -d extension=smbclient.so 2>&1 <<'EOF2'
+<?php
+foreach (['NONE'=>SMBCLIENT_ENCRYPTLEVEL_NONE,'REQUEST'=>SMBCLIENT_ENCRYPTLEVEL_REQUEST] as $n=>$l) {
+    $s = smbclient_state_new();
+    smbclient_option_set($s, SMBCLIENT_OPT_AUTO_ANONYMOUS_LOGIN, false);
+    smbclient_option_set($s, SMBCLIENT_OPT_ENCRYPT_LEVEL, $l);
+    smbclient_state_init($s, 'WORKGROUP', '<user>', getenv('SMBP'));
+    $d = @smbclient_opendir($s, 'smb://<host>/<share>');
+    echo "encrypt=$n => ".($d ? 'OK' : 'FAIL errno='.smbclient_state_errno($s)).PHP_EOL;
+}
+EOF2
+unset SMBP
+```
+If REQUEST works on the new image, remove the /dev/null line from the override and verify every SMB mount.
+If not, fix it in the Dockerfile (nextcloud-app), rehearsed on the test server first. Do not edit vendored
+PHP inside the container. To read the real error behind an empty `verify` message, the log is
+/mnt/ncdata/nextcloud.log (`occ log:file`); `/var/www/html/data/nextcloud.log` is an old file.
 
 ## Offices (kdvn_visitors 0.6.0, kdvn_rooms 0.2.1): deployed 2026-10-31
 - Deployed to production on 2026-10-31 (backup.sh at 11:06, files copied with docker cp, `occ upgrade`
@@ -110,8 +142,8 @@
   `layout=condensed`.
 
 ## Next
-- SMB external storage: apply or confirm the workaround above (backup, recreate), verify mount 19, then
-  re-test on the 35 image.
+- SMB external storage: workaround applied; /scan-ho waits for the answers from the Windows PC (see "Open
+  decision" in the SMB section), then re-test on the 35 image.
 - Re-run the quick re-test of the apps on 34 (docs/deploy-apps.md step 6) and note the result.
 - kdvn_visitors 0.6.0 and kdvn_rooms 0.2.1 are deployed: run Phase 1 tests, set reception offices, then a go-live dry run on site before the office
   move.

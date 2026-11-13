@@ -41,6 +41,7 @@ content on the server, so apps installed from the app store land there too.
   server built with restore.sh. Nextcloud cannot downgrade.
 - Never recreate nextcloud-app (`docker compose up -d app`, image change) without a fresh
   backup. If the custom image (Dockerfile/nextcloud-app) is not in use, hand-installed
-  packages (smbclient, ffmpeg, nano, ping) are lost. TODO: confirm whether it is in use.
+  packages (smbclient, ffmpeg, nano, ping) are lost. The custom image is in use (override builds
+  kdvn/nextcloud-app:34 from Dockerfile/nextcloud-app/Dockerfile).
 - The calresources_* tables belong to calendar_resource_management: never change their
   schema. Re-test after any update of that app or of Nextcloud.

@@ -1,0 +1,26 @@
+/* Sensor display. Dark by default (like the room display); &theme=light for bright lobbies.
+   Status is shown by a word and a colored edge, never by color alone. */
+:root {
+	--ks-bg: #0e110e; --ks-panel: #181c18; --ks-ink: #f2f4f2; --ks-muted: #a3aba3;
+	--ks-good: #4cc26b; --ks-warning: #f0b429; --ks-bad: #ff6b5e; --ks-na: #6b736b;
+}
+:root[data-theme="light"] {
+	--ks-bg: #f2f3f1; --ks-panel: #ffffff; --ks-ink: #141614; --ks-muted: #545a54;
+	--ks-good: #1f7a3a; --ks-warning: #8f5600; --ks-bad: #b3261e; --ks-na: #6b736b;
+}
+html, body#body-public.layout-base {
+	height: 100%; margin: 0; background: var(--ks-bg) !important; color: var(--ks-ink);
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Noto Sans", sans-serif;
+	overflow: hidden;
+}
+#ks-display { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; gap: 3vh; padding: 3vh 3vw; box-sizing: border-box; }
+.ks-clock { font-size: 3.2vh; color: var(--ks-muted); text-align: end; }
+.ks-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2vw; }
+.ks-tile { background: var(--ks-panel); border-inline-start: 1.2vh solid var(--ks-na); border-radius: 12px; padding: 3vh 2vw; display: flex; flex-direction: column; justify-content: center; gap: 1.5vh; }
+.ks-good { border-color: var(--ks-good); } .ks-warning { border-color: var(--ks-warning); } .ks-bad { border-color: var(--ks-bad); }
+.ks-name { font-size: 3vh; color: var(--ks-muted); }
+.ks-value { font-size: 12vh; font-weight: 700; line-height: 1; }
+.ks-unit { font-size: 4vh; font-weight: 400; color: var(--ks-muted); }
+.ks-word { font-size: 4vh; font-weight: 600; }
+.ks-good .ks-word { color: var(--ks-good); } .ks-warning .ks-word { color: var(--ks-warning); } .ks-bad .ks-word { color: var(--ks-bad); } .ks-na .ks-word { color: var(--ks-na); }
+.ks-foot { font-size: 2.4vh; color: var(--ks-muted); }

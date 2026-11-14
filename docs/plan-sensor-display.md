@@ -1,6 +1,6 @@
 # Plan: indoor air sensors (temperature, humidity, CO2) on the room display
 
-Status: design only, nothing built. Written to be cheap to pick up later.
+Status: kdvn_sensors 0.1.0 started (custom_apps/kdvn_sensors): mock provider, stand-alone display page, admin settings. Not deployed, not tested on a server. Supplier provider, weather fallback and room-display strip still open. Written to be cheap to pick up later.
 Mockup: the room display with a sensor strip on top. The solar block is dropped.
 
 ## 1. What the supplier diagram says
@@ -20,20 +20,7 @@ It is a pull model: the data is only as fresh as the service's last read of the 
 Windows SQL means the service is on a Windows host. SQL is the supplier's storage; we should
 not need to touch it.
 
-## 2. Questions for the supplier (send before building)
-
-1. API base URL, port, HTTP or HTTPS, and is it reachable from the Nextcloud server VLAN?
-2. Endpoint(s) and a sample JSON/XML response for temperature, humidity, CO2.
-3. How the secret key is sent (header name, query param, or signed token).
-4. Point/object names: how do we tell room A from room B? Is there one sensor per room or
-   one per floor?
-5. Units (degC, % RH, ppm), and the refresh interval of file (2).
-6. Does the response carry a timestamp or a quality/offline flag?
-7. Rate limit, and whether the service allows several clients polling.
-8. Is the "Base Station" or "HMI Station" the thing that exposes this API, or a separate
-   service? (Open point from the supplier.)
-
-## 3. Design
+## 2. Design
 
 ### Data flow (browser never sees the secret)
 
@@ -73,7 +60,7 @@ adjust with facilities).
 - Embedded: the existing room display fetches the same JSON endpoint and renders the strip
   at the top (the red box in the mockup). Controlled by a setting "show sensor strip".
 
-## 4. Where to build it
+## 3. Where to build it
 
 Recommended: a **new small app `kdvn_sensors`** (plain PHP + vanilla JS, as the others), not
 inside kdvn_visitors. Reasons: it has its own secret and settings, and it can be deployed
@@ -90,18 +77,18 @@ and rolled back without touching the visitor flow.
 
 Route parameter rule: never name a URL parameter `action`, `caller` or `_route`.
 
-## 5. Build steps (for a later, cheap session)
+## 4. Build steps (for a later, cheap session)
 
-1. Get the supplier answers (section 2). Without a sample response the parser is a guess.
-2. Create kdvn_sensors with a **mock provider** that returns fixed values, so the display
+1. Create kdvn_sensors with a **mock provider** that returns fixed values, so the display
    can be built and tested without the supplier.
-3. Add the weather fallback and NA handling.
-4. Add the supplier provider once a sample response exists.
-5. Embed the strip in the room display.
-6. Deploy per docs/deploy-apps.md. Needs no restart, no maintenance mode, no user
+2. Add the weather fallback and NA handling.
+3. Add the supplier provider once the API details are known (URL, how the key is sent,
+   point names, units, sample response). Until then the parser is a guess.
+4. Embed the strip in the room display.
+5. Deploy per docs/deploy-apps.md. Needs no restart, no maintenance mode, no user
    downtime: enabling an app is `occ app:enable kdvn_sensors` (approval first).
 
-## 6. Risks
+## 5. Risks
 
 - Supplier API may be HTTP only and on a different VLAN: check the firewall and use only
   an internal route. Do not expose it to the internet.

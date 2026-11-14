@@ -1,6 +1,6 @@
 # KDVN Nextcloud custom apps
 
-Two apps: kdvn_rooms (meeting-room admin page) and kdvn_visitors (guest passes, reception
+Three apps: kdvn_rooms (meeting-room admin page), kdvn_sensors (indoor air display, new, not deployed) and kdvn_visitors (guest passes, reception
 tablet, room displays). Each has its own CLAUDE.md, loaded when working in that folder.
 Status: docs/progress.md. Before any deploy, read docs/deploy-apps.md.
 

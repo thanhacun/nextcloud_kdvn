@@ -136,6 +136,17 @@ PHP inside the container. To read the real error behind an empty `verify` messag
   reception groups, hidden groups, a tablet link per office (the old link works as "no office").
 - Not tested by Claude on the live server; the 15 old visits without an office are open to every reception.
 
+## Office sensors (kdvn_sensors 0.1.0, kdvn_visitors 0.6.1): deployed 2026-11-14
+- kdvn_sensors: public display page with temperature, humidity and CO2 tiles (secret link, 60 s cache),
+  admin page (source Off or Mock, location label, thresholds, display link). Only the mock provider exists:
+  the supplier BACnet provider waits for the API details (see docs/plan-sensor-display.md). Weather
+  fallback not built.
+- kdvn_visitors 0.6.1: `&sensors=1` on a room display link shows the sensor strip in the header (tick in the
+  Room displays link builder). Thanh confirmed on 2026-11-14 that it works.
+- The deploy needed `occ upgrade` (version bump); it also updated forms, memories, nc_gantt, notes, passwords
+  and spreed 24.0.8 from the App Store. Check that Talk Reception desk messages still arrive (TODO).
+- Switch the source from Mock to the real provider before showing it to staff: mock values are fake.
+
 ## Hardware plan
 - Reception tablet: iPad 10th generation or newer (or Galaxy Tab A9+ with Fully Kiosk).
 - 15-inch screen as plain monitor plus Raspberry Pi 5 2 GB running Chromium kiosk with

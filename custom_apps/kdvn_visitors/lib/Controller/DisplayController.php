@@ -8,6 +8,7 @@ use OCA\KdvnVisitors\AppInfo\Application;
 use OCA\KdvnVisitors\Service\AppSettings;
 use OCA\KdvnVisitors\Service\Branding;
 use OCA\KdvnVisitors\Service\DisplayService;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -20,13 +21,15 @@ use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\Server;
 use OCP\Util;
 use Psr\Log\LoggerInterface;
 
 /**
  * Public room display for a screen in front of the meeting rooms. No login: the URL contains a
  * secret display key (separate from the tablet key). ?building=ID picks the building,
- * ?lang=vi|en|ja the language, ?theme=dark|light the colors.
+ * ?lang=vi|en|ja the language, ?theme=dark|light the colors, ?sensors=1 adds the indoor sensor strip
+ * (needs kdvn_sensors).
  */
 class DisplayController extends Controller {
 	public function __construct(
@@ -36,6 +39,7 @@ class DisplayController extends Controller {
 		private Branding $branding,
 		private DisplayService $display,
 		private IURLGenerator $urlGenerator,
+		private IAppManager $appManager,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct($appName, $request);
@@ -66,17 +70,41 @@ class DisplayController extends Controller {
 	#[NoCSRFRequired]
 	#[BruteForceProtection(action: 'kdvn_visitors_display')]
 	#[AnonRateLimit(limit: 120, period: 60)]
-	public function data(string $key, ?int $building = null, int $days = 5): DataResponse {
+	public function data(string $key, ?int $building = null, int $days = 5, int $sensors = 0): DataResponse {
 		if (!$this->isValidKey($key)) {
 			$response = new DataResponse(['message' => 'not_paired'], Http::STATUS_FORBIDDEN);
 			$response->throttle();
 			return $response;
 		}
 		try {
-			return new DataResponse($this->display->data($building, $days));
+			$data = $this->display->data($building, $days);
+			if ($sensors === 1) {
+				// Added after the 30 s room cache so the readings stay as fresh as their own 60 s cache.
+				$data['sensors'] = $this->sensorReadings();
+			}
+			return new DataResponse($data);
 		} catch (\Throwable $e) {
 			$this->logger->error('kdvn_visitors display: ' . $e->getMessage(), ['exception' => $e]);
 			return new DataResponse(['message' => 'error'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Optional indoor readings from kdvn_sensors. Never lets a sensor problem break the room display:
+	 * null (no strip) when the app is missing, disabled or fails. Unverified on stable34:
+	 * IAppManager::loadApp() and OCP\Server::get().
+	 */
+	private function sensorReadings(): ?array {
+		try {
+			if (!$this->appManager->isEnabledForAnyone('kdvn_sensors')) {
+				return null;
+			}
+			$this->appManager->loadApp('kdvn_sensors');
+			$service = Server::get(\OCA\KdvnSensors\Service\SensorService::class);
+			return $service->readings();
+		} catch (\Throwable $e) {
+			$this->logger->warning('kdvn_visitors display: sensor strip skipped: ' . $e->getMessage());
+			return null;
 		}
 	}
 

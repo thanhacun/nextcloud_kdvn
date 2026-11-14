@@ -143,10 +143,12 @@
 				const res = await post(root.dataset.displayLinkUrl)
 				const list = document.getElementById('kv-display-links')
 				const layoutSelect = document.getElementById('kv-display-layout')
+				const sensorsBox = document.getElementById('kv-display-sensors')
 				const withLayout = url => {
 					const layout = layoutSelect.value
-					if (!layout) return url
-					return url + (url.includes('?') ? '&' : '?') + 'layout=' + layout
+					if (layout) url += (url.includes('?') ? '&' : '?') + 'layout=' + layout
+					if (sensorsBox.checked) url += (url.includes('?') ? '&' : '?') + 'sensors=1'
+					return url
 				}
 				const draw = () => list.replaceChildren(...res.links.map(base => {
 					const link = { name: base.name, url: withLayout(base.url) }
@@ -167,6 +169,7 @@
 					return li
 				}))
 				layoutSelect.onchange = draw
+				sensorsBox.onchange = draw
 				draw()
 				document.getElementById('kv-display-result').hidden = false
 			} catch (e) { window.alert(e.message) }

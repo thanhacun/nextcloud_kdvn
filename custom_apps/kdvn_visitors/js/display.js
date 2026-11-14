@@ -3,6 +3,7 @@
  * One column per room: free/busy status now, then bookings for the next days.
  * Updates every 60 s without reloading; long lists scroll slowly by themselves.
  * URL options: ?building=ID  &lang=en|vi|ja (default en)  &theme=dark|light  &days=working days (default 5)
+ *              &sensors=1 shows the indoor sensor strip (kdvn_sensors) in the header
  *              &layout=list (default: long lists scroll) | condensed (today in full, later days one line each)
  *                     | pages (lists flip pages with "1 / 3") | timeline (today across all rooms, big screens)
  * Plain JavaScript, no build step. All text is inserted with textContent (no HTML injection).
@@ -60,6 +61,7 @@
 		const query = new URLSearchParams()
 		if (params.get('building')) query.set('building', params.get('building'))
 		if (params.get('days')) query.set('days', params.get('days'))
+		if (params.get('sensors') === '1') query.set('sensors', '1')
 		const dataUrl = root.dataset.dataUrl + (query.toString() ? '?' + query : '')
 		const loadedAt = Date.now()
 		const layout = ['list', 'condensed', 'pages', 'timeline'].includes(params.get('layout')) ? params.get('layout') : 'list'
@@ -93,6 +95,24 @@
 
 		// ----------------------------------------------------------- views
 
+		const SENSOR_T = {
+			en: { temperature: 'Temp', humidity: 'Humidity', co2: 'CO2', Comfortable: 'Comfortable', Normal: 'Normal', Good: 'Good', Warning: 'Warning', Bad: 'Bad', NA: 'NA' },
+			vi: { temperature: 'Nhiệt độ', humidity: 'Độ ẩm', co2: 'CO2', Comfortable: 'Dễ chịu', Normal: 'Bình thường', Good: 'Tốt', Warning: 'Chú ý', Bad: 'Kém', NA: 'NA' },
+			ja: { temperature: '温度', humidity: '湿度', co2: 'CO2', Comfortable: '快適', Normal: '標準', Good: '良好', Warning: '注意', Bad: '要改善', NA: 'NA' },
+		}
+
+		// Indoor sensor strip (only when the link has &sensors=1 and the server sent readings).
+		function sensorStrip() {
+			if (!data || !data.sensors || !Array.isArray(data.sensors.tiles)) return null
+			const st = SENSOR_T[lang] || SENSOR_T.en
+			return h('div', { class: 'kd-sensors', title: data.sensors.location || null },
+				data.sensors.tiles.map(tile => h('div', { class: 'kd-sensor kd-sensor--' + tile.level },
+					h('span', { class: 'kd-sensor__name' }, st[tile.metric] || tile.metric),
+					h('span', { class: 'kd-sensor__value' }, tile.value === null ? st.NA : tile.value + ' ' + tile.unit),
+					h('span', { class: 'kd-sensor__word' }, st[tile.word] || tile.word),
+				)))
+		}
+
 		function header() {
 			const now = Date.now() / 1000
 			return h('header', { class: 'kd-head' },
@@ -103,6 +123,7 @@
 						h('p', { class: 'kd-building' }, data && data.building ? data.building.name : (root.dataset.logoUrl ? '' : root.dataset.company)),
 					),
 				),
+				sensorStrip(),
 				h('div', { class: 'kd-clock' },
 					h('span', { class: 'kd-clock__time' }, fmtTime(now)),
 					h('span', { class: 'kd-clock__date' }, new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz() }).format(now * 1000)),

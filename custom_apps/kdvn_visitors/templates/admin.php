@@ -222,6 +222,7 @@ $groupOptions = function (string $selected, string $none) use ($_): string {
 				<option value="timeline">Timeline: today across all rooms (big screens)</option>
 			</select>
 		</label>
+		<label class="kv-admin-check"><input type="checkbox" id="kv-display-sensors"> Show the indoor sensor strip (temperature, humidity, CO2) in the header. Needs the Office sensors app with a data source set.</label>
 		<ul id="kv-display-links" class="kv-display-links"></ul>
 	</div>
 

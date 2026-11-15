@@ -1,6 +1,9 @@
 # Plan: indoor air sensors (temperature, humidity, CO2) on the room display
 
-Status: kdvn_sensors 0.1.0 started (custom_apps/kdvn_sensors): mock provider, stand-alone display page, admin settings. Not deployed, not tested on a server. Supplier provider, weather fallback and room-display strip still open. Written to be cheap to pick up later.
+Status (2026-11-15): kdvn_sensors 0.2.0 and kdvn_visitors 0.6.2 are deployed with the mock provider and tested by Thanh
+("so far so good"): several sensors per office (offices come from Calendar Resource Management), per-sensor metrics and
+thresholds, stand-alone display page, header strip on the room display (`&sensors=1`). Waiting for the supplier: the real
+provider is not written (see section 6). Weather fallback not built.
 Mockup: the room display with a sensor strip on top. The solar block is dropped.
 
 ## 1. What the supplier diagram says
@@ -95,3 +98,22 @@ Route parameter rule: never name a URL parameter `action`, `caller` or `_route`.
 - Stale data: show the reading age and switch to NA when older than about 10 minutes.
 - Sensor placement: one sensor per floor is not per room. Label tiles with the location.
 - Weather fallback is outdoor air. Keep the label.
+
+## 6. Waiting for the supplier: what the real provider needs
+
+Nothing else blocks it. Answers needed (send to the supplier):
+
+1. API base URL, port, HTTP or HTTPS, and whether the Nextcloud server can reach it (VLAN, firewall).
+2. How the secret key is sent with a request (header name, query parameter or signed token).
+3. A sample response (JSON or XML) with temperature, humidity and CO2.
+4. The point names that tell the sensors apart (office area, server room, other offices). They go into each
+   sensor's "Point name at the source" field in the admin page.
+5. Units (degC, % RH, ppm) and how often the service refreshes its data.
+6. Whether a reading carries a timestamp or an offline flag (decides when a tile shows NA).
+7. A rate limit, and whether several clients may poll.
+8. Whether the Base Station or HMI Station exposes the API, or a separate service.
+
+When the answers arrive: write `lib/Service/SupplierProvider.php` (implements `ReadingProvider::fetch($sensor)`,
+maps `$sensor['ref']` to the point, returns `at` from the response timestamp), add `supplier` as a data source in
+`AppSettings` and the admin page, store the API URL and key in the admin page (key encrypted, never shown again), then
+test with the mock still available. Update the version, deploy with `occ upgrade` (docs/deploy-apps.md).

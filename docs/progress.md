@@ -1,4 +1,4 @@
-# Nextcloud stack and apps: status (dated 2026-11-13)
+# Nextcloud stack and apps: status (dated 2026-11-15)
 
 ## Versions
 - Production runs Nextcloud 34.0.5 (checked on the server 2026-10-26: not in maintenance
@@ -136,20 +136,24 @@ PHP inside the container. To read the real error behind an empty `verify` messag
   reception groups, hidden groups, a tablet link per office (the old link works as "no office").
 - Not tested by Claude on the live server; the 15 old visits without an office are open to every reception.
 
-## Office sensors (kdvn_sensors 0.1.0, kdvn_visitors 0.6.1): deployed 2026-11-14
-- kdvn_sensors: public display page with temperature, humidity and CO2 tiles (secret link, 60 s cache),
-  admin page (source Off or Mock, location label, thresholds, display link). Only the mock provider exists:
-  the supplier BACnet provider waits for the API details (see docs/plan-sensor-display.md). Weather
-  fallback not built.
-- kdvn_visitors 0.6.1: `&sensors=1` on a room display link shows the sensor strip in the header (tick in the
-  Room displays link builder). Thanh confirmed on 2026-11-14 that it works.
-- The deploy needed `occ upgrade` (version bump); it also updated forms, memories, nc_gantt, notes, passwords
-  and spreed 24.0.8 from the App Store. Check that Talk Reception desk messages still arrive (TODO).
-- Multiple sensors per office (kdvn_sensors 0.2.0, kdvn_visitors 0.6.2, built 2026-11-15, not deployed): sensors are
-  a list in the admin page (name, office from Calendar Resource Management, metrics, point name, own thresholds,
-  show on room display), e.g. "Office area" and "Server room" at HO. A room display with `&sensors=1` shows the
-  sensors of its own office. Deploy both apps together (needs `occ upgrade`: version bump).
-- Switch the source from Mock to the real provider before showing it to staff: mock values are fake.
+## Office sensors (kdvn_sensors 0.2.0, kdvn_visitors 0.6.2): deployed 2026-11-14 and 2026-11-15
+- kdvn_sensors: public display page (secret link, `&building=ID`, `&lang`, `&theme`) with one block per sensor, and an
+  admin page: data source (Off or Mock), a list of sensors, default thresholds, display link. A sensor has a name, an
+  office (a Calendar Resource Management building, read-only from calresources_buildings), the metrics it measures,
+  a point name at the source, "show on the room display" and optional own thresholds (e.g. server room). At HO the
+  plan is "Office area" and "Server room"; other offices follow by adding rows. With no list saved, one implicit sensor
+  "Office" is shown.
+- kdvn_visitors: `&sensors=1` on a room display link (tick "Show the indoor sensor strip" in the Room displays link
+  builder) shows the header strip with that screen's office sensors that have "show on the room display".
+- Deployed in two steps (0.1.0/0.6.1 on 2026-11-14, 0.2.0/0.6.2 on 2026-11-15). Thanh confirmed "it worked" and "so far so
+  good". Each version bump needed `occ upgrade`, which also updated store apps (forms, memories, nc_gantt, notes,
+  passwords, spreed 24.0.8, then nc_gantt 2.5.0). The list before the second upgrade is in
+  /tmp/apps-before-sensors-0.2.txt on the server (may be lost on reboot).
+- The sensor values are still MOCK (fake). Do not show `&sensors=1` on a screen staff will see, and do not describe
+  the Mock source as real, until the supplier provider exists.
+- WAITING FOR THE SUPPLIER: the questions and the plan for the real provider are in docs/plan-sensor-display.md
+  section 6. Not built: supplier provider, weather fallback.
+- TODO: check that Talk Reception desk messages still arrive after Talk updated to 24.0.8.
 
 ## Hardware plan
 - Reception tablet: iPad 10th generation or newer (or Galaxy Tab A9+ with Fully Kiosk).
@@ -159,6 +163,8 @@ PHP inside the container. To read the real error behind an empty `verify` messag
 ## Next
 - SMB external storage: workaround applied; /scan-ho waits for the answers from the Windows PC (see "Open
   decision" in the SMB section), then re-test on the 35 image.
+- Indoor sensors: waiting for the supplier answers (docs/plan-sensor-display.md section 6), then write the
+  supplier provider. Meanwhile keep `&sensors=1` off staff-facing screens (mock values).
 - Re-run the quick re-test of the apps on 34 (docs/deploy-apps.md step 6) and note the result.
 - kdvn_visitors 0.6.0 and kdvn_rooms 0.2.1 are deployed: run Phase 1 tests, set reception offices, then a go-live dry run on site before the office
   move.

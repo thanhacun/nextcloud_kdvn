@@ -103,7 +103,11 @@ class KioskController extends Controller {
 	#[BruteForceProtection(action: 'kdvn_visitors_kiosk')]
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function hosts(string $key, string $q = ''): DataResponse {
-		return $this->guarded($key, fn () => ['hosts' => $this->visits->searchStaff($q, 8, $this->settings->hostNamePrivacy() === 'masked')]);
+		return $this->guarded($key, function () use ($q) {
+			// Ask for one more than shown, so the tablet can say "more matches, type more letters".
+			$found = $this->visits->searchStaff($q, 9, $this->settings->hostNamePrivacy() === 'masked');
+			return ['hosts' => array_slice($found, 0, 8), 'more' => count($found) > 8];
+		});
 	}
 
 	#[PublicPage]

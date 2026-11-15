@@ -169,6 +169,16 @@ PHP inside the container. To read the real error behind an empty `verify` messag
 - kdvn_visitors 0.6.0 and kdvn_rooms 0.2.1 are deployed: run Phase 1 tests, set reception offices, then a go-live dry run on site before the office
   move.
 
+## Visitors 0.6.3: tablet name search ranking (not deployed yet)
+- Thanh could not find his own name ("Truong Quang Thanh") by typing "Thanh": results were capped at 8, sorted
+  alphabetically among equal scores, and nothing said more people matched.
+- Fix (`StaffDirectory::score()`): the LAST word of the name ranks first (Vietnamese given name; Japanese staff are
+  stored "Given Family" and searched by family name, also the last word), then a word start, then anywhere.
+- The tablet shows "More people match, type another word of the name" when there are more than 8 matches
+  (`more` flag from `KioskController::hosts`, text in kiosk.js in vi/en/ja).
+- Deploy: git pull, then `occ upgrade` (version bump); hard-refresh the iPad. The reception invite search
+  (`VisitApiController`, limit 8) is unchanged.
+
 ## Before upgrading to Nextcloud 35: PHP `intl` and Visitors name search
 - Visitors 0.5.0 (`custom_apps/kdvn_visitors/lib/Service/StaffDirectory.php`) ignores accents in
   the "Who are you visiting?" search. It uses PHP's `intl` Transliterator when present, and falls

@@ -37,6 +37,7 @@
 			purpose: 'Mục đích', optional: '(không bắt buộc)',
 			purposeChoose: 'Chọn mục đích…', purposeOther: 'Khác…', purposeOtherHint: 'Vui lòng ghi rõ mục đích',
 			requiredLegend: '* Bắt buộc', fieldRequired: 'Vui lòng điền mục này', consentRequired: 'Vui lòng đánh dấu đồng ý để tiếp tục',
+			hostMore: 'Còn nhiều kết quả khác. Hãy nhập thêm một từ của tên (ví dụ họ hoặc tên đệm).',
 			noHostFound: 'Không tìm thấy. Hãy thử tên khác hoặc chọn "Tôi không chắc".',
 			consent: 'Tôi đồng ý để {company} lưu các thông tin này nhằm quản lý khách ra vào. Thông tin sẽ được xóa sau {days} ngày.',
 			required: 'Vui lòng điền họ tên, công ty, số điện thoại và đánh dấu đồng ý.',
@@ -75,6 +76,7 @@
 			purpose: 'Purpose of visit', optional: '(optional)',
 			purposeChoose: 'Choose a purpose…', purposeOther: 'Other…', purposeOtherHint: 'Please tell us the purpose',
 			requiredLegend: '* Required', fieldRequired: 'Please fill in this field', consentRequired: 'Please tick the box to continue',
+			hostMore: 'More people match. Type another word of the name (for example the family name).',
 			noHostFound: 'No match. Try another spelling or choose "I\'m not sure".',
 			consent: 'I agree that {company} stores these details to manage building visitors. They are deleted after {days} days.',
 			required: 'Please fill in your name, company and phone, and tick the consent box.',
@@ -113,6 +115,7 @@
 			purpose: 'ご用件', optional: '（任意）',
 			purposeChoose: 'ご用件を選択…', purposeOther: 'その他…', purposeOtherHint: 'ご用件をご記入ください',
 			requiredLegend: '* 必須', fieldRequired: 'この項目を入力してください', consentRequired: '続けるには同意にチェックしてください',
+			hostMore: '他にも該当者がいます。名前の別の部分(姓など)も入力してください。',
 			noHostFound: '該当者が見つかりません。別の綴りをお試しいただくか「わからない」を選択してください。',
 			consent: '来訪者管理のため、{company}がこの情報を保存することに同意します。情報は{days}日後に削除されます。',
 			required: 'お名前、会社名、電話番号を入力し、同意にチェックしてください。',
@@ -476,7 +479,8 @@
 								if (mine !== latest) return // a newer search is already on its way
 								const hosts = data.hosts || []
 								results.replaceChildren(...(hosts.length
-									? hosts.map(host => h('button', { type: 'button', class: 'kk-host', role: 'option', onclick: () => { w.host = host; render() } }, host.name))
+									? [...hosts.map(host => h('button', { type: 'button', class: 'kk-host', role: 'option', onclick: () => { w.host = host; render() } }, host.name)),
+										...(data.more ? [h('p', { class: 'kk-text kk-muted' }, t('hostMore'))] : [])]
 									: [h('p', { class: 'kk-text kk-muted' }, t('noHostFound'))]))
 							} catch (err) { /* ignore; the guest can pick "I'm not sure" */ }
 						}, 300)

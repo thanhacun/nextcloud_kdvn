@@ -99,18 +99,25 @@ class StaffDirectory {
 		return strtr(mb_strtolower($text), self::ACCENTS);
 	}
 
-	/** Every token must appear. Lower score = better: name starts with it, then a word starts with it, then anywhere. */
+	/**
+	 * Every token must appear. Lower score = better. Vietnamese people are called by their given name,
+	 * the LAST word of the name ("Truong Quang Thanh" is "Thanh"), so a token equal to the last word ranks
+	 * first, then one that starts the last word, then one that starts another word, then anywhere.
+	 */
 	private function score(string $folded, array $tokens): ?int {
+		$words = explode(' ', $folded);
+		$last = end($words);
 		$score = 0;
 		foreach ($tokens as $i => $token) {
-			$at = strpos($folded, $token);
-			if ($at === false) {
+			if (strpos($folded, $token) === false) {
 				return null;
 			}
-			if ($at === 0) {
+			if ($token === $last) {
 				$score += 0;
-			} elseif (strpos($folded, ' ' . $token) !== false) {
-				$score += 1 + $i;
+			} elseif (str_starts_with($last, $token)) {
+				$score += 1;
+			} elseif (strpos($folded, ' ' . $token) !== false || str_starts_with($folded, $token)) {
+				$score += 3 + $i;
 			} else {
 				$score += 10;
 			}

@@ -101,15 +101,19 @@
 			ja: { temperature: '温度', humidity: '湿度', co2: 'CO2', Comfortable: '快適', Normal: '標準', Good: '良好', Warning: '注意', Bad: '要改善', NA: 'NA' },
 		}
 
-		// Indoor sensor strip (only when the link has &sensors=1 and the server sent readings).
+		// Indoor sensor strip (only when the link has &sensors=1 and the server sent sensors): one group per sensor.
 		function sensorStrip() {
-			if (!data || !data.sensors || !Array.isArray(data.sensors.tiles)) return null
+			if (!data || !Array.isArray(data.sensors) || data.sensors.length === 0) return null
 			const st = SENSOR_T[lang] || SENSOR_T.en
-			return h('div', { class: 'kd-sensors', title: data.sensors.location || null },
-				data.sensors.tiles.map(tile => h('div', { class: 'kd-sensor kd-sensor--' + tile.level },
-					h('span', { class: 'kd-sensor__name' }, st[tile.metric] || tile.metric),
-					h('span', { class: 'kd-sensor__value' }, tile.value === null ? st.NA : tile.value + ' ' + tile.unit),
-					h('span', { class: 'kd-sensor__word' }, st[tile.word] || tile.word),
+			return h('div', { class: 'kd-sensors' },
+				data.sensors.map(sensor => h('div', { class: 'kd-sensor-group' },
+					h('span', { class: 'kd-sensor-group__name' }, sensor.name),
+					h('div', { class: 'kd-sensor-group__chips' },
+						sensor.tiles.map(tile => h('div', { class: 'kd-sensor kd-sensor--' + tile.level },
+							h('span', { class: 'kd-sensor__name' }, st[tile.metric] || tile.metric),
+							h('span', { class: 'kd-sensor__value' }, tile.value === null ? st.NA : tile.value + ' ' + tile.unit),
+							h('span', { class: 'kd-sensor__word' }, st[tile.word] || tile.word),
+						)))
 				)))
 		}
 

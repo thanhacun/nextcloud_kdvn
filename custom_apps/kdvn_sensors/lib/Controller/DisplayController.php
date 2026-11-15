@@ -24,7 +24,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Public sensor display. No login: the URL contains a secret key (hashed in appconfig).
- * ?lang=vi|en|ja, ?theme=dark|light are read by the page script.
+ * ?building=ID shows only that office's sensors; ?lang=vi|en|ja, ?theme=dark|light are read by the page script.
  */
 class DisplayController extends Controller {
 	public function __construct(
@@ -58,14 +58,14 @@ class DisplayController extends Controller {
 	#[NoCSRFRequired]
 	#[BruteForceProtection(action: 'kdvn_sensors_display')]
 	#[AnonRateLimit(limit: 120, period: 60)]
-	public function readings(string $key): DataResponse {
+	public function readings(string $key, ?int $building = null): DataResponse {
 		if (!$this->isValidKey($key)) {
 			$response = new DataResponse(['message' => 'not_paired'], Http::STATUS_FORBIDDEN);
 			$response->throttle();
 			return $response;
 		}
 		try {
-			return new DataResponse($this->sensors->readings());
+			return new DataResponse($this->sensors->readings($building));
 		} catch (\Throwable $e) {
 			$this->logger->error('kdvn_sensors display: ' . $e->getMessage(), ['exception' => $e]);
 			return new DataResponse(['message' => 'error'], Http::STATUS_INTERNAL_SERVER_ERROR);

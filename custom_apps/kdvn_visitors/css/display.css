@@ -58,8 +58,11 @@ html, body#body-public.layout-base {
 .kd-clock { display: flex; flex-direction: column; align-items: flex-end; text-align: end; }
 .kd-clock__time { font-size: 2.8em; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 .kd-clock__date { font-size: 1.05em; color: var(--kd-muted); margin-top: 0.3em; }
-.kd-sensors { display: flex; gap: 1.2vw; flex: 1; justify-content: center; }
-.kd-sensor { display: flex; flex-direction: column; align-items: flex-start; padding: 0.5em 1em; background: var(--kd-panel); border-inline-start: 0.5vh solid var(--kd-muted); border-radius: 0.6vw; min-width: 8vw; }
+.kd-sensors { display: flex; gap: 2vw; flex: 1; justify-content: center; flex-wrap: wrap; }
+.kd-sensor-group { display: flex; flex-direction: column; gap: 0.3em; }
+.kd-sensor-group__name { font-size: 0.85em; font-weight: 600; color: var(--kd-muted); }
+.kd-sensor-group__chips { display: flex; gap: 0.8vw; }
+.kd-sensor { display: flex; flex-direction: column; align-items: flex-start; padding: 0.4em 0.8em; background: var(--kd-panel); border-inline-start: 0.5vh solid var(--kd-muted); border-radius: 0.6vw; min-width: 6vw; }
 .kd-sensor--good { border-color: #4cc26b; }
 .kd-sensor--warning { border-color: var(--kd-busy); }
 .kd-sensor--bad { border-color: #ff6b5e; }

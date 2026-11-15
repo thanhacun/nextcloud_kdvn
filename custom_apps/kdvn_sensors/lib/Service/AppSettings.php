@@ -9,6 +9,8 @@ use OCP\IAppConfig;
 /** Every setting of the app (oc_appconfig, app "kdvn_sensors"). */
 class AppSettings {
 	private const APP = 'kdvn_sensors';
+	public const METRICS = ['temperature', 'humidity', 'co2'];
+	private const MAX_SENSORS = 30;
 
 	/** Starting thresholds (typical comfort guidance; adjust with facilities). */
 	public const DEFAULT_THRESHOLDS = [
@@ -35,44 +37,117 @@ class AppSettings {
 		$this->config->setValueString(self::APP, 'provider', in_array($value, ['off', 'mock'], true) ? $value : 'off');
 	}
 
-	public function location(): string {
-		return $this->config->getValueString(self::APP, 'location', '');
-	}
-
-	public function setLocation(string $value): void {
-		$this->config->setValueString(self::APP, 'location', mb_substr(trim($value), 0, 100));
-	}
-
-	/** @return array<string, array{okMin: float, okMax: float, warnMin: float, warnMax: float}> */
+	/**
+	 * Default thresholds for every sensor (a sensor can override them).
+	 * @return array<string, array{okMin: float, okMax: float, warnMin: float, warnMax: float}>
+	 */
 	public function thresholds(): array {
 		$stored = json_decode($this->config->getValueString(self::APP, 'thresholds', ''), true);
-		$result = self::DEFAULT_THRESHOLDS;
-		if (is_array($stored)) {
-			foreach ($result as $metric => $defaults) {
-				foreach (array_keys($defaults) as $field) {
-					if (isset($stored[$metric][$field]) && is_numeric($stored[$metric][$field])) {
-						$result[$metric][$field] = (float)$stored[$metric][$field];
-					}
-				}
-			}
-		}
-		return $result;
+		return self::mergeThresholds(self::DEFAULT_THRESHOLDS, is_array($stored) ? $stored : []);
 	}
 
 	public function setThresholds(array $in): void {
-		$clean = [];
-		foreach (self::DEFAULT_THRESHOLDS as $metric => $defaults) {
-			foreach (array_keys($defaults) as $field) {
-				$clean[$metric][$field] = isset($in[$metric][$field]) && is_numeric($in[$metric][$field])
-					? (float)$in[$metric][$field] : $defaults[$field];
+		$valid = self::cleanThresholds($in);
+		$this->config->setValueString(self::APP, 'thresholds', json_encode($valid));
+	}
+
+	/**
+	 * The configured sensors. With none configured one implicit sensor stands in, so the page
+	 * deployed with 0.1.0 keeps working.
+	 * @return list<array{id: string, name: string, buildingId: ?int, metrics: list<string>, ref: string, roomDisplay: bool, thresholds: array}>
+	 */
+	public function sensors(): array {
+		$stored = json_decode($this->config->getValueString(self::APP, 'sensors', ''), true);
+		$sensors = is_array($stored) ? self::cleanSensors($stored) : [];
+		if ($sensors === []) {
+			$name = trim($this->config->getValueString(self::APP, 'location', ''));
+			$sensors = [[
+				'id' => 'default', 'name' => $name !== '' ? $name : 'Office', 'buildingId' => null,
+				'metrics' => self::METRICS, 'ref' => '', 'roomDisplay' => true, 'thresholds' => [],
+			]];
+		}
+		return $sensors;
+	}
+
+	/** True when the admin saved a sensor list (the implicit sensor is not "configured"). */
+	public function hasSensors(): bool {
+		$stored = json_decode($this->config->getValueString(self::APP, 'sensors', ''), true);
+		return is_array($stored) && self::cleanSensors($stored) !== [];
+	}
+
+	public function setSensors(array $in): void {
+		$this->config->setValueString(self::APP, 'sensors', json_encode(self::cleanSensors($in)));
+	}
+
+	/** Thresholds of one sensor: defaults, then the global ones, then the sensor's own. */
+	public function thresholdsFor(array $sensor): array {
+		return self::mergeThresholds($this->thresholds(), $sensor['thresholds'] ?? []);
+	}
+
+	/** @return list<array> sanitized sensors (unknown fields dropped, ids generated, duplicates removed) */
+	public static function cleanSensors(array $in): array {
+		$out = [];
+		$seen = [];
+		foreach ($in as $row) {
+			if (!is_array($row) || count($out) >= self::MAX_SENSORS) {
+				continue;
 			}
-			$t = $clean[$metric];
-			// The warning band must contain the good band.
-			if ($t['warnMin'] > $t['okMin'] || $t['okMin'] > $t['okMax'] || $t['okMax'] > $t['warnMax']) {
-				$clean[$metric] = $defaults;
+			$name = mb_substr(trim((string)($row['name'] ?? '')), 0, 60);
+			if ($name === '') {
+				continue;
+			}
+			$id = preg_replace('/[^a-z0-9]/', '', strtolower((string)($row['id'] ?? '')));
+			if ($id === '' || isset($seen[$id])) {
+				$id = bin2hex(random_bytes(4));
+			}
+			$seen[$id] = true;
+			$metrics = array_values(array_intersect(self::METRICS, array_map('strval', (array)($row['metrics'] ?? []))));
+			$building = $row['buildingId'] ?? null;
+			$out[] = [
+				'id' => $id,
+				'name' => $name,
+				'buildingId' => ($building === null || $building === '' || !is_numeric($building)) ? null : (int)$building,
+				'metrics' => $metrics === [] ? self::METRICS : $metrics,
+				'ref' => mb_substr(trim((string)($row['ref'] ?? '')), 0, 100),
+				'roomDisplay' => !empty($row['roomDisplay']),
+				'thresholds' => self::cleanThresholds((array)($row['thresholds'] ?? []), false),
+			];
+		}
+		return $out;
+	}
+
+	/**
+	 * Keep only metrics whose four numbers are present and nest (warning band wider than the good band).
+	 * With $fillDefaults a bad or missing metric gets its default; without, it is left out (= "use default").
+	 */
+	public static function cleanThresholds(array $in, bool $fillDefaults = true): array {
+		$out = [];
+		foreach (self::DEFAULT_THRESHOLDS as $metric => $defaults) {
+			$t = [];
+			foreach (array_keys($defaults) as $field) {
+				$value = $in[$metric][$field] ?? null;
+				if ($value === null || $value === '' || !is_numeric($value)) {
+					$t = null;
+					break;
+				}
+				$t[$field] = (float)$value;
+			}
+			if ($t !== null && $t['warnMin'] <= $t['okMin'] && $t['okMin'] <= $t['okMax'] && $t['okMax'] <= $t['warnMax']) {
+				$out[$metric] = $t;
+			} elseif ($fillDefaults) {
+				$out[$metric] = $defaults;
 			}
 		}
-		$this->config->setValueString(self::APP, 'thresholds', json_encode($clean));
+		return $out;
+	}
+
+	private static function mergeThresholds(array $base, array $override): array {
+		foreach ($override as $metric => $t) {
+			if (isset($base[$metric]) && is_array($t) && count($t) === 4) {
+				$base[$metric] = $t;
+			}
+		}
+		return $base;
 	}
 
 	public function displayKeyHash(): string {

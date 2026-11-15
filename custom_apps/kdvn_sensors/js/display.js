@@ -1,6 +1,6 @@
 /**
- * Sensor display: three tiles (temperature, humidity, CO2) and a clock.
- * Refreshes every 60 s without reloading. URL options: &lang=en|vi|ja  &theme=dark|light
+ * Sensor display: one block per sensor (name, office, tiles for temperature, humidity, CO2) and a clock.
+ * Refreshes every 60 s without reloading. URL options: &building=ID (one office)  &lang=en|vi|ja  &theme=dark|light
  * Plain JavaScript, no build step. All text is inserted with textContent.
  */
 (function () {
@@ -8,9 +8,9 @@
 
 	const LOCALES = { vi: 'vi-VN', en: 'en-GB', ja: 'ja-JP' }
 	const T = {
-		en: { temperature: 'Temperature', humidity: 'Humidity', co2: 'CO2', Comfortable: 'Comfortable', Normal: 'Normal', Good: 'Good', Warning: 'Warning', Bad: 'Bad', NA: 'NA', source: 'Indoor sensor', none: 'No data source', offline: 'Connection lost, retrying', measured: 'Measured {time}' },
-		vi: { temperature: 'Nhiệt độ', humidity: 'Độ ẩm', co2: 'CO2', Comfortable: 'Dễ chịu', Normal: 'Bình thường', Good: 'Tốt', Warning: 'Chú ý', Bad: 'Kém', NA: 'NA', source: 'Cảm biến trong nhà', none: 'Chưa có nguồn dữ liệu', offline: 'Mất kết nối – đang thử lại', measured: 'Đo lúc {time}' },
-		ja: { temperature: '温度', humidity: '湿度', co2: 'CO2', Comfortable: '快適', Normal: '標準', Good: '良好', Warning: '注意', Bad: '要改善', NA: 'NA', source: '室内センサー', none: 'データなし', offline: '接続が切れました。再試行中…', measured: '{time}測定' },
+		en: { temperature: 'Temperature', humidity: 'Humidity', co2: 'CO2', Comfortable: 'Comfortable', Normal: 'Normal', Good: 'Good', Warning: 'Warning', Bad: 'Bad', NA: 'NA', source: 'Indoor sensor', none: 'No data source', offline: 'Connection lost, retrying', measured: 'Measured {time}', noSensors: 'No sensor for this office' },
+		vi: { temperature: 'Nhiệt độ', humidity: 'Độ ẩm', co2: 'CO2', Comfortable: 'Dễ chịu', Normal: 'Bình thường', Good: 'Tốt', Warning: 'Chú ý', Bad: 'Kém', NA: 'NA', source: 'Cảm biến trong nhà', none: 'Chưa có nguồn dữ liệu', offline: 'Mất kết nối – đang thử lại', measured: 'Đo lúc {time}', noSensors: 'Chưa có cảm biến cho văn phòng này' },
+		ja: { temperature: '温度', humidity: '湿度', co2: 'CO2', Comfortable: '快適', Normal: '標準', Good: '良好', Warning: '注意', Bad: '要改善', NA: 'NA', source: '室内センサー', none: 'データなし', offline: '接続が切れました。再試行中…', measured: '{time}測定', noSensors: 'この拠点にはセンサーがありません' },
 	}
 
 	function h(tag, cls, text) {
@@ -30,6 +30,7 @@
 		document.documentElement.lang = lang
 		document.documentElement.dataset.theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
+		const query = params.get('building') && /^\d+$/.test(params.get('building')) ? '?building=' + params.get('building') : ''
 		const clock = h('div', 'ks-clock')
 		const grid = h('div', 'ks-grid')
 		const foot = h('div', 'ks-foot')
@@ -40,24 +41,36 @@
 		}
 
 		function render(data) {
-			grid.replaceChildren(...data.tiles.map(tile => {
-				const card = h('div', 'ks-tile ks-' + tile.level)
-				card.append(h('div', 'ks-name', t[tile.metric]))
-				const value = h('div', 'ks-value', tile.value === null ? t.NA : String(tile.value))
-				if (tile.value !== null) value.append(h('span', 'ks-unit', ' ' + tile.unit))
-				card.append(value, h('div', 'ks-word', t[tile.word] || tile.word))
-				return card
+			if (!data.sensors.length) {
+				grid.replaceChildren(h('p', 'ks-empty', t.noSensors))
+				foot.textContent = ''
+				return
+			}
+			root.dataset.count = String(Math.min(data.sensors.length, 4))
+			grid.replaceChildren(...data.sensors.map(sensor => {
+				const block = h('section', 'ks-sensor')
+				const title = h('h2', 'ks-title', sensor.name)
+				if (sensor.building) title.append(h('span', 'ks-building', ' · ' + sensor.building))
+				const tiles = h('div', 'ks-tiles')
+				sensor.tiles.forEach(tile => {
+					const card = h('div', 'ks-tile ks-' + tile.level)
+					card.append(h('div', 'ks-name', t[tile.metric]))
+					const value = h('div', 'ks-value', tile.value === null ? t.NA : String(tile.value))
+					if (tile.value !== null) value.append(h('span', 'ks-unit', ' ' + tile.unit))
+					card.append(value, h('div', 'ks-word', t[tile.word] || tile.word))
+					tiles.append(card)
+				})
+				block.append(title, tiles)
+				const times = sensor.measuredAt ? [t.measured.replace('{time}', new Date(sensor.measuredAt * 1000).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }))] : []
+				block.append(h('div', 'ks-meta', (sensor.source === 'none' ? t.none : t.source) + (times.length ? ' · ' + times[0] : '')))
+				return block
 			}))
-			const parts = []
-			if (data.location) parts.push(data.location)
-			parts.push(data.source === 'none' ? t.none : t.source)
-			if (data.measuredAt) parts.push(t.measured.replace('{time}', new Date(data.measuredAt * 1000).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })))
-			foot.textContent = parts.join(' · ')
+			foot.textContent = ''
 		}
 
 		async function load() {
 			try {
-				const response = await fetch(root.dataset.dataUrl, { headers: { Accept: 'application/json' } })
+				const response = await fetch(root.dataset.dataUrl + query, { headers: { Accept: 'application/json' } })
 				if (!response.ok) throw new Error(String(response.status))
 				render(await response.json())
 			} catch (e) {

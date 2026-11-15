@@ -23,10 +23,10 @@ class SettingsApiController extends Controller {
 		parent::__construct($appName, $request);
 	}
 
-	public function save(string $provider = 'off', string $location = '', array $thresholds = []): DataResponse {
+	public function save(string $provider = 'off', array $thresholds = [], array $sensors = []): DataResponse {
 		$this->settings->setProvider($provider);
-		$this->settings->setLocation($location);
 		$this->settings->setThresholds($thresholds);
+		$this->settings->setSensors($sensors);
 		return new DataResponse(['ok' => true]);
 	}
 

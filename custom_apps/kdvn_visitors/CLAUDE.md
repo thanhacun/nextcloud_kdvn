@@ -39,7 +39,7 @@ alerts, passes created from Calendar, and public meeting-room displays.
   Recurring meetings create no passes.
 - Room display: DisplayService reads oc_calendarobjects and parses with Sabre VObject,
   30 s cache. Link option `&sensors=1` (tick in the link builder) adds a `sensors`
-  block from kdvn_sensors (DisplayController::sensorReadings(), after the room cache, null on any failure) and
+  list (this office's room-display sensors) from kdvn_sensors (DisplayController::sensorReadings(), after the room cache, null on any failure) and
   the header strip in display.js. "Book the room in Calendar" creates an event with the room as ROOM attendee
   in the host's calendar. It replaced the n8n "Booking_Rooms" webhook.
 

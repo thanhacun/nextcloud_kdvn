@@ -80,7 +80,7 @@ class DisplayController extends Controller {
 			$data = $this->display->data($building, $days);
 			if ($sensors === 1) {
 				// Added after the 30 s room cache so the readings stay as fresh as their own 60 s cache.
-				$data['sensors'] = $this->sensorReadings();
+				$data['sensors'] = $this->sensorReadings($building);
 			}
 			return new DataResponse($data);
 		} catch (\Throwable $e) {
@@ -90,18 +90,19 @@ class DisplayController extends Controller {
 	}
 
 	/**
-	 * Optional indoor readings from kdvn_sensors. Never lets a sensor problem break the room display:
+	 * Optional indoor readings (list of sensors) from kdvn_sensors. Never lets a sensor problem break the room display:
 	 * null (no strip) when the app is missing, disabled or fails. Unverified on stable34:
 	 * IAppManager::loadApp() and OCP\Server::get().
 	 */
-	private function sensorReadings(): ?array {
+	private function sensorReadings(?int $building): ?array {
 		try {
 			if (!$this->appManager->isEnabledForAnyone('kdvn_sensors')) {
 				return null;
 			}
 			$this->appManager->loadApp('kdvn_sensors');
 			$service = Server::get(\OCA\KdvnSensors\Service\SensorService::class);
-			return $service->readings();
+			// Only this office's sensors that are ticked "show on the room display"; null building = all of those.
+			return $service->readings($building, true)['sensors'];
 		} catch (\Throwable $e) {
 			$this->logger->warning('kdvn_visitors display: sensor strip skipped: ' . $e->getMessage());
 			return null;

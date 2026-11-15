@@ -15,12 +15,20 @@ html, body#body-public.layout-base {
 }
 #ks-display { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; gap: 3vh; padding: 3vh 3vw; box-sizing: border-box; }
 .ks-clock { font-size: 3.2vh; color: var(--ks-muted); text-align: end; }
-.ks-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2vw; }
-.ks-tile { background: var(--ks-panel); border-inline-start: 1.2vh solid var(--ks-na); border-radius: 12px; padding: 3vh 2vw; display: flex; flex-direction: column; justify-content: center; gap: 1.5vh; }
+.ks-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 2vw; align-content: stretch; }
+.ks-sensor { display: flex; flex-direction: column; gap: 1.2vh; min-width: 0; }
+.ks-title { margin: 0; font-size: 3.4vh; font-weight: 700; color: inherit; }
+.ks-building { font-weight: 400; color: var(--ks-muted); }
+.ks-meta { font-size: 2vh; color: var(--ks-muted); }
+.ks-tiles { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.2vw; }
+.ks-tile { background: var(--ks-panel); border-inline-start: 1.2vh solid var(--ks-na); border-radius: 12px; padding: 2vh 1.2vw; display: flex; flex-direction: column; justify-content: center; gap: 1vh; }
 .ks-good { border-color: var(--ks-good); } .ks-warning { border-color: var(--ks-warning); } .ks-bad { border-color: var(--ks-bad); }
-.ks-name { font-size: 3vh; color: var(--ks-muted); }
-.ks-value { font-size: 12vh; font-weight: 700; line-height: 1; }
-.ks-unit { font-size: 4vh; font-weight: 400; color: var(--ks-muted); }
-.ks-word { font-size: 4vh; font-weight: 600; }
+.ks-name { font-size: 2.6vh; color: var(--ks-muted); }
+.ks-value { font-size: 8vh; font-weight: 700; line-height: 1; }
+.ks-unit { font-size: 3vh; font-weight: 400; color: var(--ks-muted); }
+.ks-word { font-size: 3vh; font-weight: 600; }
+#ks-display[data-count="1"] .ks-value { font-size: 12vh; }
+#ks-display[data-count="3"] .ks-value, #ks-display[data-count="4"] .ks-value { font-size: 6vh; }
 .ks-good .ks-word { color: var(--ks-good); } .ks-warning .ks-word { color: var(--ks-warning); } .ks-bad .ks-word { color: var(--ks-bad); } .ks-na .ks-word { color: var(--ks-na); }
+.ks-empty { font-size: 4vh; color: var(--ks-muted); }
 .ks-foot { font-size: 2.4vh; color: var(--ks-muted); }

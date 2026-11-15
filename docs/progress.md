@@ -145,6 +145,10 @@ PHP inside the container. To read the real error behind an empty `verify` messag
   Room displays link builder). Thanh confirmed on 2026-11-14 that it works.
 - The deploy needed `occ upgrade` (version bump); it also updated forms, memories, nc_gantt, notes, passwords
   and spreed 24.0.8 from the App Store. Check that Talk Reception desk messages still arrive (TODO).
+- Multiple sensors per office (kdvn_sensors 0.2.0, kdvn_visitors 0.6.2, built 2026-11-15, not deployed): sensors are
+  a list in the admin page (name, office from Calendar Resource Management, metrics, point name, own thresholds,
+  show on room display), e.g. "Office area" and "Server room" at HO. A room display with `&sensors=1` shows the
+  sensors of its own office. Deploy both apps together (needs `occ upgrade`: version bump).
 - Switch the source from Mock to the real provider before showing it to staff: mock values are fake.
 
 ## Hardware plan

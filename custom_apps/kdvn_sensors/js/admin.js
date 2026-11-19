@@ -3,6 +3,7 @@
 	'use strict'
 
 	const METRICS = [['temperature', 'Temp'], ['humidity', 'Humidity'], ['co2', 'CO2']]
+	const POINTS = [['temperature', 'Temp point'], ['humidity', 'Humidity point'], ['co2', 'CO2 point'], ['fan', 'Fan point (optional)']]
 	const FIELDS = [['okMin', 'Good from'], ['okMax', 'Good to'], ['warnMin', 'Warn from'], ['warnMax', 'Warn to']]
 
 	function h(tag, attrs, ...children) {
@@ -73,8 +74,10 @@
 				h('div', { style: 'display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end' },
 					h('label', { style: 'display:flex;flex-direction:column;font-weight:600' }, 'Name', h('input', { type: 'text', maxlength: '60', 'data-f': 'name', value: sensor.name || '', placeholder: 'Server room' })),
 					h('label', { style: 'display:flex;flex-direction:column;font-weight:600' }, 'Office', buildingSelect),
-					h('label', { style: 'display:flex;flex-direction:column;font-weight:600' }, 'Point name at the source', h('input', { type: 'text', maxlength: '100', 'data-f': 'ref', value: sensor.ref || '' })),
 					remove),
+				h('div', { style: 'display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:8px' },
+					POINTS.map(([key, label]) => h('label', { style: 'display:flex;flex-direction:column;font-weight:600' }, label,
+						h('input', { type: 'text', maxlength: '100', 'data-p': key, value: (sensor.points && sensor.points[key]) || '', placeholder: 'R101_' + ({ temperature: 'Temp', humidity: 'RH', co2: 'CO2', fan: 'Fan' })[key] })))),
 				h('div', { style: 'display:flex;flex-wrap:wrap;gap:16px;margin-top:8px;align-items:center' }, h('strong', {}, 'Measures:'), metricBoxes,
 					h('label', { style: 'flex-direction:row;font-weight:normal;gap:4px;align-items:center;display:flex' }, roomBox, 'Show on the room display')),
 				thresholdBlock)
@@ -100,7 +103,7 @@
 					id: el.dataset.id,
 					name: get('name').value,
 					buildingId: get('buildingId').value,
-					ref: get('ref').value,
+					points: Object.fromEntries(POINTS.map(([key]) => [key, el.querySelector('[data-p="' + key + '"]').value])),
 					roomDisplay: get('roomDisplay').checked,
 					metrics: METRICS.filter(([key]) => el.querySelector('[data-metric="' + key + '"]').checked).map(([key]) => key),
 					thresholds,
@@ -116,7 +119,17 @@
 				for (const [field] of FIELDS) thresholds[metric][field] = form.elements[metric + '.' + field].value
 			}
 			try {
-				await post(root.dataset.saveUrl, { provider: form.elements.provider.value, thresholds, sensors: collectSensors() })
+				const body = {
+					provider: form.elements.provider.value,
+					thresholds,
+					sensors: collectSensors(),
+					supplierUrl: form.elements.supplierUrl.value,
+					supplierKey: form.elements.supplierKey.value,
+					supplierStaleMinutes: parseInt(form.elements.supplierStaleMinutes.value, 10) || 5,
+					clearSupplierKey: !!(form.elements.clearSupplierKey && form.elements.clearSupplierKey.checked),
+				}
+				await post(root.dataset.saveUrl, body)
+				form.elements.supplierKey.value = ''
 				status.textContent = 'Saved. A sensor without a name is dropped; thresholds that do not nest (warning band narrower than good) are ignored. Reload to see the saved list.'
 			} catch (e) { status.textContent = e.message }
 		})

@@ -14,15 +14,36 @@ $fields = ['okMin' => 'Good from', 'okMax' => 'Good up to', 'warnMin' => 'Warnin
 		<label>Data source
 			<select name="provider">
 				<option value="off" <?php if ($_['provider'] === 'off') { p('selected'); } ?>>Off (tiles show NA)</option>
+				<option value="supplier" <?php if ($_['provider'] === 'supplier') { p('selected'); } ?>>Supplier API (Azbil BACnet Service)</option>
 				<option value="mock" <?php if ($_['provider'] === 'mock') { p('selected'); } ?>>Mock values (for testing only)</option>
 			</select>
 		</label>
-		<p class="settings-hint">The supplier BACnet API will be added as a third source when its details are known.</p>
+
+		<h3>Supplier API</h3>
+		<p class="settings-hint">
+			Used when the data source is "Supplier API". The URL is the endpoint that returns all points, for example
+			<code>http://&lt;IP&gt;:&lt;port&gt;/api/points/values</code>. The key is sent in the <code>X-API-Key</code> header,
+			stored encrypted and never shown again. Nextcloud only calls an address on the internal network when
+			<code>allow_local_remote_servers</code> is true in config.php (see docs/deploy-apps.md).
+		</p>
+		<label>API URL
+			<input type="url" name="supplierUrl" maxlength="300" style="width:100%;max-width:560px" value="<?php p($_['supplierUrl']); ?>" placeholder="http://192.168.x.x:port/api/points/values">
+		</label>
+		<label>API key <?php if ($_['hasSupplierKey']): ?>(a key is stored; leave empty to keep it)<?php else: ?>(not set)<?php endif; ?>
+			<input type="password" name="supplierKey" autocomplete="new-password" style="width:100%;max-width:560px" value="">
+		</label>
+		<?php if ($_['hasSupplierKey']): ?>
+			<label style="flex-direction:row;font-weight:normal;gap:6px;align-items:center;display:flex"><input type="checkbox" name="clearSupplierKey"> Remove the stored key when saving</label>
+		<?php endif; ?>
+		<label>Show NA when a value is older than (minutes, 1 to 10)
+			<input type="number" name="supplierStaleMinutes" min="1" max="10" style="width:90px" value="<?php p($_['supplierStaleMinutes']); ?>">
+		</label>
 
 		<h3>Sensors</h3>
 		<p class="settings-hint">
 			One row per sensor, for example "Office area" and "Server room". The office is a building of Calendar Resource Management
-			(managed in Meeting Rooms). "Point name" is how the sensor is called at the data source (used by the supplier source later).
+			(managed in Meeting Rooms). The point names are how the sensor's values are called at the supplier (for example R101_Temp, R101_RH, R101_CO2);
+			"Fan point" is optional: the exhaust fan running signal, shown as a small "Fan running" mark. The fan itself is controlled by the BMS, not by Nextcloud.
 			"Room display" shows the sensor in the header strip of that office's room display. Thresholds left empty use the defaults below.
 			<?php if (empty($_['sensors'])): ?>No sensor is configured yet: one default sensor ("Office") is shown until you save a list.<?php endif; ?>
 		</p>

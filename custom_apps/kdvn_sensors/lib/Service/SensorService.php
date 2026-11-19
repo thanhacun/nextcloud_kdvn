@@ -22,6 +22,7 @@ class SensorService {
 	public function __construct(
 		private AppSettings $settings,
 		private MockProvider $mock,
+		private SupplierProvider $supplier,
 		private BuildingCatalog $buildings,
 		ICacheFactory $cacheFactory,
 		private LoggerInterface $logger,
@@ -70,7 +71,12 @@ class SensorService {
 				}
 				$tiles[] = $tile;
 			}
+			$fan = null;
+			if (!empty($sensor['points']['fan'])) {
+				$fan = ($stale || !isset($raw['fan'])) ? 'na' : ($raw['fan'] ? 'on' : 'off');
+			}
 			$out[] = [
+				'fan' => $fan,
 				'id' => $sensor['id'],
 				'name' => $sensor['name'],
 				'buildingId' => $sensor['buildingId'],
@@ -88,13 +94,13 @@ class SensorService {
 		if ($provider === 'off') {
 			return null;
 		}
-		$cacheKey = 'raw_' . $provider . '_' . $sensor['id'] . '_' . md5($sensor['ref']);
+		$cacheKey = 'raw_' . $provider . '_' . $sensor['id'] . '_' . md5(json_encode($sensor['points']));
 		$cached = $this->cache?->get($cacheKey);
 		if (is_array($cached)) {
 			return $cached;
 		}
 		try {
-			$raw = $this->mock->fetch($sensor); // only 'mock' exists so far
+			$raw = $provider === 'supplier' ? $this->supplier->fetch($sensor) : $this->mock->fetch($sensor);
 		} catch (\Throwable $e) {
 			$this->logger->error('kdvn_sensors provider: ' . $e->getMessage(), ['exception' => $e]);
 			return null;

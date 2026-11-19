@@ -151,9 +151,16 @@ PHP inside the container. To read the real error behind an empty `verify` messag
   /tmp/apps-before-sensors-0.2.txt on the server (may be lost on reboot).
 - The sensor values are still MOCK (fake). Do not show `&sensors=1` on a screen staff will see, and do not describe
   the Mock source as real, until the supplier provider exists.
-- WAITING FOR THE SUPPLIER: the questions and the plan for the real provider are in docs/plan-sensor-display.md
-  section 6. Not built: supplier provider, weather fallback.
+- Supplier (Azbil) answered on 2026-11-19: see docs/plan-sensor-display.md section 7 (REST GET /api/points/values,
+  X-API-Key header, one sensor per room, no rate limit, NA when offline or stale). Still open: IP, port, HTTP or
+  HTTPS, the point list (comes with the budget). Not built: weather fallback.
 - TODO: check that Talk Reception desk messages still arrive after Talk updated to 24.0.8.
+
+- kdvn_sensors 0.3.0 (code written 2026-11-19, NOT deployed, not tested against the real service): supplier provider
+  from the sample JSON, admin fields, point names per metric, optional fan mark, CO2 default bands 600/1000 from the
+  Azbil diagram E-14. Parser unit-tested with the sample (17 checks). Deploy notes: docs/deploy-apps.md (needs
+  `allow_local_remote_servers`, a firewall rule, `occ upgrade`). The fan is controlled by Azbil's DDC, not Nextcloud.
+  Questions to send Azbil: end of docs/plan-sensor-display.md.
 
 ## Hardware plan
 - Reception tablet: iPad 10th generation or newer (or Galaxy Tab A9+ with Fully Kiosk).

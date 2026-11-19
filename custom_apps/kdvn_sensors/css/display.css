@@ -20,6 +20,8 @@ html, body#body-public.layout-base {
 .ks-title { margin: 0; font-size: 3.4vh; font-weight: 700; color: inherit; }
 .ks-building { font-weight: 400; color: var(--ks-muted); }
 .ks-meta { font-size: 2vh; color: var(--ks-muted); }
+.ks-fan { font-size: 2.2vh; margin: 1vh 0; color: var(--ks-muted); }
+.ks-fan-on { color: var(--ks-warn, #e0a030); font-weight: 600; }
 .ks-tiles { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.2vw; }
 .ks-tile { background: var(--ks-panel); border-inline-start: 1.2vh solid var(--ks-na); border-radius: 12px; padding: 2vh 1.2vw; display: flex; flex-direction: column; justify-content: center; gap: 1vh; }
 .ks-good { border-color: var(--ks-good); } .ks-warning { border-color: var(--ks-warning); } .ks-bad { border-color: var(--ks-bad); }

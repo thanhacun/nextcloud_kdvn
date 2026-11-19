@@ -25,6 +25,9 @@ class Admin implements ISettings {
 		Util::addScript(Application::APP_ID, 'admin');
 		return new TemplateResponse(Application::APP_ID, 'admin', [
 			'provider' => $this->settings->provider(),
+			'supplierUrl' => $this->settings->supplierUrl(),
+			'hasSupplierKey' => $this->settings->hasSupplierKey(),
+			'supplierStaleMinutes' => $this->settings->supplierStaleMinutes(),
 			'sensors' => $this->settings->hasSensors() ? $this->settings->sensors() : [],
 			'buildings' => array_map(fn ($id, $name) => ['id' => $id, 'name' => $name], array_keys($this->buildings->names()), array_values($this->buildings->names())),
 			'defaultThresholds' => AppSettings::DEFAULT_THRESHOLDS,

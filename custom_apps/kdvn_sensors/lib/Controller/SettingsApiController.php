@@ -23,8 +23,13 @@ class SettingsApiController extends Controller {
 		parent::__construct($appName, $request);
 	}
 
-	public function save(string $provider = 'off', array $thresholds = [], array $sensors = []): DataResponse {
+	/**
+	 * @param ?string $supplierKey null or '' = keep the stored key (it is never sent to the browser);
+	 *   the "Remove the key" box sends clearSupplierKey = true.
+	 */
+	public function save(string $provider = 'off', array $thresholds = [], array $sensors = [], string $supplierUrl = '', ?string $supplierKey = null, int $supplierStaleMinutes = 5, bool $clearSupplierKey = false): DataResponse {
 		$this->settings->setProvider($provider);
+		$this->settings->setSupplier($supplierUrl, $clearSupplierKey ? '' : (($supplierKey === null || trim($supplierKey) === '') ? null : $supplierKey), $supplierStaleMinutes);
 		$this->settings->setThresholds($thresholds);
 		$this->settings->setSensors($sensors);
 		return new DataResponse(['ok' => true]);

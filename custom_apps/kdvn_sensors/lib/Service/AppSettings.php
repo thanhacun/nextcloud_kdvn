@@ -16,8 +16,12 @@ class AppSettings {
 	public const DEFAULT_THRESHOLDS = [
 		'temperature' => ['okMin' => 22.0, 'okMax' => 26.0, 'warnMin' => 20.0, 'warnMax' => 28.0],
 		'humidity' => ['okMin' => 40.0, 'okMax' => 60.0, 'warnMin' => 30.0, 'warnMax' => 70.0],
-		'co2' => ['okMin' => 0.0, 'okMax' => 800.0, 'warnMin' => 0.0, 'warnMax' => 1200.0],
+		// Bands from the Azbil BMS diagram E-14: 400-600 good, 600-1000 poor (shown as Warning), above that Bad.
+		'co2' => ['okMin' => 0.0, 'okMax' => 600.0, 'warnMin' => 0.0, 'warnMax' => 1000.0],
 	];
+
+	/** Point names of one sensor at the supplier source ("fan" is optional: the exhaust fan running signal). */
+	public const POINT_KEYS = ['temperature', 'humidity', 'co2', 'fan'];
 
 	/** After this many seconds without a fresh reading the tile shows NA. */
 	public const STALE_SECONDS = 600;
@@ -27,14 +31,63 @@ class AppSettings {
 	) {
 	}
 
-	/** 'off' or 'mock' (a 'supplier' provider follows once the API details are known). */
+	private const PROVIDERS = ['off', 'mock', 'supplier'];
+
+	/** 'off', 'mock' (testing) or 'supplier' (Azbil BACnet Service API). */
 	public function provider(): string {
 		$value = $this->config->getValueString(self::APP, 'provider', 'off');
-		return in_array($value, ['off', 'mock'], true) ? $value : 'off';
+		return in_array($value, self::PROVIDERS, true) ? $value : 'off';
 	}
 
 	public function setProvider(string $value): void {
-		$this->config->setValueString(self::APP, 'provider', in_array($value, ['off', 'mock'], true) ? $value : 'off');
+		$this->config->setValueString(self::APP, 'provider', in_array($value, self::PROVIDERS, true) ? $value : 'off');
+	}
+
+	/** Full URL of the supplier endpoint that returns all point values ('' = not set). */
+	public function supplierUrl(): string {
+		return $this->config->getValueString(self::APP, 'supplier_url', '');
+	}
+
+	/** The X-API-Key secret (stored encrypted as a sensitive value; never sent to the browser). */
+	public function supplierKey(): string {
+		return $this->config->getValueString(self::APP, 'supplier_key', '');
+	}
+
+	public function hasSupplierKey(): bool {
+		return $this->supplierKey() !== '';
+	}
+
+	/** A value not updated for this many seconds shows NA (supplier default: 5 minutes). */
+	public function supplierStaleSeconds(): int {
+		$minutes = $this->config->getValueInt(self::APP, 'supplier_stale_minutes', 5);
+		return self::cleanStaleMinutes($minutes) * 60;
+	}
+
+	public function supplierStaleMinutes(): int {
+		return intdiv($this->supplierStaleSeconds(), 60);
+	}
+
+	/** 1 to 10 minutes (the display itself shows NA after STALE_SECONDS anyway). */
+	public static function cleanStaleMinutes(int $minutes): int {
+		return max(1, min(10, $minutes));
+	}
+
+	/** Only http(s) URLs; anything else is stored as '' (not set). */
+	public static function cleanUrl(string $url): string {
+		$url = trim($url);
+		if ($url === '' || strlen($url) > 300 || !filter_var($url, FILTER_VALIDATE_URL)) {
+			return '';
+		}
+		return in_array(strtolower((string)parse_url($url, PHP_URL_SCHEME)), ['http', 'https'], true) ? $url : '';
+	}
+
+	/** @param ?string $key null = keep the stored key, '' = delete it */
+	public function setSupplier(string $url, ?string $key, int $staleMinutes): void {
+		$this->config->setValueString(self::APP, 'supplier_url', self::cleanUrl($url));
+		if ($key !== null) {
+			$this->config->setValueString(self::APP, 'supplier_key', trim($key), false, true);
+		}
+		$this->config->setValueInt(self::APP, 'supplier_stale_minutes', self::cleanStaleMinutes($staleMinutes));
 	}
 
 	/**
@@ -54,7 +107,7 @@ class AppSettings {
 	/**
 	 * The configured sensors. With none configured one implicit sensor stands in, so the page
 	 * deployed with 0.1.0 keeps working.
-	 * @return list<array{id: string, name: string, buildingId: ?int, metrics: list<string>, ref: string, roomDisplay: bool, thresholds: array}>
+	 * @return list<array{id: string, name: string, buildingId: ?int, metrics: list<string>, points: array<string, string>, roomDisplay: bool, thresholds: array}>
 	 */
 	public function sensors(): array {
 		$stored = json_decode($this->config->getValueString(self::APP, 'sensors', ''), true);
@@ -63,7 +116,7 @@ class AppSettings {
 			$name = trim($this->config->getValueString(self::APP, 'location', ''));
 			$sensors = [[
 				'id' => 'default', 'name' => $name !== '' ? $name : 'Office', 'buildingId' => null,
-				'metrics' => self::METRICS, 'ref' => '', 'roomDisplay' => true, 'thresholds' => [],
+				'metrics' => self::METRICS, 'points' => [], 'roomDisplay' => true, 'thresholds' => [],
 			]];
 		}
 		return $sensors;
@@ -108,10 +161,22 @@ class AppSettings {
 				'name' => $name,
 				'buildingId' => ($building === null || $building === '' || !is_numeric($building)) ? null : (int)$building,
 				'metrics' => $metrics === [] ? self::METRICS : $metrics,
-				'ref' => mb_substr(trim((string)($row['ref'] ?? '')), 0, 100),
+				'points' => self::cleanPoints((array)($row['points'] ?? [])),
 				'roomDisplay' => !empty($row['roomDisplay']),
 				'thresholds' => self::cleanThresholds((array)($row['thresholds'] ?? []), false),
 			];
+		}
+		return $out;
+	}
+
+	/** @return array<string, string> point name per metric (and "fan"); empty names are left out */
+	public static function cleanPoints(array $in): array {
+		$out = [];
+		foreach (self::POINT_KEYS as $key) {
+			$name = mb_substr(trim((string)($in[$key] ?? '')), 0, 100);
+			if ($name !== '') {
+				$out[$key] = $name;
+			}
 		}
 		return $out;
 	}

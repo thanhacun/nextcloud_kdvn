@@ -36,3 +36,15 @@ command and wait for approval. Steps 2 to 4 change the server.
      office's tablet link, tick the groups to hide from the staff search, and click "Test the
      Reception desk conversation". An invited guest arriving must reach the host and only that
      office's reception group; a Hanoi reception user must not see another office's guests.
+
+## kdvn_sensors with the supplier source (0.3.0)
+- Nextcloud's HTTP client refuses addresses on the internal network. Before choosing "Supplier API" run once
+  (config.php change, no restart; it also applies to every other server-side request Nextcloud makes, so state it
+  to Thanh first):
+  `docker exec -u www-data nextcloud-app php occ config:system:set allow_local_remote_servers --value=true --type=boolean`
+- Firewall: the Base Station (Azbil BACnet Service) must accept inbound TCP on its API port from the Nextcloud
+  server's IP only. Check from the server: `docker exec nextcloud-app curl -sS -m 5 -o /dev/null -w '%{http_code}\n' -H 'X-API-Key: <key>' <url>`
+  (200 = works, 401 = wrong key). Never paste the real key into chat or git.
+- Then in Administration settings > Office sensors: Data source "Supplier API", URL, key, the point names per sensor.
+  Test with one sensor first. Look at `occ log:tail` for "kdvn_sensors supplier".
+- Version bump 0.3.0: `occ upgrade` is needed (see step 4).

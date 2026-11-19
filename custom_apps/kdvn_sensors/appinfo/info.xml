@@ -4,8 +4,8 @@
 	<id>kdvn_sensors</id>
 	<name>Office Sensors</name>
 	<summary>Indoor temperature, humidity and CO2 on a public display page</summary>
-	<description>Shows indoor air readings on a secret-link display page. The readings come from a provider (a mock provider for now; the supplier BACnet API later).</description>
-	<version>0.2.0</version>
+	<description>Shows indoor air readings on a secret-link display page. The readings come from a provider: the Azbil BACnet Service REST API, or a mock provider for testing.</description>
+	<version>0.3.0</version>
 	<licence>agpl</licence>
 	<author>KDVN IT</author>
 	<namespace>KdvnSensors</namespace>

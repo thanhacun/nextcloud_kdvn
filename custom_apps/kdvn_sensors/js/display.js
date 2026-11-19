@@ -8,9 +8,9 @@
 
 	const LOCALES = { vi: 'vi-VN', en: 'en-GB', ja: 'ja-JP' }
 	const T = {
-		en: { temperature: 'Temperature', humidity: 'Humidity', co2: 'CO2', Comfortable: 'Comfortable', Normal: 'Normal', Good: 'Good', Warning: 'Warning', Bad: 'Bad', NA: 'NA', source: 'Indoor sensor', none: 'No data source', offline: 'Connection lost, retrying', measured: 'Measured {time}', noSensors: 'No sensor for this office' },
-		vi: { temperature: 'Nhiệt độ', humidity: 'Độ ẩm', co2: 'CO2', Comfortable: 'Dễ chịu', Normal: 'Bình thường', Good: 'Tốt', Warning: 'Chú ý', Bad: 'Kém', NA: 'NA', source: 'Cảm biến trong nhà', none: 'Chưa có nguồn dữ liệu', offline: 'Mất kết nối – đang thử lại', measured: 'Đo lúc {time}', noSensors: 'Chưa có cảm biến cho văn phòng này' },
-		ja: { temperature: '温度', humidity: '湿度', co2: 'CO2', Comfortable: '快適', Normal: '標準', Good: '良好', Warning: '注意', Bad: '要改善', NA: 'NA', source: '室内センサー', none: 'データなし', offline: '接続が切れました。再試行中…', measured: '{time}測定', noSensors: 'この拠点にはセンサーがありません' },
+		en: { temperature: 'Temperature', humidity: 'Humidity', co2: 'CO2', Comfortable: 'Comfortable', Normal: 'Normal', Good: 'Good', Warning: 'Warning', Bad: 'Bad', NA: 'NA', source: 'Indoor sensor', none: 'No data source', offline: 'Connection lost, retrying', measured: 'Measured {time}', noSensors: 'No sensor for this office', fanOn: 'Exhaust fan running', fanOff: 'Exhaust fan off', fanNA: 'Exhaust fan NA' },
+		vi: { temperature: 'Nhiệt độ', humidity: 'Độ ẩm', co2: 'CO2', Comfortable: 'Dễ chịu', Normal: 'Bình thường', Good: 'Tốt', Warning: 'Chú ý', Bad: 'Kém', NA: 'NA', source: 'Cảm biến trong nhà', none: 'Chưa có nguồn dữ liệu', offline: 'Mất kết nối – đang thử lại', measured: 'Đo lúc {time}', noSensors: 'Chưa có cảm biến cho văn phòng này', fanOn: 'Quạt hút đang chạy', fanOff: 'Quạt hút tắt', fanNA: 'Quạt hút NA' },
+		ja: { temperature: '温度', humidity: '湿度', co2: 'CO2', Comfortable: '快適', Normal: '標準', Good: '良好', Warning: '注意', Bad: '要改善', NA: 'NA', source: '室内センサー', none: 'データなし', offline: '接続が切れました。再試行中…', measured: '{time}測定', noSensors: 'この拠点にはセンサーがありません', fanOn: '排気ファン運転中', fanOff: '排気ファン停止', fanNA: '排気ファン NA' },
 	}
 
 	function h(tag, cls, text) {
@@ -61,6 +61,7 @@
 					tiles.append(card)
 				})
 				block.append(title, tiles)
+				if (sensor.fan) block.append(h('div', 'ks-fan ks-fan-' + sensor.fan, sensor.fan === 'on' ? t.fanOn : (sensor.fan === 'off' ? t.fanOff : t.fanNA)))
 				const times = sensor.measuredAt ? [t.measured.replace('{time}', new Date(sensor.measuredAt * 1000).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }))] : []
 				block.append(h('div', 'ks-meta', (sensor.source === 'none' ? t.none : t.source) + (times.length ? ' · ' + times[0] : '')))
 				return block

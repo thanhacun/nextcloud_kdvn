@@ -181,8 +181,10 @@ public links", so the options are in the 504 report; none applied yet.
   `~/logs/preview-generate-all.log`, removes its own crontab line when done. Stop it with
   `docker exec nextcloud-app pkill -f preview:generate-all`. Crontab before the change:
   `~/crontab.backup-2026-11-20` on the server.
-- Not changed, to decide: freshclam at 03:30 UTC and the antivirus background scan at 04:00 UTC run at 10:30 and
-  11:00 Vietnam time, in working hours.
+- Moved to night (2026-11-20): freshclam from 03:30 to 20:00 UTC (03:00 Vietnam) and the antivirus background scan
+  from 04:00 to 20:30 UTC (03:30 Vietnam); they ran in working hours before.
+- Host crontab, UTC (Vietnam = +7): every 5 min cron.php; 18:00 backup.sh; 18:30 one-time preview:generate-all
+  (2026-11-20 only); 19:30 preview:pre-generate; 20:00 freshclam; 20:30 antivirus scan.
 - Large uploads: default quota is 5 GB per user. Chunked uploads bypass the PHP size limits. A Flow rule
   (files_accesscontrol "Block access to a file" with a file-size and MIME-type check) can block big files; untested.
 - Port 9980 on 172.16.10.57 (Collabora) is open to the LAN. A DOCKER-USER rule to allow only 172.16.10.247 was tried on

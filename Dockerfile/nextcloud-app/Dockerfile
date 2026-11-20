@@ -7,7 +7,7 @@ RUN set -ex; \
     sed -i 's|http://|https://|g' /etc/apt/sources.list.d/debian.sources; \
     echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80retries; \
     apt-get update; \
-    apt-get install -y --no-install-recommends ffmpeg; \
+    apt-get install -y --no-install-recommends ffmpeg ghostscript; \
     rm -rf /var/lib/apt/lists/*
 
 RUN set -ex; \

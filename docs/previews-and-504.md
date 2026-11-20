@@ -1,0 +1,82 @@
+# 504 bursts, previews and logs (found 2026-11-20)
+
+## What happened
+Users got 504 from HAProxy in short bursts (02:59, 03:08 to 03:12 on 2026-11-20).
+HAProxy marked `nextcloud_backend/nextcloud` DOWN ("Layer4 timeout", 2 s check) while
+Apache in nextcloud-app was at `MaxRequestWorkers 150` (151 processes, all sleeping,
+CPU idle, 151 idle PostgreSQL connections, no DB locks).
+
+Trigger: a burst of about 200 `/core/preview` requests in 4 minutes. Nextcloud log
+(last 3000 lines): 519x `onlyoffice: getConvertedUri: from pdf to jpg` and 297x
+`Download with empty or not correct hash: Expired token`. So PDF thumbnails were
+rendered by the ONLYOFFICE Document Server (app setting `preview` = true), one HTTP
+round trip per thumbnail while an Apache worker waits. The DB log shows matching
+`previews_file_uniq_idx` duplicate-key errors (concurrent generation of the same preview).
+
+Second contributor: the image had no Ghostscript (`sh: 1: gs: not found`, 261 lines in
+30 min), so the core PDF provider failed too.
+
+Suspect, not confirmed: the broken SMB external storage (mount id 3, see progress.md):
+398x `Storage with mount id 3 is not available` and "Error while getting file info"
+can also hold workers.
+
+## Where the logs are
+- Nextcloud log: `log_type` and `logfile` are unset, so the default applies:
+  `<datadirectory>/nextcloud.log` = `/mnt/ncdata/nextcloud.log` in the container
+  (host: `/media/ncdata/nextcloud/nextcloud.log`, from docker-compose.yml).
+  `/var/www/html/data/nextcloud.log` is an old file from September 2025: ignore it.
+  Rotation: `log_rotate_size` = 50 MB. Level: `loglevel` = 2.
+- `config.php` is in the volume `nextcloud-stack_nextcloud_config`, not in git. Settings
+  below are therefore set with `occ config:system:set`, which writes to that file.
+- Apache access/error log and PHP errors: `docker logs nextcloud-app`.
+- HAProxy: `docker logs internal-haproxy`. PostgreSQL: `docker logs nextcloud-db`.
+- Quick error summary:
+  `docker exec nextcloud-app tail -n 3000 /mnt/ncdata/nextcloud.log` (one JSON per line).
+
+## Changes (needs approval for each server step)
+
+### 1. Ghostscript in the image (git, done in this commit)
+`Dockerfile/nextcloud-app/Dockerfile`: `ghostscript` added next to ffmpeg.
+Needs a rebuild and a recreate of nextcloud-app (`docker compose up -d app`): about a few
+minutes of downtime for about 500 users. Before: `backup.sh` plus stack-back, check the
+files are not empty. After: `docker exec nextcloud-app which gs ffmpeg`, and the SMB
+override (`/dev/null` ini) is still mounted.
+
+### 2. Previews (server settings, no restart, no downtime)
+```
+# stop the Document Server rendering thumbnails (app setting, DB)
+docker exec -u www-data nextcloud-app php occ config:app:set onlyoffice preview --value=false
+
+# drop providers that cannot work here (no LibreOffice in the image) and keep the rest
+i=0; for p in PNG JPEG GIF BMP MarkDown MP3 Image HEIC TIFF PDF Movie; do
+  docker exec -u www-data nextcloud-app php occ config:system:set enabledPreviewProviders $i --value="OC\\Preview\\$p"; i=$((i+1)); done
+
+# limit parallel generation
+docker exec -u www-data nextcloud-app php occ config:system:set preview_concurrency_new --type=integer --value=4
+docker exec -u www-data nextcloud-app php occ config:system:set preview_concurrency_all --type=integer --value=8
+```
+Provider list to keep: PNG, JPEG, GIF, BMP, MarkDown, MP3, Image, HEIC, TIFF, PDF
+(needs gs from step 1), Movie. Removed: MSOffice2003, MSOffice2007, OpenDocument.
+Result: Word/Excel/PowerPoint files show a generic icon instead of a thumbnail
+(the ONLYOFFICE provider was the only one producing them).
+
+Pre-generate instead of generating when a user opens a folder (previewgenerator 5.15.0 is
+already installed):
+```
+# once, outside working hours (heavy, 500 users of files)
+docker exec -u www-data nextcloud-app php occ preview:generate-all -vv
+# then every 10 minutes from the host cron of kdvn_admin
+*/10 * * * * docker exec -u www-data nextcloud-app php occ preview:pre-generate >/dev/null 2>&1
+```
+Unsure (check before relying on it): whether the host crontab is the right place on this
+server. It was empty on 2026-11-20 and cron.php still runs, so find out what triggers
+cron.php first. `occ preview:pre-generate` needs the previewgenerator app to see new files
+through the normal background jobs.
+
+## Public share of an xlsx (open question)
+OnlyOffice 10.2.1 serves public links itself: route `/apps/onlyoffice/s/{shareToken}`
+(EditorController::publicPage). For anonymous visitors the app checks the group
+restriction of the SHARER (`isUserAllowedToUse($shareBy)`), and opens the editor in `edit`
+mode only when the share has the edit permission; otherwise `view` mode. `liveViewOnShare`
+is false, so anonymous viewers do not co-edit. There is no app setting "never open on
+public links", so the options are in the 504 report; none applied yet.

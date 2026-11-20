@@ -1,7 +1,8 @@
 # Nextcloud stack and apps: status (dated 2026-11-15)
 
 ## Versions
-- Production runs Nextcloud 34.0.5 (checked on the server 2026-10-26: not in maintenance
+- UPDATE 2026-11-20: production now runs Nextcloud 34.0.6 (see docs/previews-and-504.md).
+- Production ran Nextcloud 34.0.5 (checked on the server 2026-10-26: not in maintenance
   mode, no DB upgrade pending). The image history shows 32.0.15, then 33, then 34, all
   built on 2026-10-23. Earlier note said "from 32.0.3"; the upgrade date is therefore
   about 2026-10-23 (Thanh: confirm).

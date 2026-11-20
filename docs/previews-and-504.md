@@ -80,3 +80,27 @@ restriction of the SHARER (`isUserAllowedToUse($shareBy)`), and opens the editor
 mode only when the share has the edit permission; otherwise `view` mode. `liveViewOnShare`
 is false, so anonymous viewers do not co-edit. There is no app setting "never open on
 public links", so the options are in the 504 report; none applied yet.
+
+## Deployed 2026-11-20
+- Backup first: backup.sh (`backup/2026-11-20_03-46`, all files non-empty) and a stack-back snapshot.
+- Preview settings applied with occ (see above). previewgenerator full run: NOT done yet.
+- Image rebuilt with ghostscript. The build re-pulled `34-apache`, so the recreate also upgraded
+  Nextcloud 34.0.5 to 34.0.6 (Thanh chose to accept it, not rehearsed on a test server). The
+  upgrade also updated calendar, deck, files_antivirus, nc_gantt, files_pdfviewer, text and
+  calendar_resource_management 0.12.2 to 1.0.0 from the app store.
+  TODO: re-test room booking (calresources_* tables must be unchanged).
+- HAProxy: `/apps/onlyoffice/s/` returns 403 for cloud.kinden.com.vn (public links no longer open
+  the editor). A single-file bind mount goes stale after `git pull`: the container kept the old
+  haproxy.cfg until `docker compose up -d --force-recreate internal-haproxy`. Reload alone (HUP)
+  is not enough after a pull. TODO: check what a visitor sees on a public xlsx link (download?).
+- Setup checks still open (not touched): HaRP 0.3.0 is older than the required 0.4.8; missing DB
+  indices (`occ db:add-missing-indices`); Talk expensive repair steps.
+
+## ONLYOFFICE Document Server host (172.16.10.57), looked at 2026-11-20
+- Container `onlyoffice` built locally from `/home/nextcloud/onlyoffice` (not in git):
+  `build/Dockerfile` installs `onlyoffice-documentserver_9.3.0-139_amd64.deb` on Ubuntu 24.04;
+  older builds kept in `build/old_builds` (9.0.4 btactic, 9.1.0, 9.2.0, 9.3.0-51). Japanese
+  fonts in `build/jpfonts`. Compose: `docker-compose.yml`, port 8081, JWT on.
+- State: up 28 days, 6 CPU / 15.6 GB RAM, container at 0.25% CPU and 1.2 GB. Healthcheck true.
+- Log: `thumb_*` documents hit `handleDeadLetter` repeatedly (thumbnail conversions retried): the
+  same preview storm as above. Should stop now that onlyoffice `preview` is false.

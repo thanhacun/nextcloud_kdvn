@@ -166,3 +166,24 @@ public links", so the options are in the 504 report; none applied yet.
   test; everything falls back to NotoSansSC (Chinese glyph shapes). M PLUS 1p and IPAex are installed but not used
   by name. Open: check on screen with a real Japanese file.
 - CODE licence terms for 500 users: not verified. ONLYOFFICE 10.0.0 stopped until the licence is clear.
+
+## Cron and backups on 172.16.10.247 (found and fixed 2026-11-20)
+- The host clock is UTC: a "02:00" cron line runs at 09:00 Vietnam time. stack-back (its own container) uses
+  Vietnam time. Plan cron times in UTC (Vietnam = UTC+7).
+- The nightly 02:00 line ran `backup-nextcloud.sh` (legacy). Its `docker exec -t pg_dump` leaves CR characters in
+  db.sql.gz (seen in backup/2026-11-19_02-00 and 2026-11-20_02-00; the manual backup.sh run is clean): those
+  dumps are not safe to restore. stack-back snapshots were not affected. Replaced by `backup.sh` at 18:00 UTC
+  (01:00 Vietnam; it turns maintenance mode on for about 3 minutes).
+- The 02:30 `preview:pre-generate` line used `docker exec -it`, which fails under cron (no TTY): nothing was
+  pre-generated. Now without `-it`, at 19:30 UTC, with a log and `flock` so that it skips while the one-time
+  `preview:generate-all` runs.
+- One-time `occ preview:generate-all` at 18:30 UTC on 2026-11-20 (01:30 Vietnam, after the backup), logged to
+  `~/logs/preview-generate-all.log`, removes its own crontab line when done. Stop it with
+  `docker exec nextcloud-app pkill -f preview:generate-all`. Crontab before the change:
+  `~/crontab.backup-2026-11-20` on the server.
+- Not changed, to decide: freshclam at 03:30 UTC and the antivirus background scan at 04:00 UTC run at 10:30 and
+  11:00 Vietnam time, in working hours.
+- Large uploads: default quota is 5 GB per user. Chunked uploads bypass the PHP size limits. A Flow rule
+  (files_accesscontrol "Block access to a file" with a file-size and MIME-type check) can block big files; untested.
+- Public ports on 172.16.10.57: Collabora 9980 should only be reachable from 172.16.10.247 (DOCKER-USER rule, needs sudo,
+  done by Thanh).

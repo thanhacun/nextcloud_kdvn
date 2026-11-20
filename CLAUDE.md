@@ -32,6 +32,13 @@ content on the server, so apps installed from the app store land there too.
 - Routing changes: check haproxy/haproxy.cfg, extra_hosts and trusted_domains/overwrite*
   settings together.
 - Run reset-perms.sh after changing volume permissions.
+- Office editor: Collabora (richdocuments) runs on 172.16.10.57 (`~/collabora`, image kdvn/collabora:...-jp), not on this
+  host; haproxy `collabora_backend` points there. The ONLYOFFICE app is disabled and its container on 172.16.10.57 is
+  stopped (rollback: `docker start onlyoffice`, `occ app:enable onlyoffice`, `occ app:disable richdocuments`).
+  ONLYOFFICE 10.x is not to be used until the licence is clear. Details: docs/previews-and-504.md.
+- haproxy.cfg is bind-mounted as a single file: after `git pull` the container still sees the old one. Validate the new
+  file in a throwaway container, then `docker compose up -d --force-recreate internal-haproxy`.
+- The host clock is UTC: write cron times in UTC (Vietnam = UTC+7). Nextcloud log: /mnt/ncdata/nextcloud.log.
 - Maintenance window: TODO: confirm.
 
 ## Backups and upgrades

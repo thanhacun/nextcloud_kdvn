@@ -1,4 +1,20 @@
-# Nextcloud stack and apps: status (dated 2026-11-15)
+# Nextcloud stack and apps: status (dated 2026-11-20)
+
+## 2026-11-20: 504 bursts fixed, Nextcloud 34.0.6, Collabora instead of ONLYOFFICE
+Details, commands and evidence: docs/previews-and-504.md. Short version:
+- Cause of the 504 bursts: ~200 `/core/preview` requests in minutes, each waiting on ONLYOFFICE thumbnails
+  (+ no Ghostscript) until Apache hit MaxRequestWorkers 150. Fixed: ghostscript in the image, ONLYOFFICE `preview`
+  off, preview providers trimmed, concurrency limits (occ config, not in git).
+- Nextcloud is 34.0.6 (the image rebuild pulled it; not rehearsed). calendar_resource_management went 0.12.2 to 1.0.0
+  by the app store during the upgrade: room booking still to be re-tested.
+- HaRP: image `:release` (0.4.8). Its FRP certificates had expired on 2026-11-07; regenerated (valid to 2040).
+- Office editor: Nextcloud now uses Collabora (richdocuments) on 172.16.10.57, image `kdvn/collabora:26.04.6.1.1-jp`
+  (project `~/collabora` there). HAProxy `collabora_backend` points to it. ONLYOFFICE app is DISABLED, container
+  `onlyoffice` on 172.16.10.57 is STOPPED but kept for rollback (see memory/previews doc). ONLYOFFICE 10.0.0 was
+  trialled and stopped: vanilla 10.0.0 is view-only on mobile; Thanh will not use it until the licence is clear.
+- Public share links: no switch to force download; a read-only public xlsx opens in Collabora view mode (fast).
+- Host cron (UTC; Vietnam = +7): backup.sh 18:00, preview jobs, ClamAV at 20:00/20:30. The old 02:00 job used the
+  legacy backup-nextcloud.sh and wrote CRLF-corrupted dumps; replaced.
 
 ## Versions
 - UPDATE 2026-11-20: production now runs Nextcloud 34.0.6 (see docs/previews-and-504.md).
@@ -44,6 +60,18 @@
   save (until saved, all offices count).
 - Retention and consent wording with HR/legal. IT contact in the reception plan.
 - Test plan Phase 1 not run yet (Thanh is starting careful testing).
+- Collabora (2026-11-20): test two users on one file and editing on a phone; check the CODE (Development Edition)
+  licence terms for ~430 users (Thanh does this); Windows Japanese font names (MS Mincho, MS Gothic, Meiryo, Yu *)
+  still fall back to Noto Sans SC (Chinese glyph shapes); fonts uploaded in the Office app work (remote_font_config).
+- Re-test room booking after calendar_resource_management 1.0.0 (tables calresources_* must stay unchanged).
+- Check the first runs of the new crons: ~/logs/nextcloud-backup.log (backup.sh, maintenance mode ~3 min at 01:00 VN)
+  and ~/logs/preview-generate-all.log (one-time, 2026-11-20 18:30 UTC).
+- Port 9980 on 172.16.10.57 is open to the LAN. A DOCKER-USER rule failed once and caused an outage: retry only with a
+  self-undoing command (docs/previews-and-504.md).
+- Setup checks still open: missing DB indices (`occ db:add-missing-indices`), Talk expensive repair steps. ExApp
+  test-deploy fails to enable (old frpc cert; test app only). Unused: ONLYOFFICE container/image/volumes and the
+  `/onlyoffice/` HAProxy route (503 while stopped): remove when the rollback is no longer needed.
+- Not decided: large-file upload block (Flow rule with files_accesscontrol: untested); default quota is 5 GB.
 
 ## SMB external storage broken after the 34 image (found 2026-11-13)
 Status 2026-11-13: workaround applied on the server (PHP smbclient extension off). /vtrm works again.
@@ -169,6 +197,7 @@ PHP inside the container. To read the real error behind an empty `verify` messag
   `layout=condensed`.
 
 ## Next
+- (2026-11-20) Finish the Collabora checks above, then decide what to do with the stopped ONLYOFFICE.
 - SMB external storage: workaround applied; /scan-ho waits for the answers from the Windows PC (see "Open
   decision" in the SMB section), then re-test on the 35 image.
 - Indoor sensors: waiting for the supplier answers (docs/plan-sensor-display.md section 6), then write the

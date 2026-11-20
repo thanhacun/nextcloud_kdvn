@@ -90,7 +90,7 @@ services:
 #      - nextcloud-net
 
   harp:
-    image: ghcr.io/nextcloud/nextcloud-appapi-harp:main
+    image: ghcr.io/nextcloud/nextcloud-appapi-harp:release  # stable tag; was :main (0.3.0 on the server, AppAPI 34 needs 0.4.8+)
     container_name: nextcloud-appapi-harp
     restart: unless-stopped
     env_file:

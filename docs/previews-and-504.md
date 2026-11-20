@@ -185,5 +185,8 @@ public links", so the options are in the 504 report; none applied yet.
   11:00 Vietnam time, in working hours.
 - Large uploads: default quota is 5 GB per user. Chunked uploads bypass the PHP size limits. A Flow rule
   (files_accesscontrol "Block access to a file" with a file-size and MIME-type check) can block big files; untested.
-- Public ports on 172.16.10.57: Collabora 9980 should only be reachable from 172.16.10.247 (DOCKER-USER rule, needs sudo,
-  done by Thanh).
+- Port 9980 on 172.16.10.57 (Collabora) is open to the LAN. A DOCKER-USER rule to allow only 172.16.10.247 was tried on
+  2026-11-20 and blocked everything, including 172.16.10.247: Office was down from about 07:42 UTC until the rule was
+  removed (HAProxy: "collabora_backend has no server available", 503 on /hosting/discovery). Cause not found (rules
+  could not be read without sudo). If retried: run it as one command that removes itself after 60 s, and test from
+  172.16.10.247 inside that minute.

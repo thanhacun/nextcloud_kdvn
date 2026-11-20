@@ -104,3 +104,29 @@ public links", so the options are in the 504 report; none applied yet.
 - State: up 28 days, 6 CPU / 15.6 GB RAM, container at 0.25% CPU and 1.2 GB. Healthcheck true.
 - Log: `thumb_*` documents hit `handleDeadLetter` repeatedly (thumbnail conversions retried): the
   same preview storm as above. Should stop now that onlyoffice `preview` is false.
+
+### OnlyOffice 10.0.0 trial (2026-11-20, throwaway container on 172.16.10.57, now removed)
+- Edit test on production (9.3.0.51 reported by Nextcloud): editor open, file download and two
+  `/apps/onlyoffice/track` callbacks seen at 04:50: editing works. Redis is not running inside
+  the container and the connection statistics stay at 0; neither breaks editing.
+- Official image `onlyoffice/documentserver:10.0.0` (build 169) started healthy on localhost:8091 with the
+  jpfonts mounted. CSV to PDF and CSV to XLSX conversions worked; Japanese and Vietnamese text kept.
+- Its info.json reports connections=2147483647, hasLicense=false. NOT verified what limit it enforces.
+- Migration trap: the official image refuses to fetch from private IPs (conversion error -4).
+  Needs `services.CoAuthoring.request-filtering-agent.allowPrivateIPAddress` and
+  `allowMetaIPAddress` = true in local.json (the production mount json/local-production-linux.json
+  is commented out in its compose). Edit local.json so it stays owned by ds:ds, mode 640, or the
+  services will not start (happened in the trial).
+- Not tested: the Nextcloud connector against 10.0.0 (needs a switch of the production
+  DocumentServerUrl), co-editing, large xlsx.
+
+## HaRP upgrade to 0.4.8 and the expired FRP certificates (2026-11-20)
+- compose now uses `ghcr.io/nextcloud/nextcloud-appapi-harp:release` (was `:main`, which ran 0.3.0).
+- The new HaRP exited at start: `frpc` "login to the server failed: session shutdown". Cause: the FRP TLS
+  certificates in `haproxy/certs/frp` (git-ignored, generated 2025-11-07) expired on 2026-11-07. The old
+  0.3.0 container only kept working because it started on 2026-11-03.
+- Fix: renamed `haproxy/certs/frp` to `frp.expired-2026-11-07` (kept), restarted harp, HaRP generated new
+  certificates valid until 2040-07-29. Setup checks "AppAPI deploy daemon" and "HaRP version check" pass.
+- ExApp `test-deploy` (test app only) failed to re-enable afterwards: its frpc most likely still has the old
+  client certificate. Nothing in production uses it. Re-register it if the app is needed again.
+- After updating Nextcloud, restart HaRP (HaRP 0.4.8 loads the ExApp route verbs at start).

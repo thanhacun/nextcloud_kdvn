@@ -130,3 +130,39 @@ public links", so the options are in the 504 report; none applied yet.
 - ExApp `test-deploy` (test app only) failed to re-enable afterwards: its frpc most likely still has the old
   client certificate. Nothing in production uses it. Re-register it if the app is needed again.
 - After updating Nextcloud, restart HaRP (HaRP 0.4.8 loads the ExApp route verbs at start).
+
+## Collabora re-check (2026-11-20), trial container on 172.16.10.57
+- Why Collabora was dropped (git 6da5641, 2025-10-04): "handle opening big MS Office files". The old HAProxy
+  `haproxy/lua/xlsx_block.lua` (disabled) refused every .xlsx ("Prevent Collabora from loading huge XLSX
+  files (> 10 MB)"). Production state: `collabora` container (collabora/code:latest from 2026-02-25, compose
+  profile `manual-start`) idle, richdocuments 11.1.2 installed but DISABLED.
+- Trial: `collabora/code:latest` = Collabora Online Development Edition 26.04.6.1, container `collabora-test`,
+  port 9980, memory cap 6 GB, WOPI host `http://172.16.10.57:8100` (mock host `/tmp/coltest/wopi_mock.py`,
+  never overwrites originals; saves go to `<name>.saved`).
+- Limits: startup log says max open documents 1000000 and max connections 1000000 (no practical cap).
+  Per document defaults: limit_load_secs 100, limit_convert_secs 100, memproportion 80%.
+- Big xlsx: synthetic 86 MB, 750k rows x 14 columns, 2 sheets, Japanese/Vietnamese text. Server-side
+  load + export to CSV: 12 s, about 800 MB peak, no error. Browser behaviour (popup, speed) NOT measured by
+  Claude; must be tried by hand.
+- Japanese: works only when the fonts are inside the jail template. Mounting jpfonts at
+  `/usr/share/fonts/custom` is NOT enough (jail bind-mount fails: "Bind-Mounting fails", also with SYS_ADMIN,
+  EACCES); mounting them at `/opt/cool/systemplate/usr/share/fonts/custom` works (NotoSerifJP, NotoSansJP
+  used). Unknown Japanese fonts (MS Gothic, MS Mincho, Yu Mincho, Meiryo) fall back to NotoSansSC (Chinese
+  glyph shapes): needs a font replacement table. Tested only through PDF export.
+- Licence: CODE is the free development edition; not verified from a vendor page in this session.
+- OnlyOffice 10.0.0 with more than 20 sessions: NOT tested. A scripted Socket.IO client connected 30
+  sockets but never got an `auth` reply (client problem). Only evidence: info.json
+  licenseInfo.connections = 2147483647.
+
+### Collabora moved to 172.16.10.57 (2026-11-20, decision by Thanh)
+- Project `~/collabora` on 172.16.10.57 (local git, not in this repo): image `kdvn/collabora:26.04.6.1.1-jp`
+  (CODE 26.04.6.1.1 + jpfonts baked into `/opt/cool/systemplate/usr/share/fonts/custom`; base image has no
+  shell, so only COPY steps; `COPY --chmod` applies to directories too, use 755 for the fonts dir).
+  Compose: port 9980, TLS terminated by HAProxy (`ssl.termination=true`), `aliasgroup1=https://cloud.kinden.com.vn:443`,
+  6 GB, `extra_hosts` cloud.kinden.com.vn to 172.16.10.247. No secrets in it.
+- haproxy.cfg: `collabora_backend` -> 172.16.10.57:9980, `timeout tunnel 1h`.
+- Japanese: Noto Sans/Serif JP work by name. Windows names (MS Gothic, MS Mincho, Meiryo, Yu *) are NOT mapped:
+  a replacement table in coolkitconfig.xcu, fontconfig rules and DefaultLocale_CJK=ja-JP had no effect in the PDF
+  test; everything falls back to NotoSansSC (Chinese glyph shapes). M PLUS 1p and IPAex are installed but not used
+  by name. Open: check on screen with a real Japanese file.
+- CODE licence terms for 500 users: not verified. ONLYOFFICE 10.0.0 stopped until the licence is clear.

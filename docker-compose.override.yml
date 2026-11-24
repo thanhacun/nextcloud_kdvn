@@ -15,6 +15,10 @@ services:
       # encryption (SMBCLIENT_ENCRYPTLEVEL_REQUEST). An empty ini switches the PHP smbclient extension off, so
       # Nextcloud falls back to the smbclient binary (works). Remove this line once the extension is fixed.
       - /dev/null:/usr/local/etc/php/conf.d/docker-php-ext-smbclient.ini:ro
+      # /scan-ho (//192.168.100.4/Admin) is mounted on the Docker host with the kernel CIFS client (line in the host's
+      # /etc/fstab, credentials in /etc/smb-credentials-scan-ho, root only) and used as a Local external storage,
+      # because Nextcloud's own SMB code cannot read it. rshared: a remount on the host shows up in the container.
+      - /mnt/scan-ho:/mnt/scan-ho:rshared
     environment:
       - PHP_OPCACHE_MEMORY_CONSUMPTION=512  # this variable is mention in /usr/local/etc/php/conf.f/opcache-recommended.ini
     mem_limit: 6g

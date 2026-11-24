@@ -10,10 +10,16 @@ Runbook and rehearsal results: docs/upgrade-35-runbook.md. Short version:
 - Outage of about 8 min (01:59 to 02:07 UTC): HAProxy kept the old nextcloud-app IP after the recreate (503 for users).
   Fix applied: `docker restart internal-haproxy`. Proper fix not done yet: `resolvers` with Docker DNS in haproxy.cfg.
 - After the upgrade: `occ db:add-missing-indices` (3 indices) and `occ maintenance:repair --include-expensive` done.
-- Open after the upgrade: Talk signaling server (turn.kinden.com.vn, external host, 2.1.1) is older than Talk 25
-  expects (latest 2.2.0, 2026-11-09; pin hash/block keys when upgrading); its shared secret was printed into a chat
-  transcript on 2026-11-24 and must be rotated (HPB server config plus `occ config:app:set spreed signaling_servers`);
-  notify_push self-test fails on the test cookie but the push server works; "Database configuration" warning in Server
+- Talk signaling server (HPB) done 2026-11-24: it runs on the external host `website@128.199.215.193` (a shared server with Odoo and KBM;
+  turn.kinden.com.vn), project `~/Projects/talk-hpb` (docker-compose.yml with the image pinned by digest, secrets in
+  `talk-secrets.env`, mode 600; old pins kept as comments; `*.bak-2026-11-24` copies of both files hold the OLD, leaked
+  secret: delete after a good call test). Upgraded 2.1.1 to 2.2.0 (aio-talk image of 2026-11-19) and SIGNALING_SECRET
+  rotated (twice: the first new value was also printed into a chat by mistake; `occ config:app:set` echoes its value, so
+  send its output to /dev/null; never run `occ talk:signaling:list`, it prints the secret). Nextcloud setup check for
+  the high-performance backend is green. Rotation recipe: new value from `openssl rand -hex 32` sent over ssh through
+  stdin to `talk-secrets.env`, `docker compose up -d` there, then the same value into `spreed signaling_servers` on
+  the Nextcloud host (about 45 s without Talk signaling). TURN_SECRET and INTERNAL_SECRET were not rotated.
+- Open after the upgrade: notify_push self-test fails on the test cookie but the push server works; "Database configuration" warning in Server
   info not read yet; SMB mounts as before (only /vtrm works; `lost+found` AccessDenied errors on /vtrm); Office, Talk call,
   group folders, SSO, tablets and displays still to be checked by Thanh.
 - Backups: backup.sh (2 min, maintenance mode) and stack-back (40 s) both write to the SAME root disk as the live data.

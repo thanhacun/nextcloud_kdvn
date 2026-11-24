@@ -20,13 +20,23 @@ Runbook and rehearsal results: docs/upgrade-35-runbook.md. Short version:
   stdin to `talk-secrets.env`, `docker compose up -d` there, then the same value into `spreed signaling_servers` on
   the Nextcloud host (about 45 s without Talk signaling). TURN_SECRET and INTERNAL_SECRET were not rotated.
 - Open after the upgrade: notify_push self-test fails on the test cookie but the push server works; "Database configuration" warning in Server
-  info not read yet; SMB mounts as before (only /vtrm works; `lost+found` AccessDenied errors on /vtrm); Office, Talk call,
+  info not read yet; SMB mounts: /scan-ho FIXED 2026-11-24 (see below); /vtrm works through the smbclient binary (`lost+found` AccessDenied noise in the
+  log); /hcmc-tamada (192.168.1.249) and /tamada-it (172.16.10.157, Tamada$, folder IT) still fail with ConnectionRefused,
+  their logins are not in any fstab; Office, Talk call,
   group folders, SSO, tablets and displays still to be checked by Thanh.
 - Backups: backup.sh (2 min, maintenance mode) and stack-back (40 s) both write to the SAME root disk as the live data.
   New: `~/dropbox_uploads/nextcloud` on Thanh's PC pulls the newest backup/ folder daily at 02:00 (Vietnam), zips, age-encrypts
   and uploads to Dropbox `/nextcloud` (Healthchecks ping). User files (639 GB on the separate disk /dev/sdb1) have no backup
   that Claude could see; Thanh says it is handled. Restore from Dropbox needs the age private key (restore tested once).
 - restore.sh fixed: roles (db_globals.sql.gz) are restored before the database dump.
+- /scan-ho via a host mount (option D, done 2026-11-24 04:31 UTC): on .247 `cifs-utils` installed, `/etc/fstab` line
+  `//192.168.100.4/admin /mnt/scan-ho cifs credentials=/etc/smb-credentials-scan-ho,uid=33,gid=33,file_mode=0660,dir_mode=0770,vers=3.0,noperm,_netdev,nofail`,
+  credentials file root-only (the account has an EMPTY password). docker-compose.override.yml binds `/mnt/scan-ho:/mnt/scan-ho:rshared`.
+  Nextcloud mount 19 (SMB, broken) was deleted and replaced by mount 20 (Local, datadir /mnt/scan-ho, user truong-quang-thanh,
+  filesystem_check_changes 1). Verified: 19 files visible, no errors. Recreate took 13 s including `docker restart internal-haproxy`.
+  Optional: add `x-systemd.automount` to the fstab line so the share is retried if the Windows PC was down at boot.
+  To do the same for /hcmc-tamada and /tamada-it: create a root-only credentials file per share (Thanh types the password,
+  Claude never sees it), fstab line, one more volume line, one recreate.
 
 ## 2026-11-20: 504 bursts fixed, Nextcloud 34.0.6, Collabora instead of ONLYOFFICE
 Details, commands and evidence: docs/previews-and-504.md. Short version:

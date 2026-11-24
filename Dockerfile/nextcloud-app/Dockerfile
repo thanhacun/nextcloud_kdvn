@@ -1,6 +1,6 @@
-# Built through docker-compose.override.yml (image kdvn/nextcloud-app:34, NC_TAG passed there).
+# Built through docker-compose.override.yml (image kdvn/nextcloud-app:35, NC_TAG passed there).
 # Keep the default in line with the override; Nextcloud cannot downgrade.
-ARG NC_TAG=34-apache
+ARG NC_TAG=35.0.3-apache
 FROM nextcloud:${NC_TAG}
 
 RUN set -ex; \

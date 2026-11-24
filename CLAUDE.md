@@ -51,9 +51,10 @@ content on the server, so apps installed from the app store land there too.
   backup. If the custom image (Dockerfile/nextcloud-app) is not in use, hand-installed
   packages (smbclient, ffmpeg, nano, ping) are lost. The custom image is in use (override builds
   kdvn/nextcloud-app:35 from Dockerfile/nextcloud-app/Dockerfile, NC_TAG pinned to an exact tag).
-- After ANY recreate of nextcloud-app, run `docker restart internal-haproxy` at once and check
-  `curl -s https://cloud.kinden.com.vn/status.php`: HAProxy resolves `nextcloud-app` only at start, so
-  the backend stays DOWN and users get 503 (happened 2026-11-24, about 8 min).
+- After ANY recreate of nextcloud-app, check `curl -s https://cloud.kinden.com.vn/status.php` at once. Until 2026-11-24
+  05:01 UTC HAProxy resolved `nextcloud-app` only at start, so the backend stayed DOWN and users got 503 (about 8 min).
+  haproxy.cfg now has `resolvers docker` (commit 8c0e5c0), which should make this automatic; it is not yet proven by a
+  real recreate, so if you get 503, run `docker restart internal-haproxy`.
 - A major upgrade disables store apps that have no release for it until they are updated and re-enabled
   (`occ app:update <app>` then `occ app:enable <app>`); compare `occ app:list` with the list saved before.
 - Image build: `pecl install smbclient` can fail transiently ("No releases available"); build before the

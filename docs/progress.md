@@ -25,8 +25,10 @@ tablets and displays). Runbook and rehearsal results: docs/upgrade-35-runbook.md
   stdin to `talk-secrets.env`, `docker compose up -d` there, then the same value into `spreed signaling_servers` on
   the Nextcloud host (about 45 s without Talk signaling). TURN_SECRET and INTERNAL_SECRET were not rotated.
 - Open after the upgrade:
-  - notify_push self-test fails on the test cookie ("invalid digit found in string") but the push server works (about 11
-    connections, events flowing). Not understood; look again if push notifications misbehave.
+  - notify_push: app 1.4.2 = newest; the push server runs the binary shipped inside the app (also 1.4.2). The self-test
+    failed right after the upgrade ("invalid digit found in string") only because it ran during the 8-minute HAProxy outage
+    (the push server calls Nextcloud through the public URL via HAProxy and got the HTML 503 page). Re-run at 12:2x UTC after the
+    fix: all 6 checks pass. Lesson: run `occ notify_push:self-test` only when the public URL answers.
   - Server info warning "Buffer cache hit ratio 97.3% (aim 99%)": cumulative since the DB started on 2026-11-03; live
     shared_buffers is already 1GB; last 90 s was 100%. The nightly dumps are NOT the cause (oc_filecache had 121M block
     reads vs about 128k per dump). Thanh decided to watch it. If it stays low: snapshot pg_stat_database blks_hit and
@@ -43,7 +45,10 @@ tablets and displays). Runbook and rehearsal results: docs/upgrade-35-runbook.md
     no warnings apart from the items above and "Database configuration" (the cache hit ratio one).
 - Backups: backup.sh (2 min, maintenance mode) and stack-back (40 s) both write to the SAME root disk as the live data.
   New: `~/dropbox_uploads/nextcloud` on Thanh's PC pulls the newest backup/ folder daily at 02:00 (Vietnam), zips, age-encrypts
-  and uploads to Dropbox `/nextcloud` (Healthchecks ping). User files (639 GB on the separate disk /dev/sdb1) have no backup
+  and uploads to Dropbox `/nextcloud` (Healthchecks ping). From 2026-11-24 the nightly file `nextcloud.tar.zip.age` holds only
+  the DB dump, roles, config and themes (about 350 MB); `custom_apps.tar.gz` goes weekly (Sundays) as
+  `nextcloud-apps.tar.zip.age` (about 295 MB); `FORCE_APPS=1 ./pull_server.sh` forces it. After a restore from a mid-week file the app
+  code can be older than the DB: run `occ app:update --all`. The job lives on Thanh's PC (`~/dropbox_uploads/nextcloud`), not in git. User files (639 GB on the separate disk /dev/sdb1) have no backup
   that Claude could see; Thanh says it is handled. Restore from Dropbox needs the age private key (restore tested once).
 - restore.sh fixed: roles (db_globals.sql.gz) are restored before the database dump.
 - /scan-ho via a host mount (option D, done 2026-11-24 04:31 UTC): on .247 `cifs-utils` installed, `/etc/fstab` line

@@ -17,11 +17,13 @@ sleep 10
 
 # 2. DATABASE RESTORE
 # Fixed: Uses -i to prevent stream corruption. Targets 'nextcloud' user per your db.env.
+# Roles first: the dump assigns objects to the role oc_admin, which only exists after the globals are restored.
+# ("role nextcloud already exists" is expected and harmless.)
+log "Restoring PostgreSQL globals (roles)..."
+gunzip -c "$BACKUP_DIR/db_globals.sql.gz" | docker exec -i nextcloud-db psql -U nextcloud -d postgres || true
+
 log "Restoring PostgreSQL database from dump..."
 gunzip -c "$BACKUP_DIR/db.sql.gz" | docker exec -i nextcloud-db psql -U nextcloud -d nextcloud
-
-log "Restoring PostgreSQL globals..."
-gunzip -c "$BACKUP_DIR/db_globals.sql.gz" | docker exec -i nextcloud-db psql -U nextcloud
 
 # 3. COMPONENT RESTORE (Config, Apps, Themes)
 # This extracts your backups back into the Docker volumes.

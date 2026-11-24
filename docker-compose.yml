@@ -35,13 +35,14 @@ services:
       - nextcloud-net
 
   app:
-    #image: nextcloud:32.0.2-apache-php8.4
-    image: nextcloud:32.0.15
+    # Same values as docker-compose.override.yml (which wins): custom image built from the official one. Keep both in line;
+    # Nextcloud cannot be downgraded, so never lower NC_TAG.
+    image: kdvn/nextcloud-app:35
     build:
       context: ./Dockerfile/nextcloud-app
       network: host
       args:
-        NC_TAG: 32.0.15-apache
+        NC_TAG: 35.0.3-apache
     container_name: nextcloud-app
     restart: unless-stopped
     depends_on:

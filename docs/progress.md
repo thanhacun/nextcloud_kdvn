@@ -1,4 +1,26 @@
-# Nextcloud stack and apps: status (dated 2026-11-20)
+# Nextcloud stack and apps: status (dated 2026-11-24)
+
+## 2026-11-24: Nextcloud 35.0.3, Dropbox backup, backup audit
+Runbook and rehearsal results: docs/upgrade-35-runbook.md. Short version:
+- Production upgraded 34.0.6 to 35.0.3 (image kdvn/nextcloud-app:35 from nextcloud:35.0.3-apache, PHP 8.5.13). Core upgrade
+  about 75 s; the upgrade disabled 11 store apps until their 35 releases were installed (assistant, deck, external,
+  files_accesscontrol, files_automatedtagging, groupfolders, impersonate, integration_openai, richdocuments, spreed,
+  workflow_script); `sharing` is new. kdvn_rooms 0.2.2, kdvn_visitors 0.6.4, kdvn_sensors 0.3.1 declare 30 to 35 (deployed
+  on 34 first).
+- Outage of about 8 min (01:59 to 02:07 UTC): HAProxy kept the old nextcloud-app IP after the recreate (503 for users).
+  Fix applied: `docker restart internal-haproxy`. Proper fix not done yet: `resolvers` with Docker DNS in haproxy.cfg.
+- After the upgrade: `occ db:add-missing-indices` (3 indices) and `occ maintenance:repair --include-expensive` done.
+- Open after the upgrade: Talk signaling server (turn.kinden.com.vn, external host, 2.1.1) is older than Talk 25
+  expects (latest 2.2.0, 2026-11-09; pin hash/block keys when upgrading); its shared secret was printed into a chat
+  transcript on 2026-11-24 and must be rotated (HPB server config plus `occ config:app:set spreed signaling_servers`);
+  notify_push self-test fails on the test cookie but the push server works; "Database configuration" warning in Server
+  info not read yet; SMB mounts as before (only /vtrm works; `lost+found` AccessDenied errors on /vtrm); Office, Talk call,
+  group folders, SSO, tablets and displays still to be checked by Thanh.
+- Backups: backup.sh (2 min, maintenance mode) and stack-back (40 s) both write to the SAME root disk as the live data.
+  New: `~/dropbox_uploads/nextcloud` on Thanh's PC pulls the newest backup/ folder daily at 02:00 (Vietnam), zips, age-encrypts
+  and uploads to Dropbox `/nextcloud` (Healthchecks ping). User files (639 GB on the separate disk /dev/sdb1) have no backup
+  that Claude could see; Thanh says it is handled. Restore from Dropbox needs the age private key (restore tested once).
+- restore.sh fixed: roles (db_globals.sql.gz) are restored before the database dump.
 
 ## 2026-11-20: 504 bursts fixed, Nextcloud 34.0.6, Collabora instead of ONLYOFFICE
 Details, commands and evidence: docs/previews-and-504.md. Short version:
@@ -72,6 +94,23 @@ Details, commands and evidence: docs/previews-and-504.md. Short version:
   test-deploy fails to enable (old frpc cert; test app only). Unused: ONLYOFFICE container/image/volumes and the
   `/onlyoffice/` HAProxy route (503 while stopped): remove when the rollback is no longer needed.
 - Not decided: large-file upload block (Flow rule with files_accesscontrol: untested); default quota is 5 GB.
+- Direct login block (done 2026-11-20, commit 5ebfed0): haproxy.cfg denies `/login?direct=1` and POST `/login` unless the
+  request comes from the front HAProxy (172.16.10.129) and the last X-Forwarded-For entry is 192.168.100.38 (admin
+  desktop). Break-glass = local `admin` (password + TOTP; disabled in Authentik on purpose). From the desktop the name
+  must resolve to 172.16.10.129 (hosts entry, browser restart, secure DNS off), because via the public name the office
+  appears as 101.99.23.25 (hairpin NAT). Rollback: haproxy/haproxy.cfg.bak-2026-11-20 on the server, then recreate
+  internal-haproxy. Open: remove the temporary hosts line when not needed; ask the colleague who manages the front
+  HAProxy about passing the real client IP (X-Real-IP is overwritten here with the front's address, so rate limits
+  and brute-force protection see one IP; see the reverse proxy item above); decide whether to allow more admin IPs;
+  WebDAV/desktop clients with real passwords are not blocked.
+- Group clean-up (started 2026-11-20): make Authentik the single source of truth for all `SAML_*` groups. SSO is not
+  enforced yet (mixed SSO and local logins; 339 Database vs 88 user_saml users), and user_saml only syncs groups when a
+  user logs in via SSO, so Nextcloud groups drift. Example: `SAML_Japanese` had 22 members (5 disabled, UI shows 17)
+  vs 8 in Authentik; yusuke-tamada added in Authentik on 2026-11-20 (needs a fresh SSO login to sync). Needs, per
+  group: Authentik member list (usernames) to diff against `occ group:list`; then decide per extra member (add in
+  Authentik or remove with `occ group:removeuser`, backup first). Also decide: enforce SSO-only, and whether groups
+  used for access (shares, group folders, Talk) should be plain Nextcloud groups instead of `SAML_*`. Check the
+  `Tamada` uid (possible duplicate of yusuke-tamada) and `Japanese HAN` (12 members) vs `SAML_Japanese`.
 
 ## SMB external storage broken after the 34 image (found 2026-11-13)
 Status 2026-11-13: workaround applied on the server (PHP smbclient extension off). /vtrm works again.

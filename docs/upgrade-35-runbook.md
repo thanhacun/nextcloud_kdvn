@@ -87,6 +87,12 @@ Announce the downtime first (about 500 users). Times are from the rehearsal.
 4. `docker compose build app` (no downtime), then with approval and downtime:
    `docker compose up -d app` (recreates nextcloud-app; the entrypoint runs the upgrade) and watch
    `docker logs -f nextcloud-app`. If the entrypoint did not finish: `docker exec -u www-data nextcloud-app php occ upgrade`.
+4b. **Restart the internal HAProxy right after the recreate**: `docker restart internal-haproxy`. HAProxy resolves
+   `nextcloud-app` only at start; the recreated container gets a new IP, the backend goes DOWN and stays down, and
+   every user gets "503 No server is available" (this happened on 2026-11-24: 01:59:37 to 02:07:51 UTC, about 8 min).
+   Check with `curl -s https://cloud.kinden.com.vn/status.php`. A lasting fix is a `resolvers` section for Docker DNS
+   (127.0.0.11) and `resolvers ... init-addr libc,none` on the `nextcloud-app` server line (haproxy.cfg change: validate in
+   a throwaway container, then `--force-recreate internal-haproxy`).
 5. Check `occ status` (version 35.0.3, maintenance false). Then re-enable the 11 apps the upgrade disabled (see the
    rehearsal result): `for a in assistant deck external files_accesscontrol files_automatedtagging groupfolders
    impersonate integration_openai richdocuments spreed workflow_script; do docker exec -u www-data nextcloud-app

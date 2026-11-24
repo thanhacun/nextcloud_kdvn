@@ -7,7 +7,7 @@ Status: docs/progress.md. Before any deploy, read docs/deploy-apps.md.
 ## Layout
 - Folder name = app id. Plain PHP and vanilla JS, no build step.
 - Installed in the nextcloud_custom_apps volume, mounted at /var/www/html/custom_apps of
-  the nextcloud-app container. Production: Nextcloud 34.0.5, PostgreSQL 17. Apps declare Nextcloud 30 to 34.
+  the nextcloud-app container. Production: Nextcloud 35.0.3, PostgreSQL 17. Apps declare Nextcloud 30 to 35.
 - The server stack is a separate repo (TODO: confirm URL). This repo cannot see its
   CLAUDE.md, so the critical rules are repeated below.
 
@@ -24,8 +24,10 @@ Status: docs/progress.md. Before any deploy, read docs/deploy-apps.md.
   consumes them; `action` once made every Let in/Decline button return HTTP 500).
 - The calresources_* tables belong to calendar_resource_management. Only kdvn_rooms
   writes to them, and never changes their schema.
-- Check every new Nextcloud API call against the stable34 public API (OCP).
-  Say when it is unverified. TODO: no local copy of that source yet.
+- Check every new Nextcloud API call against the stable35 public API (OCP).
+  Say when it is unverified. A local copy: `git clone --depth 1 --filter=blob:none --sparse --branch stable35
+  https://github.com/nextcloud/server.git <dir> && git -C <dir> sparse-checkout set lib/public` (checked on
+  2026-11-24: all OCP classes used by the three apps exist in stable35, none deprecated).
 - Do not copy Booking_Rooms.json (old n8n workflow with an exposed token) into git.
 
 ## Pitfalls

@@ -1,11 +1,11 @@
 services:
   app:
-    image: kdvn/nextcloud-app:34
+    image: kdvn/nextcloud-app:35
     build:
       context: ./Dockerfile/nextcloud-app
       network: host
       args:
-        NC_TAG: 34-apache
+        NC_TAG: 35.0.3-apache
     extra_hosts:
       - "cloud.kinden.com.vn:172.16.10.247"
     volumes:

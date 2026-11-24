@@ -5,13 +5,13 @@
 	<name>Meeting Rooms</name>
 	<summary>Manage calendar buildings, floors and meeting rooms from the web</summary>
 	<description>A web page on top of Calendar Resource Management, so rooms can be managed without occ commands.</description>
-	<version>0.2.1</version>
+	<version>0.2.2</version>
 	<licence>agpl</licence>
 	<author>KDVN IT</author>
 	<namespace>KdvnRooms</namespace>
 	<category>organization</category>
 	<dependencies>
-		<nextcloud min-version="30" max-version="34"/>
+		<nextcloud min-version="30" max-version="35"/>
 	</dependencies>
 	<settings>
 		<admin>OCA\KdvnRooms\Settings\Admin</admin>

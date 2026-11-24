@@ -5,13 +5,13 @@
 	<name>Office Sensors</name>
 	<summary>Indoor temperature, humidity and CO2 on a public display page</summary>
 	<description>Shows indoor air readings on a secret-link display page. The readings come from a provider: the Azbil BACnet Service REST API, or a mock provider for testing.</description>
-	<version>0.3.0</version>
+	<version>0.3.1</version>
 	<licence>agpl</licence>
 	<author>KDVN IT</author>
 	<namespace>KdvnSensors</namespace>
 	<category>organization</category>
 	<dependencies>
-		<nextcloud min-version="30" max-version="34"/>
+		<nextcloud min-version="30" max-version="35"/>
 	</dependencies>
 	<settings>
 		<admin>OCA\KdvnSensors\Settings\Admin</admin>

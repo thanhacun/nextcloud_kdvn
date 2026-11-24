@@ -1,29 +1,46 @@
 # Nextcloud stack and apps: status (dated 2026-11-24)
 
-## 2026-11-24: Nextcloud 35.0.3, Dropbox backup, backup audit
-Runbook and rehearsal results: docs/upgrade-35-runbook.md. Short version:
+## 2026-11-24: Nextcloud 35.0.3 upgrade COMPLETE, Dropbox backup, backup audit
+Status: the upgrade 34.0.6 to 35.0.3 is finished (Thanh did the browser checks: Office, Talk video, group folders, SSO,
+tablets and displays). Runbook and rehearsal results: docs/upgrade-35-runbook.md. Short version:
 - Production upgraded 34.0.6 to 35.0.3 (image kdvn/nextcloud-app:35 from nextcloud:35.0.3-apache, PHP 8.5.13). Core upgrade
   about 75 s; the upgrade disabled 11 store apps until their 35 releases were installed (assistant, deck, external,
   files_accesscontrol, files_automatedtagging, groupfolders, impersonate, integration_openai, richdocuments, spreed,
   workflow_script); `sharing` is new. kdvn_rooms 0.2.2, kdvn_visitors 0.6.4, kdvn_sensors 0.3.1 declare 30 to 35 (deployed
   on 34 first).
 - Outage of about 8 min (01:59 to 02:07 UTC): HAProxy kept the old nextcloud-app IP after the recreate (503 for users).
-  Fix applied: `docker restart internal-haproxy`. Proper fix not done yet: `resolvers` with Docker DNS in haproxy.cfg.
+  Fix applied: `docker restart internal-haproxy`. Proper fix done at 05:01 UTC (commit 8c0e5c0): haproxy.cfg has a
+  `resolvers docker` section (127.0.0.11:53) and `resolvers docker init-addr libc,none` on the nextcloud-app, notify and
+  harp servers, so HAProxy follows a new container IP by itself; recreated with
+  `docker compose up -d --force-recreate internal-haproxy`. Not yet tested by a real recreate of nextcloud-app: after the
+  next one still check `curl -s https://cloud.kinden.com.vn/status.php`.
 - After the upgrade: `occ db:add-missing-indices` (3 indices) and `occ maintenance:repair --include-expensive` done.
 - Talk signaling server (HPB) done 2026-11-24: it runs on the external host `website@128.199.215.193` (a shared server with Odoo and KBM;
   turn.kinden.com.vn), project `~/Projects/talk-hpb` (docker-compose.yml with the image pinned by digest, secrets in
-  `talk-secrets.env`, mode 600; old pins kept as comments; `*.bak-2026-11-24` copies of both files hold the OLD, leaked
-  secret: delete after a good call test). Upgraded 2.1.1 to 2.2.0 (aio-talk image of 2026-11-19) and SIGNALING_SECRET
+  `talk-secrets.env`, mode 600; old image pins kept as comments in the compose file, `docker-compose.yml.bak-2026-11-24` kept;
+  the env backup with the old, leaked secret was deleted after Thanh's successful video call test). Upgraded 2.1.1 to 2.2.0 (aio-talk image of 2026-11-19) and SIGNALING_SECRET
   rotated (twice: the first new value was also printed into a chat by mistake; `occ config:app:set` echoes its value, so
   send its output to /dev/null; never run `occ talk:signaling:list`, it prints the secret). Nextcloud setup check for
   the high-performance backend is green. Rotation recipe: new value from `openssl rand -hex 32` sent over ssh through
   stdin to `talk-secrets.env`, `docker compose up -d` there, then the same value into `spreed signaling_servers` on
   the Nextcloud host (about 45 s without Talk signaling). TURN_SECRET and INTERNAL_SECRET were not rotated.
-- Open after the upgrade: notify_push self-test fails on the test cookie but the push server works; "Database configuration" warning in Server
-  info not read yet; SMB mounts: /scan-ho FIXED 2026-11-24 (see below); /vtrm works through the smbclient binary (`lost+found` AccessDenied noise in the
-  log); /hcmc-tamada (192.168.1.249) and /tamada-it (172.16.10.157, Tamada$, folder IT) still fail with ConnectionRefused,
-  their logins are not in any fstab; Office, Talk call,
-  group folders, SSO, tablets and displays still to be checked by Thanh.
+- Open after the upgrade:
+  - notify_push self-test fails on the test cookie ("invalid digit found in string") but the push server works (about 11
+    connections, events flowing). Not understood; look again if push notifications misbehave.
+  - Server info warning "Buffer cache hit ratio 97.3% (aim 99%)": cumulative since the DB started on 2026-11-03; live
+    shared_buffers is already 1GB; last 90 s was 100%. The nightly dumps are NOT the cause (oc_filecache had 121M block
+    reads vs about 128k per dump). Thanh decided to watch it. If it stays low: snapshot pg_stat_database blks_hit and
+    blks_read now and after a night (do NOT run pg_stat_reset(), autovacuum uses those counters), consider pg_stat_statements.
+  - SMB mounts: /scan-ho FIXED (below). /vtrm works through the smbclient binary on Linux Samba (`lost+found`
+    AccessDenied noise in the log). Why the others fail: 172.16.10.77 is Linux Samba; 192.168.100.4 is a Windows PC that cannot
+    answer the share-root stat; 192.168.1.249 (/hcmc-tamada, share Japanese/Tama Ino) and 172.16.10.157 (/tamada-it, share
+    Tamada$, folder IT, domain kinden.com.vn) are reachable on 445 but reject logins. /hcmc-tamada: credentials file
+    `~/.smb-credentials-hcmc-tamada` exists on .247 but the server answers NT_STATUS_LOGON_FAILURE (4 attempts, stop retrying
+    to avoid an account lockout); needs the exact Windows account name and domain from Thanh. /tamada-it: no password, skipped.
+  - The Settings hint "The php-smbclient library provides improved compatibility and performance" is expected while the
+    `/dev/null` override keeps the PHP extension off (only /vtrm uses SMB code now).
+  - Checked 2026-11-24: every store app we had installed has a 35 release (app store API), and `occ setupchecks` shows
+    no warnings apart from the items above and "Database configuration" (the cache hit ratio one).
 - Backups: backup.sh (2 min, maintenance mode) and stack-back (40 s) both write to the SAME root disk as the live data.
   New: `~/dropbox_uploads/nextcloud` on Thanh's PC pulls the newest backup/ folder daily at 02:00 (Vietnam), zips, age-encrypts
   and uploads to Dropbox `/nextcloud` (Healthchecks ping). User files (639 GB on the separate disk /dev/sdb1) have no backup
@@ -71,15 +88,15 @@ Details, commands and evidence: docs/previews-and-504.md. Short version:
   mode, no DB upgrade pending). The image history shows 32.0.15, then 33, then 34, all
   built on 2026-10-23. Earlier note said "from 32.0.3"; the upgrade date is therefore
   about 2026-10-23 (Thanh: confirm).
-- Upgrade plan (Thanh, 2026-11-13): 34.0.5 to 34.0.6, then to 35. One major at a time, rehearsed
-  first on a test server built with restore.sh, fresh backup (backup.sh plus stack-back) before
-  each step. The image change for 35 is the chance to fix the SMB problem below properly.
+- UPDATE 2026-11-24: production runs Nextcloud 35.0.3 (34.0.5 to 34.0.6 to 35.0.3). Upgrade plan of Thanh (2026-11-13) is
+  done: one major at a time, rehearsed on a test server (172.16.10.57, now deleted), fresh backup before. The SMB problem
+  was NOT fixed by the 35 image (same Samba 4.22.11); worked around with a host mount for /scan-ho, see above.
 - Calendar Resource Management: 0.12.2 installed (checked 2026-10-26). 1.0.0-rc.2 is the
   release for Nextcloud 34 (its tables are unchanged from 0.12.2); upgrading it is TODO.
-- Custom image in use: nextcloud-app runs kdvn/nextcloud-app:34, built from
-  Dockerfile/nextcloud-app/Dockerfile via docker-compose.override.yml (NC_TAG 34-apache).
-  Base docker-compose.yml still says nextcloud:32.0.15, which the override replaces. A
-  recreate of nextcloud-app still needs a fresh backup.
+- Custom image in use: nextcloud-app runs kdvn/nextcloud-app:35, built from
+  Dockerfile/nextcloud-app/Dockerfile via docker-compose.override.yml (NC_TAG 35.0.3-apache, an exact tag on purpose).
+  Base docker-compose.yml still says nextcloud:32.0.15, which the override replaces (still to be cleaned up). A
+  recreate of nextcloud-app still needs a fresh backup. The 34, 33 and 32.0.15 images are still on .247 (34 = rollback).
 - Apps as found on the server on 2026-10-26 (since upgraded, see next item): kdvn_rooms 0.1.3 and kdvn_visitors
   0.4.6, both declaring Nextcloud 30 to 34. Whether the 0.4.1 to 0.4.6 features work
   (readable room names, auto check-out, newest-first lists, readable errors, reception-office

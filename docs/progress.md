@@ -38,6 +38,17 @@ Runbook and rehearsal results: docs/upgrade-35-runbook.md. Short version:
   To do the same for /hcmc-tamada and /tamada-it: create a root-only credentials file per share (Thanh types the password,
   Claude never sees it), fstab line, one more volume line, one recreate.
 
+## 2026-11-20 to 23: BentoPDF and check-in routing in haproxy.cfg (Thanh, other session; committed 2026-11-24)
+These edits were made on the server only and committed from there on 2026-11-24 (the running container uses the same file).
+Written from the file's own comments and the diff: Thanh please correct if wrong. Server copies before each step:
+`haproxy/haproxy.cfg.bak-*` on .247 (untracked).
+- `/pdf/` now goes to `bentopdf_backend` = BentoPDF on 172.16.10.57:8084 (client-side PDF tools, built with BASE_URL=/pdf/),
+  not to `stirlingpdf_fat_backend` any more (that backend stays defined, unused). Visitors without a Nextcloud login cookie are
+  redirected to https://cloud.kinden.com.vn/login.
+- `/checkins-hcm/` goes to `checkin_hcm_backend` = 192.168.1.18:3000 (combined viewer+listener, HCM instance with
+  ROUTE_PREFIX=/checkins-hcm, host "atthcm"), same login redirect; the backend sets `X-Real-IP` to the client address.
+- `checkin_viewer` backend moved from 172.16.10.57:3000 to 172.16.10.198:3000 (check-in cutover of 2026-11-23).
+
 ## 2026-11-20: 504 bursts fixed, Nextcloud 34.0.6, Collabora instead of ONLYOFFICE
 Details, commands and evidence: docs/previews-and-504.md. Short version:
 - Cause of the 504 bursts: ~200 `/core/preview` requests in minutes, each waiting on ONLYOFFICE thumbnails

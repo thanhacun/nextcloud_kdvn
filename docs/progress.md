@@ -11,7 +11,10 @@
   deactivated in Authentik and disabled in Nextcloud on 2026-11-27 with a new approval-gated bulk workflow, verified by a
   re-read. Step 2 now reports a failed Nextcloud disable instead of marking it done. Nextcloud side effects: 10 accounts
   disabled (5 Database, 5 user_saml). The 8 others never had a Nextcloud account.
-- Touch room display (not deployed, not committed): new interactive link `/touch/{key}` in kdvn_visitors, the read-only
+- Touch room display (committed 28acea5 and pushed; DEPLOYED to production .247 on 2026-11-27 without a version bump, then
+  `apachectl -k graceful` made the new routes work; rollback copy /home/kdvn_admin/backup-kdvn_visitors-20261127; TESTED by Thanh on
+  production 2026-11-27: QR booking and face booking (Odoo identify API, key pasted by him) both worked end to end. Still to do: HR
+  consent before staff see the camera, the tablet hardware and its https kiosk setup, delete the test bookings, proxy_mode in Odoo): new interactive link `/touch/{key}` in kdvn_visitors, the read-only
   `/display/{key}` is unchanged. Tap Details for a room's meetings, or Book now for 15/30/60 minutes starting now. Nobody types
   a name: the person is PROVEN. Stage 1 (built): QR code on the screen, the phone (Nextcloud login, SSO included) opens
   `/confirm/{nonce}` and taps Confirm, the screen collects a signed single-use ticket (`TouchTicket`, 60 s) and `book` accepts

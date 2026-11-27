@@ -10,6 +10,9 @@ command and wait for approval. Steps 2 to 4 change the server.
 2. `docker cp custom_apps/kdvn_visitors nextcloud-app:/var/www/html/custom_apps/`
    A single changed file can be copied alone; no restart needed. `docker cp` never deletes
    files removed in a newer version.
+   Exception, found 2026-11-27 (kdvn_visitors touch display): when `appinfo/routes.php` gains NEW routes and the version
+   is not bumped, the web workers keep the old route list (`occ router:list` already shows the new ones, the web gives 404).
+   Fix without downtime: `docker exec nextcloud-app apachectl -k graceful`, then test a new route with a bad key (expect 403/401).
 3. `docker exec nextcloud-app chown -R www-data:www-data /var/www/html/custom_apps/kdvn_visitors`
 4. `docker exec -u www-data nextcloud-app php occ upgrade`
    Needed whenever the version changed or a migration was added (a few seconds of

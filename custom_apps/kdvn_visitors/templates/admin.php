@@ -16,7 +16,10 @@ $groupOptions = function (string $selected, string $none) use ($_): string {
 	data-test-talk-url="<?php p($_['testTalkUrl']); ?>"
 	data-test-reception-url="<?php p($_['testReceptionUrl']); ?>"
 	data-logo-api-url="<?php p($_['logoApiUrl']); ?>"
-	data-display-link-url="<?php p($_['displayLinkUrl']); ?>">
+	data-display-link-url="<?php p($_['displayLinkUrl']); ?>"
+	data-touch-link-url="<?php p($_['touchLinkUrl']); ?>"
+	data-face-settings-url="<?php p($_['faceSettingsUrl']); ?>"
+	data-test-face-url="<?php p($_['testFaceUrl']); ?>">
 
 	<h2>Visitors</h2>
 
@@ -224,6 +227,47 @@ $groupOptions = function (string $selected, string $none) use ($_): string {
 		</label>
 		<label class="kv-admin-check"><input type="checkbox" id="kv-display-sensors"> Show the indoor sensor strip (temperature, humidity, CO2) in the header. Needs the Office sensors app with a data source set.</label>
 		<ul id="kv-display-links" class="kv-display-links"></ul>
+	</div>
+
+	<h3>Touch room displays (interactive)</h3>
+	<p class="settings-hint">
+		For a touch screen at the meeting rooms: tap a room to see its meetings, or book a free room for 15, 30 or 60 minutes
+		starting now (the person picks their own name; the booking goes into their calendar). Separate from the read-only
+		display links above: those keep working, and creating touch links does not affect them.
+		<?php if ($_['touchCreatedAt'] > 0): ?>
+			Touch links were created on <?php p(date('Y-m-d H:i', $_['touchCreatedAt'])); ?> (server time) and can't be shown again.
+			Creating new ones stops the old touch links.
+		<?php endif; ?>
+	</p>
+	<button type="button" id="kv-new-touch">Create touch links</button>
+	<div id="kv-touch-result" class="kv-kiosk-result" hidden>
+		<p><strong>One link per building. Shown only once.</strong> Add <code>&amp;lang=vi</code> or <code>&amp;lang=ja</code> for another language.</p>
+		<ul id="kv-touch-links" class="kv-display-links"></ul>
+	</div>
+
+	<h3>Face recognition on the touch screen (optional)</h3>
+	<p class="settings-hint">
+		With this on, "Book now" on a touch screen opens the camera and the person is recognised by the Odoo face service
+		(kdvn_face_kiosk). Without it, or when the face is not recognised, the phone QR code is used. The picture goes from this
+		server to Odoo and is not kept here. In Odoo (Face ID menu): "Identify API: clients and keys" > a client with this server's
+		address as allowed address > "New key" (shown once, paste it below), and "Identify API: switch" > switched on.
+		Only switch this on after HR has agreed to face recognition. The Nextcloud user name must equal the Odoo login without
+		the domain part.
+	</p>
+	<div class="kv-face-form">
+		<label class="kv-admin-check"><input type="checkbox" id="kv-face-enabled" <?php if ($_['faceEnabled']) { p('checked'); } ?>> Use face recognition on touch screens</label>
+		<label>Odoo address (no path)
+			<input type="text" id="kv-face-url" placeholder="https://odoo.example.com" autocomplete="off" value="<?php p($_['faceUrl']); ?>">
+		</label>
+		<label>Key from Odoo
+			<input type="password" id="kv-face-key" autocomplete="new-password"
+				placeholder="<?php p($_['hasFaceKey'] ? 'Saved. Type a new one to replace it.' : 'Not set'); ?>">
+		</label>
+		<div class="kv-admin-actions">
+			<button type="button" id="kv-save-face" class="primary">Save</button>
+			<button type="button" id="kv-test-face">Test the connection</button>
+		</div>
+		<p id="kv-face-status" class="kv-status" role="status" aria-live="polite"></p>
 	</div>
 
 	<h3>Reception tablet</h3>

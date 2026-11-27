@@ -11,6 +11,31 @@
   deactivated in Authentik and disabled in Nextcloud on 2026-11-27 with a new approval-gated bulk workflow, verified by a
   re-read. Step 2 now reports a failed Nextcloud disable instead of marking it done. Nextcloud side effects: 10 accounts
   disabled (5 Database, 5 user_saml). The 8 others never had a Nextcloud account.
+- Touch room display (not deployed, not committed): new interactive link `/touch/{key}` in kdvn_visitors, the read-only
+  `/display/{key}` is unchanged. Tap Details for a room's meetings, or Book now for 15/30/60 minutes starting now. Nobody types
+  a name: the person is PROVEN. Stage 1 (built): QR code on the screen, the phone (Nextcloud login, SSO included) opens
+  `/confirm/{nonce}` and taps Confirm, the screen collects a signed single-use ticket (`TouchTicket`, 60 s) and `book` accepts
+  nothing but a ticket; the event goes into that person's calendar with the room invited (CalendarBooking), the server re-checks
+  the room, 10 bookings per minute per IP. Stage 2 (Nextcloud side built; Odoo side built 2026-11-27, kdvn_face_kiosk 19.0.0.10.0 installed in odoo19_dev, switch OFF, route
+  404 until the dev server is restarted; full chain NOT tested; frames 640 px q0.8 once a second, give up after 15 s as Odoo advises): when the page has `data-face-url` (only when "Use face recognition on touch
+  screens" is on in Administration settings > Visitors, with the Odoo address and key; the key is stored encrypted, the picture is
+  never kept), Book opens the
+  camera, posts a frame every 0.5 s and shows "Hello X (3, 2, 1) Cancel"; "Use my phone" and a 30 s timeout fall back to the QR.
+  The relay (`TouchController::face` + `FaceRelay`) calls Odoo `POST /kdvn_face/ext/identify` with header `X-KDVN-Key`,
+  allowed to reach a private address like Talk; Odoo errors, wrong key or a missing Nextcloud account send the screen to the QR.
+  Odoo answers 403 (key, address or switch), 400 bad_image, 429 rate_limit (screen waits), 503 engine; setup in Odoo Face ID menu:
+  client with allowed address = the Nextcloud server, "New key" (shown once), "Identify API: switch". The contract: POST form `image` (jpeg), `roomId`, `minutes`,
+  `building` -> JSON `state` none | many | unknown | ambiguous | ok, and for ok `name` and `ticket` (= `TouchTicket::issue(uid,
+  roomId, minutes, building)`). Odoo returns the employee's user login; the Nextcloud uid is that login without the domain
+  part (Thanh, 2026-11-27: same user name in Odoo and Nextcloud), checked with `IUserManager::get()` before the ticket is issued. Own key
+  (`touch_key_hash`), created with "Create touch links" in Administration settings > Visitors. Demos with fake data and a cartoon
+  avatar instead of a camera (no real faces), plus the harness: ~/room-display-demo/ (room-display-demo.mp4 = read-only board,
+  touch-booking-demo.mp4 = touch booking, face then QR). Untested on the real server: routes, the cache (needs a distributed
+  cache for tickets, Redis is in the stack), booking into a real calendar, the `requesttoken` header on the confirm page on
+  NC 35. Not decided: HR/legal consent for a face camera (Thanh asks HR), the Odoo endpoint (separate task in ~/odoo19_thcn,
+  kdvn_face_kiosk is a prototype on odoo19_dev), the touch hardware (a tablet with camera, not the MSI plus Pi). Deploy:
+  docs/deploy-apps.md; a new `<version>` means `occ upgrade` (maintenance mode), a copied file without a version change does
+  not, but we have not checked whether Nextcloud then picks up the new routes.
 - Open: fresh app password for the n8n credential "Cloud (admin)" (401), then drop the personal "Cloud (tqthanh)".
 
 ## 2026-11-24: Nextcloud 35.0.3 upgrade COMPLETE, Dropbox backup, backup audit

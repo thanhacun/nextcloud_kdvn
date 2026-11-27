@@ -7,6 +7,7 @@ namespace OCA\KdvnVisitors\Controller;
 use OCA\KdvnVisitors\Service\AppSettings;
 use OCA\KdvnVisitors\Service\Branding;
 use OCA\KdvnVisitors\Service\RoomCatalog;
+use OCA\KdvnVisitors\Service\FaceRelay;
 use OCA\KdvnVisitors\Service\TalkService;
 use OCA\KdvnVisitors\Service\UserError;
 use OCP\AppFramework\Controller;
@@ -23,6 +24,9 @@ use OCP\Security\ISecureRandom;
  * Admin settings. No attributes = Nextcloud's default: admins only, CSRF checked.
  */
 class SettingsApiController extends Controller {
+	/** A 64x64 gray JPEG without a face, for testFace(). */
+	private const BLANK_JPEG = '/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjExLjEwMAD/2wBDAAgEBAQEBAUFBQUFBQYGBgYGBgYGBgYGBgYHBwcICAgHBwcGBgcHCAgICAkJCQgICAgJCQoKCgwMCwsODg4RERT/xABKAAEAAAAAAAAAAAAAAAAAAAAAAQEAAAAAAAAAAAAAAAAAAAAAEAEAAAAAAAAAAAAAAAAAAAAAEQEAAAAAAAAAAAAAAAAAAAAA/8AAEQgAQABAAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/9k=';
+
 	public function __construct(
 		string $appName,
 		IRequest $request,
@@ -30,6 +34,7 @@ class SettingsApiController extends Controller {
 		private Branding $branding,
 		private RoomCatalog $rooms,
 		private TalkService $talk,
+		private FaceRelay $face,
 		private IUserManager $userManager,
 		private IGroupManager $groupManager,
 		private IUserSession $userSession,
@@ -145,6 +150,18 @@ class SettingsApiController extends Controller {
 		return new DataResponse(['links' => $links]);
 	}
 
+	/** New secret link for the interactive touch displays (separate from the read-only ones). Shown only once. */
+	public function newTouchLink(): DataResponse {
+		$key = $this->random->generate(48, ISecureRandom::CHAR_ALPHANUMERIC);
+		$this->settings->setTouchKeyHash(hash('sha256', $key));
+		$base = $this->urlGenerator->linkToRouteAbsolute('kdvn_visitors.touch.show', ['key' => $key]);
+		$links = [];
+		foreach ($this->rooms->buildings() as $building) {
+			$links[] = ['name' => $building['name'], 'url' => $base . '?building=' . $building['id']];
+		}
+		return new DataResponse(['links' => $links]);
+	}
+
 	/** Upload form field "logo" (multipart). Admins only, CSRF checked. */
 	public function uploadLogo(): DataResponse {
 		try {
@@ -173,6 +190,26 @@ class SettingsApiController extends Controller {
 			}
 		}
 		return new DataResponse(['ok' => true, 'groups' => count($groups)]);
+	}
+
+	/** Face recognition (Odoo) settings. An empty key keeps the saved one. */
+	public function saveFace(bool $faceEnabled = false, string $faceUrl = '', string $faceKey = ''): DataResponse {
+		try {
+			$this->settings->setFace($faceEnabled, $faceUrl, $faceKey);
+		} catch (UserError $e) {
+			return new DataResponse(['message' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
+		return new DataResponse(['ok' => true, 'hasFaceKey' => $this->settings->hasFaceKey()]);
+	}
+
+	/** Sends a tiny blank picture to Odoo: any answer with a state proves the address and the key work. */
+	public function testFace(): DataResponse {
+		try {
+			$answer = $this->face->identify((string)base64_decode(self::BLANK_JPEG));
+		} catch (\Throwable $e) {
+			return new DataResponse(['message' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
+		}
+		return new DataResponse(['ok' => true, 'state' => $answer['state']]);
 	}
 
 	/** Sends a test Talk message to the admin who clicks the button. */

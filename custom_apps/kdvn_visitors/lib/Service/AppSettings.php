@@ -289,6 +289,20 @@ class AppSettings {
 		$this->config->setValueInt(self::APP, 'display_key_created_at', time());
 	}
 
+	/** Key of the interactive (touch) room display. Separate from the read-only display key, so each can be revoked alone. */
+	public function touchKeyHash(): string {
+		return $this->config->getValueString(self::APP, 'touch_key_hash', '');
+	}
+
+	public function touchKeyCreatedAt(): int {
+		return $this->config->getValueInt(self::APP, 'touch_key_created_at', 0);
+	}
+
+	public function setTouchKeyHash(string $hash): void {
+		$this->config->setValueString(self::APP, 'touch_key_hash', $hash, false, true);
+		$this->config->setValueInt(self::APP, 'touch_key_created_at', time());
+	}
+
 	// ------------------------------------------------ tablet / pass appearance
 
 	public const DEFAULT_ACCENT = '#017101'; // Kinden green, from the logo
@@ -444,6 +458,51 @@ class AppSettings {
 	public function setTalkPassword(string $plain): void {
 		// Encrypted with the instance secret, and marked sensitive so it is hidden in occ/config listings.
 		$this->config->setValueString(self::APP, 'talk_password', $this->crypto->encrypt($plain), false, true);
+	}
+
+	// ------------------------------------------------ face recognition for the touch screen (Odoo)
+
+	/** Base URL of the Odoo server, e.g. https://odoo.example.com (no path). */
+	public function faceUrl(): string {
+		return rtrim($this->config->getValueString(self::APP, 'face_url', ''), '/');
+	}
+
+	public function faceEnabled(): bool {
+		return $this->config->getValueString(self::APP, 'face_enabled', '0') === '1';
+	}
+
+	public function faceKey(): string {
+		$encrypted = $this->config->getValueString(self::APP, 'face_key', '');
+		if ($encrypted === '') {
+			return '';
+		}
+		try {
+			return $this->crypto->decrypt($encrypted);
+		} catch (\Throwable) {
+			return '';
+		}
+	}
+
+	public function hasFaceKey(): bool {
+		return $this->config->getValueString(self::APP, 'face_key', '') !== '';
+	}
+
+	/** Switched on, with an address and a key: the touch page offers the camera. */
+	public function faceReady(): bool {
+		return $this->faceEnabled() && $this->faceUrl() !== '' && $this->hasFaceKey();
+	}
+
+	/** @param string|null $key null or '' keeps the saved key */
+	public function setFace(bool $enabled, string $url, ?string $key): void {
+		$url = rtrim(trim($url), '/');
+		if ($url !== '' && !preg_match('#^https?://[^/\s]+$#i', $url)) {
+			throw new UserError('Use the Odoo address without a path, for example https://odoo.example.com');
+		}
+		$this->config->setValueString(self::APP, 'face_url', $url);
+		$this->config->setValueString(self::APP, 'face_enabled', $enabled ? '1' : '0');
+		if ($key !== null && trim($key) !== '') {
+			$this->config->setValueString(self::APP, 'face_key', $this->crypto->encrypt(trim($key)), false, true);
+		}
 	}
 
 	/** Replaces the tablet key of an office (the old link stops working). */

@@ -1,0 +1,9 @@
+/* Phone page behind the touch screen's QR code: big text, one big button. Follows the Nextcloud theme. */
+#kv-confirm { max-width: 28em; margin: 0 auto; padding: 8vh 20px 48px; text-align: center; }
+#kv-confirm h2 { margin: 0 0 12px; font-size: 1.7em; font-weight: 700; }
+#kv-confirm p { margin: 8px 0; font-size: 1.1em; }
+#kv-confirm .kv-confirm__room { font-size: 1.5em; font-weight: 700; }
+#kv-confirm .kv-confirm__who { color: var(--color-text-maxcontrast); }
+#kv-confirm button { width: 100%; min-height: 64px; margin-top: 24px; font-size: 1.25em; font-weight: 700; }
+#kv-confirm .kv-confirm__error { color: var(--color-error-text, var(--color-error)); font-weight: 600; }
+#kv-confirm .kv-confirm__done { font-size: 2em; font-weight: 800; }

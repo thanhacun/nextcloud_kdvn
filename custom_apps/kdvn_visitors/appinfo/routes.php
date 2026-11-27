@@ -30,6 +30,18 @@ return [
 		['name' => 'display#show', 'url' => '/display/{key}', 'verb' => 'GET'],
 		['name' => 'display#data', 'url' => '/display/{key}/data', 'verb' => 'GET'],
 
+		// Interactive (touch) room display: same data, plus details and quick booking (separate secret key)
+		['name' => 'touch#show', 'url' => '/touch/{key}', 'verb' => 'GET'],
+		['name' => 'touch#data', 'url' => '/touch/{key}/data', 'verb' => 'GET'],
+		['name' => 'touch#face', 'url' => '/touch/{key}/face', 'verb' => 'POST'],
+		['name' => 'touch#claim', 'url' => '/touch/{key}/claim', 'verb' => 'POST'],
+		['name' => 'touch#claim_status', 'url' => '/touch/{key}/claim/{nonce}', 'verb' => 'GET'],
+		['name' => 'touch#book', 'url' => '/touch/{key}/book', 'verb' => 'POST'],
+
+		// Phone side of the touch screen's QR code (needs a Nextcloud login)
+		['name' => 'confirm#show', 'url' => '/confirm/{nonce}', 'verb' => 'GET'],
+		['name' => 'confirm#confirm', 'url' => '/confirm/{nonce}', 'verb' => 'POST'],
+
 		// Logo for the tablet and guest pass (public)
 		['name' => 'logo#show', 'url' => '/logo', 'verb' => 'GET'],
 
@@ -39,6 +51,9 @@ return [
 		['name' => 'settings_api#test_talk', 'url' => '/admin/test-talk', 'verb' => 'POST'],
 		['name' => 'settings_api#test_reception', 'url' => '/admin/test-reception', 'verb' => 'POST'],
 		['name' => 'settings_api#new_display_link', 'url' => '/admin/display-link', 'verb' => 'POST'],
+		['name' => 'settings_api#new_touch_link', 'url' => '/admin/touch-link', 'verb' => 'POST'],
+		['name' => 'settings_api#save_face', 'url' => '/admin/face-settings', 'verb' => 'POST'],
+		['name' => 'settings_api#test_face', 'url' => '/admin/test-face', 'verb' => 'POST'],
 		['name' => 'settings_api#upload_logo', 'url' => '/admin/logo', 'verb' => 'POST'],
 		['name' => 'settings_api#remove_logo', 'url' => '/admin/logo', 'verb' => 'DELETE'],
 	],

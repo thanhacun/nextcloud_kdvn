@@ -175,6 +175,54 @@
 			} catch (e) { window.alert(e.message) }
 		})
 
+		document.getElementById('kv-new-touch').addEventListener('click', async () => {
+			if (!window.confirm('Create new touch links? Touch screens using the old links will stop working until you open the new ones. The read-only display links are not affected.')) return
+			try {
+				const res = await post(root.dataset.touchLinkUrl)
+				document.getElementById('kv-touch-links').replaceChildren(...res.links.map(link => {
+					const li = document.createElement('li')
+					const label = document.createElement('strong')
+					label.textContent = link.name
+					const input = document.createElement('input')
+					input.type = 'text'
+					input.readOnly = true
+					input.value = link.url
+					const copy = document.createElement('button')
+					copy.type = 'button'
+					copy.textContent = 'Copy'
+					copy.addEventListener('click', async () => {
+						try { await navigator.clipboard.writeText(link.url); copy.textContent = 'Copied' } catch (e) { input.select() }
+					})
+					li.append(label, input, copy)
+					return li
+				}))
+				document.getElementById('kv-touch-result').hidden = false
+			} catch (e) { window.alert(e.message) }
+		})
+
+		const faceStatus = document.getElementById('kv-face-status')
+		const faceSay = (text, bad) => { faceStatus.textContent = text; faceStatus.classList.toggle('is-error', !!bad) }
+		const faceKey = document.getElementById('kv-face-key')
+		document.getElementById('kv-save-face').addEventListener('click', async () => {
+			try {
+				const res = await post(root.dataset.faceSettingsUrl, {
+					faceEnabled: document.getElementById('kv-face-enabled').checked,
+					faceUrl: document.getElementById('kv-face-url').value,
+					faceKey: faceKey.value,
+				})
+				faceKey.value = ''
+				faceKey.placeholder = res.hasFaceKey ? 'Saved. Type a new one to replace it.' : 'Not set'
+				faceSay('Saved.')
+			} catch (e) { faceSay(e.message, true) }
+		})
+		document.getElementById('kv-test-face').addEventListener('click', async () => {
+			faceSay('Testing…')
+			try {
+				await post(root.dataset.testFaceUrl)
+				faceSay('Connected: Odoo accepted the key and answered.')
+			} catch (e) { faceSay(e.message, true) }
+		})
+
 		const result = document.getElementById('kv-kiosk-result')
 		const linkInput = document.getElementById('kv-kiosk-link')
 		root.querySelectorAll('.kv-new-kiosk').forEach(button => button.addEventListener('click', async () => {

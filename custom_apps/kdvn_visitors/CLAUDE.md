@@ -42,8 +42,22 @@ alerts, passes created from Calendar, and public meeting-room displays.
   list (this office's room-display sensors) from kdvn_sensors (DisplayController::sensorReadings(), after the room cache, null on any failure) and
   the header strip in display.js. "Book the room in Calendar" creates an event with the room as ROOM attendee
   in the host's calendar. It replaced the n8n "Booking_Rooms" webhook.
+- Touch display: /touch/{key} (TouchController, own key touch_key_hash, own "Create touch links" button) reuses display.php and
+  display.js with data-touch="1"; the read-only /display/{key} never gets the buttons. Who books is proven, not typed:
+  claim (QR) -> logged-in phone page /confirm/{nonce} (ConfirmController, user from the session) -> screen collects a TouchTicket
+  (HMAC, 60 s, once) -> /book redeems it -> CalendarBooking::book for that user, 15/30/60 min from now, room re-checked on the
+  server, DisplayService::forgetCache() afterwards. Claims and used tickets live in the distributed cache. A face check is the
+  same thing without the phone: its endpoint must issue a ticket (contract in docs/progress.md; the uid is the Odoo login without the
+  domain part); the UI for it is in display.js
+  and shows only when the page has data-face-url (set when appconfig face_enabled, face_url and the encrypted face_key
+  are set: TouchController::face relays the JPEG through FaceRelay to Odoo and never stores it or logs it; the Odoo side is a
+  separate task in ~/odoo19_thcn). Never put the face key in git, chat or logs.
 
 ## Decisions
+- Touch booking has no typed names and no shared login: only a ticket from a verified identity books a room. Do not add a
+  "type your name" path back: anyone could then book in any colleague's name (the old first version did, and was dropped).
+  The audit line in nextcloud.log ("touch booking: room N by uid") shows who. Someone photographing the QR can book a room for
+  themselves, no more (2 minute code).
 - Display is built inside Visitors, not n8n: the n8n flow had SQL injection via
   `?building=`, missed recurring and UTC events, and showed private titles.
 - The tablet is a secret URL key, not a logged-in account: a logged-in public tablet can

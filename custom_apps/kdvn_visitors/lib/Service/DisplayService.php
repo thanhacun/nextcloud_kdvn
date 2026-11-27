@@ -120,6 +120,12 @@ class DisplayService {
 		return $data;
 	}
 
+	/** Drops the cached display data, so a booking made on the touch screen shows at once. */
+	public function forgetCache(): void {
+		$cache = $this->cacheFactory->createDistributed('kdvn_visitors');
+		$cache->clear('display-');
+	}
+
 	/**
 	 * Is the room free? Used before booking it from the Visitors page.
 	 * @return array|null the first meeting that overlaps, or null when free

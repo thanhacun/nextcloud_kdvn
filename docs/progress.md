@@ -1,4 +1,17 @@
-# Nextcloud stack and apps: status (dated 2026-11-24)
+# Nextcloud stack and apps: status (dated 2026-11-27)
+
+## 2026-11-27: room display hardware, BMS scope with Azbil, HR leavers workflow (n8n)
+- Room display hardware: MSI Pro MP165 E6 (16 inch, 1920x1080) plus Raspberry Pi 5, `layout=condensed`, 3 rooms per screen
+  fits. Checks, Pi setup steps and what is still open: docs/pi-display-kiosk.md. The same page also fixed the old plan of a
+  15-inch screen below.
+- BMS scope (Azbil): Azbil proposes dropping the SVC and savic-net G5; the DDC (BTL BACnet device) would send data only
+  through the BACnet Service REST API (read only). Consequences for kdvn_sensors, history and alerting, plus the questions to
+  send Azbil: end of docs/plan-sensor-display.md. Decision pending, nothing deployed.
+- n8n HR sync (workflows live in n8n, notes in ~/n8n/sync-ak-users/PROGRESS.md): 18 overdue leavers (7 Hanoi, 11 HCMC) were
+  deactivated in Authentik and disabled in Nextcloud on 2026-11-27 with a new approval-gated bulk workflow, verified by a
+  re-read. Step 2 now reports a failed Nextcloud disable instead of marking it done. Nextcloud side effects: 10 accounts
+  disabled (5 Database, 5 user_saml). The 8 others never had a Nextcloud account.
+- Open: fresh app password for the n8n credential "Cloud (admin)" (401), then drop the personal "Cloud (tqthanh)".
 
 ## 2026-11-24: Nextcloud 35.0.3 upgrade COMPLETE, Dropbox backup, backup audit
 Status: the upgrade 34.0.6 to 35.0.3 is finished (Thanh did the browser checks: Office, Talk video, group folders, SSO,
@@ -278,11 +291,13 @@ PHP inside the container. To read the real error behind an empty `verify` messag
   Azbil diagram E-14. Parser unit-tested with the sample (17 checks). Deploy notes: docs/deploy-apps.md (needs
   `allow_local_remote_servers`, a firewall rule, `occ upgrade`). The fan is controlled by Azbil's DDC, not Nextcloud.
   Questions to send Azbil: end of docs/plan-sensor-display.md.
+- (2026-11-25) Azbil proposes dropping SVC and savic-net G5 (DDC data via the BACnet Service only). Impact on kdvn_sensors,
+  history and alerting, and the new questions for Azbil: end of docs/plan-sensor-display.md. Decision pending.
 
 ## Hardware plan
 - Reception tablet: iPad 10th generation or newer (or Galaxy Tab A9+ with Fully Kiosk).
-- 15-inch screen as plain monitor plus Raspberry Pi 5 2 GB running Chromium kiosk with
-  `layout=condensed`.
+- Room display: MSI Pro MP165 E6 (16 inch, 1920x1080, chosen 2026-11-27) as plain monitor plus Raspberry Pi 5 2 GB running
+  Chromium kiosk with `layout=condensed` (setup: docs/pi-display-kiosk.md).
 
 ## Next
 - (2026-11-20) Finish the Collabora checks above, then decide what to do with the stopped ONLYOFFICE.

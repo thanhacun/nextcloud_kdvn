@@ -166,3 +166,26 @@ supplier says endpoint and fields can be adjusted.
      outdoor air, so the fan may rarely stop).
   5. Is the e-multimeter (power, current, voltage) in the API, and is it in scope?
   6. Fixed IP and port of the Base Station, HTTP or HTTPS, and the firewall rule for the Nextcloud server's IP.
+
+### Update 2026-11-25: Azbil proposes dropping SVC and savic-net G5
+Context: BMS scope discussion (field equipment -> DDC -> SVC -> Base Station -> 7 big monitors, third-party software "A"
+for the monitors). Azbil now says: the DDC is a BTL-certified BACnet device and sends all point data through the BACnet
+Service; Azbil supplies points plus controllers/interlocks only, no trends, reports or logs; they would drop the SVC and
+G5 to save cost. Decision on Kinden's side is pending.
+- kdvn_sensors is not affected if the BACnet Service and its REST API stay in Azbil's scope (it would read the DDC
+  directly instead of the SVC). Not confirmed by Azbil yet.
+- Consequences if SVC and G5 go: no Azbil alerts (the 2026-11-19 reply said alerts exist on the Base Station only), no
+  trends, no logs. Kinden must own CO2 history (graph in diagram E-14) and alerting. kdvn_sensors stores no history and
+  sends no alerts today. Decide whether software A or Nextcloud is the single history store.
+- The API is documented as read-only (`value`, `status`, `updated`): no commands, no alarm or event state, no alarm
+  acknowledge. Software A could not control lighting or acknowledge alarms through it.
+- Ownership rule proposed: interlocks, alarm thresholds and schedules live in the DDC (master); software A and
+  Nextcloud only display, and write manual commands only if the API allows it.
+- Questions to add for Azbil:
+  1. Confirm in writing that the BACnet Service and its REST API stay in scope after SVC and G5 are removed, and its price.
+  2. Does the API support write and alarm or event state, or only read of value and status?
+  3. Is history or trend included? If not, Kinden stores its own.
+  4. Who does alerting (SMS, email, Talk)?
+  5. DDC model, PICS, BACnet/IP or MS/TP (a router would be a Kinden item if MS/TP), and the engineering tool and support after handover.
+  6. Open point-list items: who supplies the PM point, how many lighting lines or sets.
+

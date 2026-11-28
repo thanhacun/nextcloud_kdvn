@@ -138,6 +138,10 @@
 			const rooms = d.rooms.filter(r => r.floorId === state.floorId)
 
 			root.replaceChildren(
+				h('div', { class: 'kr-toolbar' },
+					h('button', { type: 'button', onclick: importDialog }, 'Import from Excel…'),
+					h('a', { class: 'kr-link', href: baseUrl + '/import/template', download: 'meeting-rooms-template.xlsx' }, 'Download the Excel template'),
+				),
 				h('div', { class: 'kr-columns' },
 					listColumn({
 						title: 'Buildings',
@@ -429,6 +433,90 @@
 					await reload(isNew ? 'Room added. It can now be booked in Calendar.' : 'Room saved.')
 				},
 			)
+		}
+
+		// ---------------------------------------------------- Excel import
+
+		const IMPORT_LABEL = { add: 'Will add', skip: 'Skipped', error: 'Problem' }
+
+		/** Send the file to /import. apply false = preview only, nothing is saved. */
+		async function sendImport(file, apply) {
+			const form = new FormData()
+			form.append('file', file)
+			form.append('apply', apply ? '1' : '0')
+			const response = await fetch(baseUrl + '/import', {
+				method: 'POST', credentials: 'same-origin', body: form,
+				headers: { Accept: 'application/json', requesttoken: requestToken() },
+			})
+			let json = {}
+			try { json = await response.json() } catch (e) { /* empty body */ }
+			if (!response.ok) throw new Error(json.message || 'Import failed (' + response.status + ').')
+			return json
+		}
+
+		function importDialog() {
+			const fileInput = h('input', { type: 'file', accept: '.xlsx,.csv', 'aria-label': 'Excel or CSV file' })
+			const error = h('p', { class: 'kr-error', role: 'alert', hidden: true })
+			const report = h('div', { class: 'kr-import-report' })
+			const go = h('button', { type: 'button', class: 'primary', hidden: true }, 'Import')
+			const cancel = h('button', { type: 'button' }, 'Close')
+			const dialog = h('dialog', { class: 'kr-dialog kr-dialog-wide' },
+				h('div', { class: 'kr-form' },
+					h('h3', {}, 'Import rooms from Excel'),
+					h('p', { class: 'kr-hint' },
+						'One row per room. Required columns: Building, Floor, Room. Optional: Room number, Seats, Type, Equipment, ' +
+						'Who can book (groups), Contact person, Room ID, Booking email, Address. Buildings and floors that do not exist yet ' +
+						'are created. Rooms that already exist are skipped, never changed. You see a preview before anything is saved.'),
+					field('Excel (.xlsx) or CSV file', fileInput),
+					error, report,
+					h('div', { class: 'kr-actions' }, cancel, go),
+				))
+			let current = null
+			function fail(e) { error.textContent = e.message; error.hidden = false; go.hidden = true; report.replaceChildren() }
+			function table(result) {
+				const c = result.counts
+				return [
+					h('p', { class: 'kr-import-summary' },
+						(result.applied ? 'Done: ' : 'Preview: ') + plural(c.add, 'room') + (result.applied ? ' added' : ' to add') +
+						', ' + c.skip + ' skipped, ' + plural(c.error, 'problem')),
+					h('div', { class: 'kr-import-scroll' }, h('table', { class: 'kr-import-table' },
+						h('thead', {}, h('tr', {}, ['Line', 'Building', 'Floor', 'Room', 'Result'].map(t => h('th', { scope: 'col' }, t)))),
+						h('tbody', {}, result.rows.map(r => h('tr', { class: 'is-' + r.status },
+							h('td', {}, r.line), h('td', {}, r.building), h('td', {}, r.floor), h('td', {}, r.room),
+							h('td', {}, h('strong', {}, (result.applied && r.status === 'add' ? 'Added' : IMPORT_LABEL[r.status]) + (r.message ? ': ' : '')), r.message ? ' ' + r.message : ''),
+						))),
+					)),
+				]
+			}
+			fileInput.addEventListener('change', async () => {
+				error.hidden = true; go.hidden = true; report.replaceChildren()
+				current = fileInput.files[0]
+				if (!current) return
+				report.replaceChildren(h('p', { class: 'kr-hint' }, 'Checking the file…'))
+				try {
+					const result = await sendImport(current, false)
+					report.replaceChildren(...table(result))
+					if (result.counts.add > 0) {
+						go.textContent = 'Import ' + plural(result.counts.add, 'room')
+						go.hidden = false
+					}
+				} catch (e) { fail(e) }
+			})
+			go.addEventListener('click', async () => {
+				go.disabled = true
+				try {
+					const result = await sendImport(current, true)
+					report.replaceChildren(...table(result))
+					go.hidden = true
+					cancel.focus()
+					await reload('Imported ' + plural(result.counts.add, 'room') + '.')
+				} catch (e) { fail(e) } finally { go.disabled = false }
+			})
+			cancel.addEventListener('click', () => dialog.close())
+			dialog.addEventListener('close', () => dialog.remove())
+			document.body.append(dialog)
+			dialog.showModal()
+			fileInput.focus()
 		}
 
 		async function remove(path, item, noun) {

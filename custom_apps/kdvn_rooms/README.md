@@ -13,6 +13,7 @@ Nextcloud 34+. After upgrading to 34, compare the two and remove this app if ups
 - Refuses to delete a building that still has floors, or a floor that still has rooms
   (the backend has no foreign keys, so this prevents orphaned rows).
 - Room ID and booking email can't be changed after creation, because existing bookings use them.
+- Import many rooms from an Excel (.xlsx) or CSV file: Import from Excel, with a downloadable template and a preview.
 - Vehicles and general resources are not managed here yet (still `occ`).
 
 ## Install

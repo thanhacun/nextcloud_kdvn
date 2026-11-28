@@ -40,6 +40,7 @@ class ResourceStore {
 	private const UID_INVALID_CHARS = '/[^a-zA-Z0-9 _.@\-\']/';
 
 	private ?bool $hasRestrictedColumn = null;
+	private bool $deferRefresh = false;
 
 	public function __construct(
 		private IDBConnection $db,
@@ -314,8 +315,22 @@ class ResourceStore {
 		}
 	}
 
+	/** Run several saves and rebuild Calendar's room cache once at the end instead of after each one (imports). */
+	public function batch(callable $work): void {
+		$this->deferRefresh = true;
+		try {
+			$work();
+		} finally {
+			$this->deferRefresh = false;
+			$this->refreshRooms();
+		}
+	}
+
 	/** Same as the occ commands: rebuild Nextcloud's room cache so Calendar sees changes now. */
 	private function refreshRooms(): void {
+		if ($this->deferRefresh) {
+			return;
+		}
 		try {
 			if (method_exists($this->roomManager, 'update')) {
 				$this->roomManager->update();

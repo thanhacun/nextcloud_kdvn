@@ -5,8 +5,6 @@ declare(strict_types=1);
 // "api#create_building" calls ApiController::createBuilding()
 return [
 	'routes' => [
-		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
-
 		['name' => 'api#data', 'url' => '/api/data', 'verb' => 'GET'],
 
 		['name' => 'api#create_building', 'url' => '/api/buildings', 'verb' => 'POST'],
@@ -16,6 +14,9 @@ return [
 		['name' => 'api#create_floor', 'url' => '/api/floors', 'verb' => 'POST'],
 		['name' => 'api#update_floor', 'url' => '/api/floors/{id}', 'verb' => 'PUT'],
 		['name' => 'api#delete_floor', 'url' => '/api/floors/{id}', 'verb' => 'DELETE'],
+
+		['name' => 'api#import', 'url' => '/api/import', 'verb' => 'POST'],
+		['name' => 'api#import_template', 'url' => '/api/import/template', 'verb' => 'GET'],
 
 		['name' => 'api#create_room', 'url' => '/api/rooms', 'verb' => 'POST'],
 		['name' => 'api#update_room', 'url' => '/api/rooms/{id}', 'verb' => 'PUT'],

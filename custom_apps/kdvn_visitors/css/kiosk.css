@@ -355,8 +355,7 @@ html, body#body-public.layout-base {
 
 .kk-frame-layer {
 	position: fixed; inset: 0; z-index: 11; display: flex; flex-direction: column; background: var(--kk-bg);
-	padding-top: max(12px, env(safe-area-inset-top));
 }
 .kk-frame-layer[hidden] { display: none; }
-.kk-frame-top { justify-content: center; padding-bottom: 8px; max-width: none; }
+.kk-frame-top { justify-content: center; padding: 6px 0 max(8px, env(safe-area-inset-bottom)); max-width: none; }
 .kk-embed { flex: 1; width: 100%; border: 0; background: #fff; }

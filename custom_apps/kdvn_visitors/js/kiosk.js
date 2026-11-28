@@ -352,16 +352,24 @@
 		// layer that render() never rebuilds, so the page keeps its state and does not reload when the clock redraws.
 		const tabUrl = cfg.tabUrl || ''
 		const hasTab = tabUrl !== ''
-		const tabLabel = () => cfg.tabLabel || t('tabBook')
+		// The framed page has its own language (?lang= in its address, English when absent); its buttons follow that, not the tablet's.
+		let tabLang = null
+		try { tabLang = new URL(tabUrl, location.href).searchParams.get('lang') } catch (e) { /* bad address */ }
+		const tabText = (key, lang) => (T[lang] && T[lang][key]) || T.en[key]
+		const tabLabel = (inFrame) => inFrame
+			? tabText('tabBook', T[tabLang] ? tabLang : 'en')
+			: (cfg.tabLabel || t('tabBook'))
 		let frameLayer = null
 		let frameTabs = null
 		let frameIdle = null
 		const FRAME_IDLE_SECONDS = 180
 
 		function tabButtons(active) {
+			const fl = T[tabLang] ? tabLang : 'en'
+			const inFrame = active === 'extra'
 			return h('div', { class: 'kk-tabs', role: 'tablist' },
-				h('button', { type: 'button', role: 'tab', class: 'kk-tab' + (active === 'visitors' ? ' is-active' : ''), 'aria-selected': String(active === 'visitors'), onclick: () => showTab('visitors') }, t('tabVisitors')),
-				h('button', { type: 'button', role: 'tab', class: 'kk-tab' + (active === 'extra' ? ' is-active' : ''), 'aria-selected': String(active === 'extra'), onclick: () => showTab('extra') }, tabLabel()),
+				h('button', { type: 'button', role: 'tab', class: 'kk-tab' + (active === 'visitors' ? ' is-active' : ''), 'aria-selected': String(active === 'visitors'), onclick: () => showTab('visitors') }, inFrame ? tabText('tabVisitors', fl) : t('tabVisitors')),
+				h('button', { type: 'button', role: 'tab', class: 'kk-tab' + (active === 'extra' ? ' is-active' : ''), 'aria-selected': String(active === 'extra'), onclick: () => showTab('extra') }, tabLabel(inFrame)),
 			)
 		}
 
@@ -373,7 +381,7 @@
 				return
 			}
 			if (!frameLayer) {
-				const iframe = h('iframe', { class: 'kk-embed', src: tabUrl, title: tabLabel(), allow: "camera 'self'; fullscreen 'self'" })
+				const iframe = h('iframe', { class: 'kk-embed', src: tabUrl, title: tabLabel(true), allow: "camera 'self'; fullscreen 'self'" })
 				// Same-origin pages (our own display) tell us about touches, so a booking is not cut off; other sites cannot be watched.
 				iframe.addEventListener('load', () => {
 					try {
@@ -382,7 +390,8 @@
 					frameTouched()
 				})
 				frameTabs = h('nav', { class: 'kk-top kk-frame-top' })
-				frameLayer = h('div', { class: 'kk-frame-layer' }, frameTabs, iframe)
+				frameTabs.style.cssText = 'justify-content:center;padding:6px 0 max(8px,env(safe-area-inset-bottom))'
+				frameLayer = h('div', { class: 'kk-frame-layer' }, iframe, frameTabs)
 				// Layout inline as well: a browser that kept an older kiosk.css (cached for months) would otherwise open this
 				// layer unstyled, behind the welcome screen, and the tab would look dead.
 				frameLayer.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:11;display:none;flex-direction:column;background:#f2f3f1'

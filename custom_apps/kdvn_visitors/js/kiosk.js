@@ -359,18 +359,34 @@
 		const tabLabel = (inFrame) => inFrame
 			? tabText('tabBook', T[tabLang] ? tabLang : 'en')
 			: (cfg.tabLabel || t('tabBook'))
+		// Our own display page (same address as this tablet) draws its back button inside its header, where the sensor strip and
+		// clock leave room for it; any other page gets the floating button below.
+		let frameSrc = tabUrl
+		let ownPage = false
+		try {
+			const u = new URL(tabUrl, location.href)
+			if (u.origin === location.origin) {
+				u.searchParams.set('embed', '1')
+				frameSrc = u.toString()
+				ownPage = true
+			}
+		} catch (e) { /* bad address */ }
+		window.addEventListener('message', (e) => {
+			if (ownPage && e.origin === location.origin && e.data && e.data.kdvnBack === true) showTab('visitors')
+		})
 		let frameLayer = null
 		let frameTabs = null
 		let frameIdle = null
 		const FRAME_IDLE_SECONDS = 180
 
+		// One button only: the visitor screen offers the other page, the framed page offers the way back (in its own language).
 		function tabButtons(active) {
 			const fl = T[tabLang] ? tabLang : 'en'
-			const inFrame = active === 'extra'
-			return h('div', { class: 'kk-tabs', role: 'tablist' },
-				h('button', { type: 'button', role: 'tab', class: 'kk-tab' + (active === 'visitors' ? ' is-active' : ''), 'aria-selected': String(active === 'visitors'), onclick: () => showTab('visitors') }, inFrame ? tabText('tabVisitors', fl) : t('tabVisitors')),
-				h('button', { type: 'button', role: 'tab', class: 'kk-tab' + (active === 'extra' ? ' is-active' : ''), 'aria-selected': String(active === 'extra'), onclick: () => showTab('extra') }, tabLabel(inFrame)),
-			)
+			return active === 'extra'
+				? h('div', { class: 'kk-tabs' },
+					h('button', { type: 'button', class: 'kk-tab', onclick: () => showTab('visitors') }, '‹ ' + tabText('tabVisitors', fl)))
+				: h('div', { class: 'kk-tabs' },
+					h('button', { type: 'button', class: 'kk-tab', onclick: () => showTab('extra') }, tabLabel(false)))
 		}
 
 		function showTab(which) {
@@ -381,7 +397,7 @@
 				return
 			}
 			if (!frameLayer) {
-				const iframe = h('iframe', { class: 'kk-embed', src: tabUrl, title: tabLabel(true), allow: "camera 'self'; fullscreen 'self'" })
+				const iframe = h('iframe', { class: 'kk-embed', src: frameSrc, title: tabLabel(true), allow: "camera 'self'; fullscreen 'self'" })
 				// Same-origin pages (our own display) tell us about touches, so a booking is not cut off; other sites cannot be watched.
 				iframe.addEventListener('load', () => {
 					try {
@@ -390,15 +406,18 @@
 					frameTouched()
 				})
 				frameTabs = h('nav', { class: 'kk-top kk-frame-top' })
-				frameTabs.style.cssText = 'justify-content:center;padding:6px 0 max(8px,env(safe-area-inset-bottom))'
+				frameTabs.style.cssText = 'position:absolute;top:2.2vh;left:0;right:0;height:8vh;display:flex;justify-content:center;align-items:center;pointer-events:none;z-index:2'
 				frameLayer = h('div', { class: 'kk-frame-layer' }, iframe, frameTabs)
+				// The buttons float over the framed page's own header line (between logo and clock) so the page keeps the full height.
 				// Layout inline as well: a browser that kept an older kiosk.css (cached for months) would otherwise open this
 				// layer unstyled, behind the welcome screen, and the tab would look dead.
 				frameLayer.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:11;display:none;flex-direction:column;background:#f2f3f1'
 				iframe.style.cssText = 'flex:1;width:100%;border:0;background:#fff'
 				document.body.append(frameLayer)
 			}
-			frameTabs.replaceChildren(tabButtons('extra'))
+			const bar = tabButtons('extra')
+			bar.style.pointerEvents = 'auto'
+			frameTabs.replaceChildren(ownPage ? '' : bar)
 			frameLayer.style.display = 'flex'
 			frameTouched()
 		}

@@ -58,6 +58,9 @@
 		const params = new URLSearchParams(window.location.search)
 		const lang = T[params.get('lang')] ? params.get('lang') : 'en' // no choice on a wall screen: English
 		const locale = LOCALES[lang]
+		// Inside the reception tablet's second tab (?embed=1) the header carries a back button; the tablet listens for it.
+		const embedded = params.get('embed') === '1' && window.parent !== window
+		const BACK = { vi: 'Khách đến', en: 'Visitors', ja: '来訪者' }
 		document.documentElement.lang = lang
 		document.documentElement.dataset.theme = params.get('theme') === 'light' ? 'light' : 'dark'
 		const query = new URLSearchParams()
@@ -133,6 +136,11 @@
 						h('p', { class: 'kd-building' }, data && data.building ? data.building.name : (root.dataset.logoUrl ? '' : root.dataset.company)),
 					),
 				),
+				embedded ? h('button', {
+					type: 'button', class: 'kd-back',
+					style: 'font:inherit;font-weight:700;font-size:1.1em;min-height:44px;padding:0 1.4em;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer',
+					onclick: () => window.parent.postMessage({ kdvnBack: true }, window.location.origin),
+				}, '‹ ' + (BACK[lang] || BACK.en)) : null,
 				sensorStrip(),
 				h('div', { class: 'kd-clock' },
 					h('span', { class: 'kd-clock__time' }, fmtTime(now)),

@@ -357,5 +357,6 @@ html, body#body-public.layout-base {
 	position: fixed; inset: 0; z-index: 11; display: flex; flex-direction: column; background: var(--kk-bg);
 }
 .kk-frame-layer[hidden] { display: none; }
-.kk-frame-top { justify-content: center; padding: 6px 0 max(8px, env(safe-area-inset-bottom)); max-width: none; }
+.kk-frame-top { position: absolute; top: 2.2vh; left: 0; right: 0; height: 8vh; display: flex; justify-content: center; align-items: center; pointer-events: none; z-index: 2; max-width: none; }
+.kk-frame-top .kk-tabs { pointer-events: auto; }
 .kk-embed { flex: 1; width: 100%; border: 0; background: #fff; }

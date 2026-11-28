@@ -13,6 +13,10 @@ command and wait for approval. Steps 2 to 4 change the server.
    Exception, found 2026-11-27 (kdvn_visitors touch display): when `appinfo/routes.php` gains NEW routes and the version
    is not bumped, the web workers keep the old route list (`occ router:list` already shows the new ones, the web gives 404).
    Fix without downtime: `docker exec nextcloud-app apachectl -k graceful`, then test a new route with a bad key (expect 403/401).
+   Browser cache gotcha, found 2026-11-28: Nextcloud serves custom_apps css/js with `max-age` of about 6 months, so a tablet or
+   display that already has the page may run NEW js with OLD css (the new second tab on the reception tablet looked dead).
+   A private window shows the truth. After changing css/js of a tablet or display, clear the site data on those devices
+   (Safari: Settings > Safari > Advanced > Website Data), or bump the app version so the `?v=` in the URLs changes.
 3. `docker exec nextcloud-app chown -R www-data:www-data /var/www/html/custom_apps/kdvn_visitors`
 4. `docker exec -u www-data nextcloud-app php occ upgrade`
    Needed whenever the version changed or a migration was added (a few seconds of

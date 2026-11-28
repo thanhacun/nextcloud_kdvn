@@ -379,7 +379,7 @@ PHP inside the container. To read the real error behind an empty `verify` messag
 - KDVN_Logo_cropped.png (the Dockerfile is exported already)
 
 
-## 2026-11-28: tablet second tab, rooms moved to Settings with Excel import (uncommitted, not deployed)
+## 2026-11-28: tablet second tab, rooms moved to Settings with Excel import (deployed to .247, eb6d14b)
 - kdvn_visitors: optional second tab on the reception tablet (default name "Book a room"), framed inside the kiosk page because
   the iPad is in kiosk mode. Admin: Visitors settings > Second tab. Tested in a browser harness (tab switch, frame not reloaded,
   return to Visitors). No route change: file copy only.
@@ -387,3 +387,5 @@ PHP inside the container. To read the real error behind an empty `verify` messag
   Administration privileges delegation). New: Import from Excel (.xlsx/.csv) with template download and a preview. New routes:
   deploy needs `apachectl -k graceful` (see deploy-apps.md). Importer logic tested on a real openpyxl file; SheetWriter (template) not
   yet tested because the local PHP lacks zip: open the downloaded template in Excel after deploy.
+- Deployed 2026-11-28 (rooms 0.3.0 via occ upgrade, apachectl graceful; backups ~/backup-kdvn_{rooms,visitors}-20261128 on .247). The tablet's second tab looked dead on a
+  device with cached old css; fixed by inline layer styles (see deploy-apps.md cache gotcha). Excel template download still to be checked in Excel.

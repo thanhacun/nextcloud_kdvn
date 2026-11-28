@@ -368,7 +368,7 @@
 		function showTab(which) {
 			clearTimeout(frameIdle)
 			if (which === 'visitors') {
-				if (frameLayer) frameLayer.hidden = true
+				if (frameLayer) frameLayer.style.display = 'none'
 				go('welcome')
 				return
 			}
@@ -383,10 +383,14 @@
 				})
 				frameTabs = h('nav', { class: 'kk-top kk-frame-top' })
 				frameLayer = h('div', { class: 'kk-frame-layer' }, frameTabs, iframe)
+				// Layout inline as well: a browser that kept an older kiosk.css (cached for months) would otherwise open this
+				// layer unstyled, behind the welcome screen, and the tab would look dead.
+				frameLayer.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:11;display:none;flex-direction:column;background:#f2f3f1'
+				iframe.style.cssText = 'flex:1;width:100%;border:0;background:#fff'
 				document.body.append(frameLayer)
 			}
 			frameTabs.replaceChildren(tabButtons('extra'))
-			frameLayer.hidden = false
+			frameLayer.style.display = 'flex'
 			frameTouched()
 		}
 
@@ -394,7 +398,7 @@
 		let frameWatchable = false
 		function frameTouched() {
 			clearTimeout(frameIdle)
-			if (!frameLayer || frameLayer.hidden) return
+			if (!frameLayer || frameLayer.style.display === 'none') return
 			try {
 				frameWatchable = !!frameLayer.querySelector('iframe').contentWindow.document
 			} catch (e) { frameWatchable = false }
@@ -645,7 +649,7 @@
 
 		// Keep the clock and greeting fresh on the welcome screen.
 		setInterval(() => {
-			if (state.screen !== 'welcome' || (frameLayer && !frameLayer.hidden)) return
+			if (state.screen !== 'welcome' || (frameLayer && frameLayer.style.display !== 'none')) return
 			if (Date.now() - loadedAt > RELOAD_AFTER_MS && navigator.onLine !== false) {
 				window.location.reload() // only while nobody is using the tablet
 				return

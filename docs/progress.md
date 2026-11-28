@@ -389,3 +389,13 @@ PHP inside the container. To read the real error behind an empty `verify` messag
   yet tested because the local PHP lacks zip: open the downloaded template in Excel after deploy.
 - Deployed 2026-11-28 (rooms 0.3.0 via occ upgrade, apachectl graceful; backups ~/backup-kdvn_{rooms,visitors}-20261128 on .247). The tablet's second tab looked dead on a
   device with cached old css; fixed by inline layer styles (see deploy-apps.md cache gotcha). Excel template download still to be checked in Excel.
+
+## 2026-11-28: kdvn_directory 0.1.0, staff directory (deployed to .247, cb68bb0)
+- Why: NC users cannot see members of the groups they belong to (normal Nextcloud behaviour; the auto-created group Teams are
+  hidden too). Read-only app: Administration settings > Directory, tick groups to list, optional label, "Denied" groups
+  (Limit = temporary/guest users) get 403. Disabled accounts are never listed. No migration, no occ upgrade.
+- Deployed by git pull + docker cp + app:enable, no maintenance mode. Tested by Thanh: works.
+- Data found the same day: SAML_Japanese has 21 members, 5 disabled (never logged in); Okudaira and Mizobata are in
+  "Japanese HAN" but not in SAML_Japanese. Fix in Authentik (add the two, remove the 5), then 18 active. Not done yet.
+- Open: list SAML_Japanese and other real department groups in the directory; check why the HR sync leaves disabled users in groups.
+- Team folder facts (2026-11-28): "1. Construction" is 3.55 GiB of 5 GB, "IT Store" 105 GB unlimited quota.

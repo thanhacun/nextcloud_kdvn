@@ -230,3 +230,7 @@ html, body#body-public.layout-base {
 .kd-done { text-align: center; padding: 3vh 0; }
 .kd-done__big { margin: 0 0 1vh; font-size: 2.4em; font-weight: 800; color: var(--kd-accent-ink, var(--kd-ink)); }
 .kd-done p { margin: 0; font-size: 1.4em; }
+
+.kd-privacy { font-size: 0.95em; }
+.kd-cam .kd-privacy { text-align: center; max-width: 28em; margin: 0; }
+.kd-failmsg { text-align: center; padding: 3vh 0; }

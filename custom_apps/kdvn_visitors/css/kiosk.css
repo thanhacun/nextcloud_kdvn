@@ -342,3 +342,21 @@ html, body#body-public.layout-base {
 	.kk-form__row { grid-template-columns: 1fr; }
 	.kk-camera { width: min(72vw, 44vh); }
 }
+
+/* ---- optional second tab (a page framed inside the tablet page) ---- */
+
+.kk-tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--kk-panel); border: 1px solid var(--kk-line); border-radius: 999px; }
+.kk-tab {
+	min-height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: transparent;
+	color: var(--kk-ink); font: inherit; font-weight: 600; font-size: 1rem; cursor: pointer;
+}
+.kk-tab.is-active { background: var(--kk-accent); color: var(--kk-accent-text); }
+.kk-tab:focus-visible { outline: 3px solid var(--kk-accent); outline-offset: 2px; }
+
+.kk-frame-layer {
+	position: fixed; inset: 0; z-index: 11; display: flex; flex-direction: column; background: var(--kk-bg);
+	padding-top: max(12px, env(safe-area-inset-top));
+}
+.kk-frame-layer[hidden] { display: none; }
+.kk-frame-top { justify-content: center; padding-bottom: 8px; max-width: none; }
+.kk-embed { flex: 1; width: 100%; border: 0; background: #fff; }

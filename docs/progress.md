@@ -13,7 +13,10 @@
   disabled (5 Database, 5 user_saml). The 8 others never had a Nextcloud account.
 - Touch room display (committed 28acea5 and pushed; DEPLOYED to production .247 on 2026-11-27 without a version bump, then
   `apachectl -k graceful` made the new routes work; rollback copy /home/kdvn_admin/backup-kdvn_visitors-20261127; TESTED by Thanh on
-  production 2026-11-27: QR booking and face booking (Odoo identify API, key pasted by him) both worked end to end. Still to do: HR
+  production 2026-11-27: QR booking and face booking (Odoo identify API, key pasted by him) both worked end to end. Then added (not deployed yet): when the face is not recognised after 15 s, or is ambiguous, the screen
+  shows "We could not recognise you" with Try again and Use my phone instead (no automatic jump to the QR), and the screen says in
+  vi/en/ja that the picture is only used to recognise the person and is not saved (QR: only the booking is saved). Odoo still keeps
+  one log row per identify call (time, state, employee, ms; 30 days): HR should know. Still to do: HR
   consent before staff see the camera, the tablet hardware and its https kiosk setup, delete the test bookings, proxy_mode in Odoo): new interactive link `/touch/{key}` in kdvn_visitors, the read-only
   `/display/{key}` is unchanged. Tap Details for a room's meetings, or Book now for 15/30/60 minutes starting now. Nobody types
   a name: the person is PROVEN. Stage 1 (built): QR code on the screen, the phone (Nextcloud login, SSO included) opens
@@ -23,7 +26,7 @@
   404 until the dev server is restarted; full chain NOT tested; frames 640 px q0.8 once a second, give up after 15 s as Odoo advises): when the page has `data-face-url` (only when "Use face recognition on touch
   screens" is on in Administration settings > Visitors, with the Odoo address and key; the key is stored encrypted, the picture is
   never kept), Book opens the
-  camera, posts a frame every 0.5 s and shows "Hello X (3, 2, 1) Cancel"; "Use my phone" and a 30 s timeout fall back to the QR.
+  camera, posts a frame every 0.5 s and shows "Hello X (3, 2, 1) Cancel"; "Use my phone" falls back to the QR.
   The relay (`TouchController::face` + `FaceRelay`) calls Odoo `POST /kdvn_face/ext/identify` with header `X-KDVN-Key`,
   allowed to reach a private address like Talk; Odoo errors, wrong key or a missing Nextcloud account send the screen to the QR.
   Odoo answers 403 (key, address or switch), 400 bad_image, 429 rate_limit (screen waits), 503 engine; setup in Odoo Face ID menu:
@@ -374,3 +377,13 @@ PHP inside the container. To read the real error behind an empty `verify` messag
 - claude_authentik-migration-runbook.md
 - claude_sitepin-app-design.md (SitePin app design, not built)
 - KDVN_Logo_cropped.png (the Dockerfile is exported already)
+
+
+## 2026-11-28: tablet second tab, rooms moved to Settings with Excel import (uncommitted, not deployed)
+- kdvn_visitors: optional second tab on the reception tablet (default name "Book a room"), framed inside the kiosk page because
+  the iPad is in kiosk mode. Admin: Visitors settings > Second tab. Tested in a browser harness (tab switch, frame not reloaded,
+  return to Visitors). No route change: file copy only.
+- kdvn_rooms 0.3.0: top-bar entry and page removed (only Administration settings > Meeting rooms; non-admin reception staff need
+  Administration privileges delegation). New: Import from Excel (.xlsx/.csv) with template download and a preview. New routes:
+  deploy needs `apachectl -k graceful` (see deploy-apps.md). Importer logic tested on a real openpyxl file; SheetWriter (template) not
+  yet tested because the local PHP lacks zip: open the downloaded template in Excel after deploy.

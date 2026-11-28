@@ -359,6 +359,39 @@ class AppSettings {
 		}
 	}
 
+	// ------------------------------------------------ optional second tab on the reception tablet
+
+	/**
+	 * An optional second tab on the reception tablet (label + address of a page shown inside the tablet page).
+	 * The iPad runs in kiosk mode and cannot open other browser tabs, so the page is framed. Empty url = no tab.
+	 * Kept apart from appearance(): the address may hold a secret key (a touch display link) and appearance()
+	 * also feeds the public guest pass.
+	 *
+	 * @return array{label: string, url: string}
+	 */
+	public function kioskTab(): array {
+		return [
+			'label' => $this->config->getValueString(self::APP, 'kiosk_tab_label', ''),
+			'url' => $this->config->getValueString(self::APP, 'kiosk_tab_url', ''),
+		];
+	}
+
+	/** @throws UserError when the address is not an https address or a path on this server */
+	public function setKioskTab(array $in): void {
+		$url = trim((string)($in['url'] ?? ''));
+		$label = mb_substr(trim((string)($in['label'] ?? '')), 0, 40);
+		if ($url !== '') {
+			// https only: the tablet page is https, so the browser would block an http page inside it anyway.
+			$ok = mb_strlen($url) <= 600 && !preg_match('/[\s<>"\'\\\\]/', $url)
+				&& (preg_match('#^https://[^/?\#]+#i', $url) === 1 || preg_match('#^/(?!/)#', $url) === 1);
+			if (!$ok) {
+				throw new UserError('The tablet tab address must start with https:// (or be a path on this server such as /apps/...), with no spaces.');
+			}
+		}
+		$this->config->setValueString(self::APP, 'kiosk_tab_label', $label);
+		$this->config->setValueString(self::APP, 'kiosk_tab_url', $url, false, true);
+	}
+
 	// ------------------------------------------------ purpose of visit, host privacy
 
 	public const DEFAULT_PURPOSES = "Meeting | Họp | 会議\nSales | Bán hàng | 営業\nInterview | Phỏng vấn | 面接\nDelivery | Giao hàng | 配達";

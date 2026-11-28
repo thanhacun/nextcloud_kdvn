@@ -63,6 +63,7 @@
 					])),
 					displayGuestMode: f.displayGuestMode.value,
 					displayTitleMode: f.displayTitleMode.value,
+					kioskTab: { label: f.tabLabel.value, url: f.tabUrl.value },
 					appearance: {
 						accent: f.accent.value,
 						showLogo: f.showLogo.checked,

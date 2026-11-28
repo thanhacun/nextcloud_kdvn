@@ -12,6 +12,8 @@
 #kv-admin .kv-kiosk-result p { flex-basis: 100%; margin: 0; }
 #kv-admin .kv-kiosk-result input { flex: 1; min-width: 280px; margin: 0; }
 
+#kv-admin .kv-grow { flex: 1 1 320px; }
+#kv-admin .kv-grow input { width: 100%; }
 #kv-admin .kv-admin-inline { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
 #kv-admin .kv-admin-form label.kv-admin-check { flex-direction: row; align-items: center; gap: 6px; font-weight: normal; min-height: 34px; }
 #kv-admin .kv-admin-form input[type="color"] { width: 64px; height: 36px; padding: 2px; }

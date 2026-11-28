@@ -64,6 +64,7 @@ class SettingsApiController extends Controller {
 		?array $officeGroups = null,
 		?array $officeStaffGroups = null,
 		?array $staffHiddenGroups = null,
+		?array $kioskTab = null,
 	): DataResponse {
 		$companyName = trim($companyName);
 		$talkUser = trim($talkUser);
@@ -95,6 +96,9 @@ class SettingsApiController extends Controller {
 		$this->settings->setOfficeTimezone($officeTimezone);
 		try {
 			$this->settings->setAppearance($appearance);
+			if ($kioskTab !== null) {
+				$this->settings->setKioskTab($kioskTab);
+			}
 			$this->settings->setCalendarSettings($autoPassMode, $displayGuestMode, $displayTitleMode);
 			$this->settings->setAutoCheckoutMinutes($autoCheckoutMinutes);
 			$this->settings->setHostNamePrivacy($hostNamePrivacy);

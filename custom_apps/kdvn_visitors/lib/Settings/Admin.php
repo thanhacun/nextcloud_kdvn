@@ -44,6 +44,7 @@ class Admin implements ISettings {
 			'retentionDays' => $this->settings->retentionDays(),
 			'officeTimezone' => $this->settings->officeTimezoneName(),
 			'appearance' => $this->settings->appearance(),
+			'kioskTab' => $this->settings->kioskTab(),
 			'autoPassMode' => $this->settings->autoPassMode(),
 			'purposesText' => $this->settings->purposesText(),
 			'hostNamePrivacy' => $this->settings->hostNamePrivacy(),

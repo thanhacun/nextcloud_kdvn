@@ -52,6 +52,11 @@ alerts, passes created from Calendar, and public meeting-room displays.
   and shows only when the page has data-face-url (set when appconfig face_enabled, face_url and the encrypted face_key
   are set: TouchController::face relays the JPEG through FaceRelay to Odoo and never stores it or logs it; the Odoo side is a
   separate task in ~/odoo19_thcn). Never put the face key in git, chat or logs.
+- Optional second tab on the reception tablet (appconfig kiosk_tab_label, kiosk_tab_url, set in the Visitors admin page, saved
+  with the normal Save; empty url = no tab). The iPad is in kiosk mode, so the page is framed inside the tablet page (never a new
+  browser tab): KioskController adds the address' origin to the CSP frame-src; js/kiosk.js keeps the iframe in its own layer so
+  the 30 s redraw never reloads it. https or a /path only. Stored apart from appearance() because the address can hold a secret
+  touch key and appearance() also feeds the public guest pass. Other websites work only if they allow framing.
 
 ## Decisions
 - Touch booking has no typed names and no shared login: only a ticket from a verified identity books a room. Do not add a

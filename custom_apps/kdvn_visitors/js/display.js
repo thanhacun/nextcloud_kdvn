@@ -20,19 +20,19 @@
 			title: 'Lịch phòng họp', comingUp: 'Sắp tới', bookings: '{n} lịch đặt', oneBooking: '1 lịch đặt', noMoreToday: 'Hôm nay không còn cuộc họp nào', nextDays: 'Những ngày tới', guestVisit: 'Tiếp khách', free: 'Trống', freeUntil: 'Trống đến {time}', freeRest: 'Trống đến hết ngày', guestWaiting: 'Khách đã đến, họp lúc {time}',
 			busyUntil: 'Đang họp đến {time}', today: 'Hôm nay', tomorrow: 'Ngày mai', none: 'Chưa có lịch đặt phòng',
 			guests: 'Khách: {list}', guestCount: '{n} khách', arrived: '{n} đã đến', booked: 'Đã đặt', allDay: 'Cả ngày',
-			seats: '{n} chỗ', details: 'Chi tiết', bookNow: 'Đặt ngay', close: 'Đóng', bookTitle: 'Đặt {room}', freeUntilLong: 'Trống đến {time}', roomFreeRest: 'Trống đến hết ngày', howLong: 'Họp bao lâu?', minutes: '{n} phút', identFace: 'Camera sẽ nhận diện khuôn mặt của bạn', identPhone: 'Bạn sẽ quét mã QR bằng điện thoại và xác nhận', qrTitle: 'Quét bằng điện thoại', qrHelp: 'Mở camera hoặc ứng dụng Nextcloud, quét mã, rồi bấm Xác nhận trên điện thoại ({from}–{to}).', waitingPhone: 'Đang chờ điện thoại…', qrExpired: 'Mã đã hết hạn, hãy thử lại', back: 'Quay lại', cancel: 'Hủy', usePhone: 'Dùng điện thoại', faceHint: 'Hãy nhìn vào camera', faceUnknown: 'Chưa nhận ra, hãy nhìn thẳng vào camera', faceMany: 'Chỉ một người trước camera', faceAmbiguous: 'Có người trông giống nhau: hãy dùng điện thoại', hello: 'Xin chào {name}', confirmBook: 'Đặt phòng {from}–{to}', booking: 'Đang đặt…', bookedOk: 'Đã đặt xong', bookedOkLine: '{room} là của bạn đến {time}', takenNow: 'Vừa có người đặt phòng này', bookFailed: 'Không đặt được', tooShort: 'Phòng sắp có cuộc họp, không đủ thời gian', today2: 'Hôm nay', updated: 'Cập nhật {time}', offline: 'Mất kết nối – đang thử lại', noRooms: 'Chưa có phòng họp nào.',
+			seats: '{n} chỗ', details: 'Chi tiết', bookNow: 'Đặt ngay', close: 'Đóng', bookTitle: 'Đặt {room}', freeUntilLong: 'Trống đến {time}', roomFreeRest: 'Trống đến hết ngày', howLong: 'Họp bao lâu?', minutes: '{n} phút', tryAgain: 'Thử lại', faceFailed: 'Chưa nhận ra bạn', noPhoto: 'Ảnh chỉ được dùng để nhận diện rồi bỏ đi, không được lưu ở đâu cả.', bookingOnly: 'Chỉ lịch đặt phòng được lưu, trong lịch của bạn.', identFace: 'Camera sẽ nhận diện khuôn mặt của bạn', identPhone: 'Bạn sẽ quét mã QR bằng điện thoại và xác nhận', qrTitle: 'Quét bằng điện thoại', qrHelp: 'Mở camera hoặc ứng dụng Nextcloud, quét mã, rồi bấm Xác nhận trên điện thoại ({from}–{to}).', waitingPhone: 'Đang chờ điện thoại…', qrExpired: 'Mã đã hết hạn, hãy thử lại', back: 'Quay lại', cancel: 'Hủy', usePhone: 'Dùng điện thoại', faceHint: 'Hãy nhìn vào camera', faceUnknown: 'Chưa nhận ra, hãy nhìn thẳng vào camera', faceMany: 'Chỉ một người trước camera', faceAmbiguous: 'Có người trông giống nhau: hãy dùng điện thoại', hello: 'Xin chào {name}', confirmBook: 'Đặt phòng {from}–{to}', booking: 'Đang đặt…', bookedOk: 'Đã đặt xong', bookedOkLine: '{room} là của bạn đến {time}', takenNow: 'Vừa có người đặt phòng này', bookFailed: 'Không đặt được', tooShort: 'Phòng sắp có cuộc họp, không đủ thời gian', today2: 'Hôm nay', updated: 'Cập nhật {time}', offline: 'Mất kết nối – đang thử lại', noRooms: 'Chưa có phòng họp nào.',
 		},
 		en: {
 			title: 'Meeting rooms', comingUp: 'Coming up', bookings: '{n} bookings', oneBooking: '1 booking', noMoreToday: 'No more meetings today', nextDays: 'Next days', guestVisit: 'Guest visit', free: 'Free', freeUntil: 'Free until {time}', freeRest: 'Free for today', guestWaiting: 'Guest waiting, meeting at {time}',
 			busyUntil: 'In use until {time}', today: 'Today', tomorrow: 'Tomorrow', none: 'No bookings',
 			guests: 'Guests: {list}', guestCount: '{n} guests', arrived: '{n} arrived', booked: 'Booked', allDay: 'All day',
-			seats: '{n} seats', details: 'Details', bookNow: 'Book now', close: 'Close', bookTitle: 'Book {room}', freeUntilLong: 'Free until {time}', roomFreeRest: 'Free for the rest of the day', howLong: 'How long?', minutes: '{n} min', identFace: 'The camera will recognise your face', identPhone: 'You will scan a QR code with your phone and confirm', qrTitle: 'Scan with your phone', qrHelp: 'Open the camera or the Nextcloud app, scan, then tap Confirm on your phone ({from}–{to}).', waitingPhone: 'Waiting for your phone…', qrExpired: 'The code expired, try again', back: 'Back', cancel: 'Cancel', usePhone: 'Use my phone instead', faceHint: 'Look at the camera', faceUnknown: 'Not recognised yet, look straight at the camera', faceMany: 'One person in front of the camera, please', faceAmbiguous: 'Several people look alike: use your phone', hello: 'Hello {name}', confirmBook: 'Book {from}–{to}', booking: 'Booking…', bookedOk: 'Booked', bookedOkLine: '{room} is yours until {time}', takenNow: 'Someone just booked this room', bookFailed: 'Could not book', tooShort: 'A meeting starts soon, not enough time to book', today2: 'Today', updated: 'Updated {time}', offline: 'Connection lost, retrying', noRooms: 'No meeting rooms yet.',
+			seats: '{n} seats', details: 'Details', bookNow: 'Book now', close: 'Close', bookTitle: 'Book {room}', freeUntilLong: 'Free until {time}', roomFreeRest: 'Free for the rest of the day', howLong: 'How long?', minutes: '{n} min', tryAgain: 'Try again', faceFailed: 'We could not recognise you', noPhoto: 'Your picture is only used to recognise you, then discarded. It is not saved anywhere.', bookingOnly: 'Only the booking is saved, in your calendar.', identFace: 'The camera will recognise your face', identPhone: 'You will scan a QR code with your phone and confirm', qrTitle: 'Scan with your phone', qrHelp: 'Open the camera or the Nextcloud app, scan, then tap Confirm on your phone ({from}–{to}).', waitingPhone: 'Waiting for your phone…', qrExpired: 'The code expired, try again', back: 'Back', cancel: 'Cancel', usePhone: 'Use my phone instead', faceHint: 'Look at the camera', faceUnknown: 'Not recognised yet, look straight at the camera', faceMany: 'One person in front of the camera, please', faceAmbiguous: 'Several people look alike: use your phone', hello: 'Hello {name}', confirmBook: 'Book {from}–{to}', booking: 'Booking…', bookedOk: 'Booked', bookedOkLine: '{room} is yours until {time}', takenNow: 'Someone just booked this room', bookFailed: 'Could not book', tooShort: 'A meeting starts soon, not enough time to book', today2: 'Today', updated: 'Updated {time}', offline: 'Connection lost, retrying', noRooms: 'No meeting rooms yet.',
 		},
 		ja: {
 			title: '会議室予約状況', comingUp: '今後の予定', bookings: '予約{n}件', oneBooking: '予約1件', noMoreToday: '本日の予定はこれ以上ありません', nextDays: '今後の日程', guestVisit: '来客対応', free: '空き', freeUntil: '{time}まで空き', freeRest: '本日は空き', guestWaiting: '来訪者到着済み、{time}開始',
 			busyUntil: '{time}まで使用中', today: '今日', tomorrow: '明日', none: '予約はありません',
 			guests: '来訪者：{list}', guestCount: '来訪者{n}名', arrived: '{n}名到着', booked: '予約済み', allDay: '終日',
-			seats: '{n}名', details: '詳細', bookNow: '今すぐ予約', close: '閉じる', bookTitle: '{room}を予約', freeUntilLong: '{time}まで空き', roomFreeRest: '本日は空き', howLong: '利用時間', minutes: '{n}分', identFace: 'カメラで顔を認識します', identPhone: 'スマートフォンでQRコードを読み取り、確定します', qrTitle: 'スマートフォンで読み取り', qrHelp: 'カメラまたはNextcloudアプリで読み取り、スマートフォンで「確定」を押してください（{from}–{to}）。', waitingPhone: 'スマートフォンを待っています…', qrExpired: 'コードの期限が切れました。もう一度お試しください', back: '戻る', cancel: 'キャンセル', usePhone: 'スマートフォンを使う', faceHint: 'カメラを見てください', faceUnknown: 'まだ認識できません。カメラをまっすぐ見てください', faceMany: 'カメラの前は一人でお願いします', faceAmbiguous: '似た人がいます。スマートフォンを使ってください', hello: 'こんにちは、{name}さん', confirmBook: '{from}–{to}を予約', booking: '予約中…', bookedOk: '予約しました', bookedOkLine: '{room}を{time}まで使用できます', takenNow: 'たった今、予約されました', bookFailed: '予約できませんでした', tooShort: 'まもなく予定があり、予約できません', today2: '今日', updated: '{time}更新', offline: '接続が切れました。再試行中…', noRooms: '会議室がまだありません。',
+			seats: '{n}名', details: '詳細', bookNow: '今すぐ予約', close: '閉じる', bookTitle: '{room}を予約', freeUntilLong: '{time}まで空き', roomFreeRest: '本日は空き', howLong: '利用時間', minutes: '{n}分', tryAgain: 'もう一度', faceFailed: '認識できませんでした', noPhoto: '写真は本人確認にのみ使用し、すぐに破棄します。どこにも保存されません。', bookingOnly: '保存されるのは予約のみ（あなたのカレンダー）です。', identFace: 'カメラで顔を認識します', identPhone: 'スマートフォンでQRコードを読み取り、確定します', qrTitle: 'スマートフォンで読み取り', qrHelp: 'カメラまたはNextcloudアプリで読み取り、スマートフォンで「確定」を押してください（{from}–{to}）。', waitingPhone: 'スマートフォンを待っています…', qrExpired: 'コードの期限が切れました。もう一度お試しください', back: '戻る', cancel: 'キャンセル', usePhone: 'スマートフォンを使う', faceHint: 'カメラを見てください', faceUnknown: 'まだ認識できません。カメラをまっすぐ見てください', faceMany: 'カメラの前は一人でお願いします', faceAmbiguous: '似た人がいます。スマートフォンを使ってください', hello: 'こんにちは、{name}さん', confirmBook: '{from}–{to}を予約', booking: '予約中…', bookedOk: '予約しました', bookedOkLine: '{room}を{time}まで使用できます', takenNow: 'たった今、予約されました', bookFailed: '予約できませんでした', tooShort: 'まもなく予定があり、予約できません', today2: '今日', updated: '{time}更新', offline: '接続が切れました。再試行中…', noRooms: '会議室がまだありません。',
 		},
 	}
 
@@ -350,7 +350,7 @@
 			const room = data.rooms.find(r => r.id === sheet.roomId)
 			if (!room) { closeSheet(); return }
 			clearTimeout(closeSheet.timer)
-			closeSheet.timer = setTimeout(closeSheet, sheet.done ? 10 * 1000 : sheet.step === 'choose' ? 60 * 1000 : 150 * 1000) // back to the board when nobody touches it
+			closeSheet.timer = setTimeout(closeSheet, sheet.done ? 10 * 1000 : sheet.step === 'choose' || sheet.step === 'facefail' ? 60 * 1000 : 150 * 1000) // back to the board when nobody touches it
 
 			const free = freeSeconds(room, now)
 			const fits = m => free === null || m * 60 <= free
@@ -394,10 +394,16 @@
 							type: 'button', class: 'kd-chip' + (sheet.minutes === m ? ' is-on' : ''), disabled: !fits(m),
 							onclick: () => { sheet.minutes = m; drawSheet() },
 						}, t('minutes', { n: m })))),
-						h('p', { class: 'kd-sheet__hint' }, faceUrl ? t('identFace') : t('identPhone')))
+						h('p', { class: 'kd-sheet__hint' }, faceUrl ? t('identFace') : t('identPhone')),
+						h('p', { class: 'kd-sheet__hint kd-privacy' }, faceUrl ? t('noPhoto') : t('bookingOnly')))
 					foot.push(h('button', { type: 'button', class: 'kd-btn kd-btn--primary kd-btn--big', onclick: startIdentify },
 						t('confirmBook', { from: fmtTime(now), to: fmtTime(end) })))
 				}
+			} else if (sheet.step === 'facefail') {
+				body.push(h('p', { class: 'kd-sheet__sub kd-failmsg' }, sheet.failMsg || t('faceFailed')))
+				foot.push(h('div', { class: 'kd-split' },
+					h('button', { type: 'button', class: 'kd-btn kd-btn--primary kd-btn--big', onclick: startFace }, t('tryAgain')),
+					h('button', { type: 'button', class: 'kd-btn kd-btn--big', onclick: startQr }, t('usePhone'))))
 			} else if (sheet.step === 'qr') {
 				sheet.refs.qr = h('div', { class: 'kd-qr' })
 				sheet.refs.wait = h('p', { class: 'kd-sheet__sub' }, t('waitingPhone'))
@@ -405,12 +411,14 @@
 					h('div', { class: 'kd-qrtext' },
 						h('h3', { class: 'kd-sheet__q' }, t('qrTitle')),
 						h('p', {}, t('qrHelp', { from: fmtTime(now), to: fmtTime(end) })),
-						sheet.refs.wait)))
+						sheet.refs.wait,
+						h('p', { class: 'kd-sheet__hint kd-privacy' }, t('bookingOnly')))))
 				foot.push(h('button', { type: 'button', class: 'kd-btn kd-btn--big', onclick: () => backToChoose() }, t('back')))
 			} else if (sheet.step === 'face') {
 				sheet.refs.video = h('video', { class: 'kd-cam__video', autoplay: true, muted: true, playsinline: true })
 				sheet.refs.hint = h('p', { class: 'kd-sheet__sub kd-cam__hint' }, t('faceHint'))
-				body.push(h('div', { class: 'kd-cam' }, h('div', { class: 'kd-cam__oval' }, sheet.refs.video), sheet.refs.hint))
+				body.push(h('div', { class: 'kd-cam' }, h('div', { class: 'kd-cam__oval' }, sheet.refs.video), sheet.refs.hint,
+					h('p', { class: 'kd-sheet__hint kd-privacy' }, t('noPhoto'))))
 				foot.push(h('div', { class: 'kd-split' },
 					h('button', { type: 'button', class: 'kd-btn kd-btn--big', onclick: () => backToChoose() }, t('cancel')),
 					h('button', { type: 'button', class: 'kd-btn kd-btn--big', onclick: startQr }, t('usePhone'))))
@@ -473,6 +481,16 @@
 			}
 		}
 
+		/** Not recognised: say so and let the person try again or use the phone (no automatic jump to the QR). */
+		function faceFailed(message) {
+			stopIdentify()
+			if (!sheet) return
+			sheet.step = 'facefail'
+			sheet.failMsg = message
+			sheet.error = ''
+			drawSheet()
+		}
+
 		// ---- face (needs data-face-url: the server compares the picture with the enrolled faces; nothing is kept here)
 
 		async function startFace() {
@@ -498,7 +516,7 @@
 			const giveUpAt = Date.now() + 15 * 1000 // Odoo's advice: about one frame a second, stop after 10-15 s
 			const tick = async () => {
 				if (stopped || sheet !== mine) return
-				if (Date.now() > giveUpAt) { startQr(); return }
+				if (Date.now() > giveUpAt) { faceFailed(t('faceFailed')); return }
 				try {
 					const video = mine.refs.video
 					canvas.width = 640 // Odoo wants about 640x480 and under 300 KB
@@ -515,7 +533,7 @@
 					if (stopped || sheet !== mine) return
 					if (answer.state === 'ok') { hello(answer); return }
 					if (answer.state === 'error' || answer.state === 'off') { startQr(); return } // face service unavailable: the phone still works
-					if (answer.state === 'ambiguous') { mine.refs.hint.textContent = t('faceAmbiguous'); timer = setTimeout(startQr, 2500); return }
+					if (answer.state === 'ambiguous') { faceFailed(t('faceAmbiguous')); return }
 					if (answer.state !== 'wait') mine.refs.hint.textContent = answer.state === 'many' ? t('faceMany') : answer.state === 'none' ? t('faceHint') : t('faceUnknown')
 				} catch (e) { /* try again */ }
 				timer = setTimeout(tick, 1000)

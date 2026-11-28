@@ -184,6 +184,18 @@ $groupOptions = function (string $selected, string $none) use ($_): string {
 			<label class="kv-admin-check"><input type="checkbox" name="walkIn" <?php if ($a['walkIn']) { p('checked'); } ?>> Walk-in button on tablet</label>
 			<label class="kv-admin-check"><input type="checkbox" name="checkOut" <?php if ($a['checkOut']) { p('checked'); } ?>> Check-out button on tablet</label>
 		</div>
+		<h4>Second tab on the reception tablet (optional)</h4>
+		<p class="settings-hint">
+			Adds a tab next to the welcome screen, for example the room booking screen for a demonstration. Leave the address empty for
+			no tab. The iPad stays in kiosk mode: the page opens inside the tablet screen, never in a new browser tab. Use an https
+			address, such as a Touch room display link (see Room display links below) or the read-only display link. Another website
+			only works if it allows being shown inside a page (many block it); open the tablet link once in a browser to check.
+			The address is kept like a password and is shown only to the tablet.
+		</p>
+		<div class="kv-admin-inline">
+			<label>Tab name <input type="text" name="tabLabel" maxlength="40" placeholder="Book a room" value="<?php p($_['kioskTab']['label']); ?>"></label>
+			<label class="kv-grow">Address <input type="text" name="tabUrl" maxlength="600" autocomplete="off" placeholder="https://" value="<?php p($_['kioskTab']['url']); ?>"></label>
+		</div>
 		<table class="kv-admin-texts">
 			<thead><tr><th></th><th>Welcome title</th><th>Message under the clock (e.g. Wi-Fi, floor info)</th></tr></thead>
 			<tbody>

@@ -18,6 +18,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\FeaturePolicy;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -66,6 +67,7 @@ class KioskController extends Controller {
 			'checkOutUrl' => $url('check_out'),
 			'hostsUrl' => $url('hosts'),
 			'walkInUrl' => $url('walk_in'),
+			'tab' => $this->settings->kioskTab(),
 			'purposes' => $this->settings->purposes(),
 			'maskHosts' => $this->settings->hostNamePrivacy() === 'masked',
 			'appearance' => $this->settings->appearance() + [
@@ -78,6 +80,19 @@ class KioskController extends Controller {
 		$policy->addAllowedCameraDomain("'self'");
 		$policy->addAllowedFullScreenDomain("'self'");
 		$response->setFeaturePolicy($policy);
+
+		// The optional second tab shows another page inside this one (the iPad is in kiosk mode, so no new browser tab).
+		// Nextcloud's policy forbids frames unless the address is allowed here.
+		$tabUrl = $this->settings->kioskTab()['url'];
+		if ($tabUrl !== '') {
+			$csp = new ContentSecurityPolicy();
+			$csp->addAllowedFrameDomain("'self'");
+			$origin = $this->originOf($tabUrl);
+			if ($origin !== null) {
+				$csp->addAllowedFrameDomain($origin);
+			}
+			$response->setContentSecurityPolicy($csp);
+		}
 		return $response;
 	}
 
@@ -127,6 +142,15 @@ class KioskController extends Controller {
 				return ['ok' => false, 'error' => $e->getMessage() === 'consent' ? 'consent' : 'invalid', 'message' => $e->getMessage()];
 			}
 		});
+	}
+
+	/** "https://host:port" of an address, or null for a path on this server. */
+	private function originOf(string $url): ?string {
+		$parts = parse_url($url);
+		if (!is_array($parts) || empty($parts['host']) || ($parts['scheme'] ?? '') !== 'https') {
+			return null;
+		}
+		return 'https://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '');
 	}
 
 	private function guarded(string $key, callable $action): DataResponse {

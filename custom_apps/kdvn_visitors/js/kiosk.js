@@ -53,6 +53,7 @@
 			network: 'Đã xảy ra lỗi. Vui lòng thử lại hoặc hỏi nhân viên lễ tân.',
 			not_paired: 'Máy tính bảng này chưa được thiết lập. Vui lòng liên hệ IT.',
 			noCamera: 'Không dùng được camera. Vui lòng nhập mã.',
+			tabVisitors: 'Khách đến', tabBook: 'Đặt phòng họp',
 		},
 		en: {
 			morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening',
@@ -92,6 +93,7 @@
 			network: 'Something went wrong. Please try again or ask reception staff.',
 			not_paired: 'This tablet is not set up for check-in. Please ask IT.',
 			noCamera: 'The camera is not available. Please type your code.',
+			tabVisitors: 'Visitors', tabBook: 'Book a room',
 		},
 		ja: {
 			morning: 'おはようございます', afternoon: 'こんにちは', evening: 'こんばんは',
@@ -131,6 +133,7 @@
 			network: 'エラーが発生しました。もう一度お試しいただくか、受付スタッフにお声がけください。',
 			not_paired: 'このタブレットは受付用に設定されていません。IT担当にお問い合わせください。',
 			noCamera: 'カメラが使用できません。コードを入力してください。',
+			tabVisitors: '来訪者', tabBook: '会議室予約',
 		},
 	}
 
@@ -344,11 +347,66 @@
 			)
 		}
 
+		// ---------------------------------------------- optional second tab
+		// A page shown inside this one (an iPad in kiosk mode cannot open another browser tab). The frame lives in its own
+		// layer that render() never rebuilds, so the page keeps its state and does not reload when the clock redraws.
+		const tabUrl = cfg.tabUrl || ''
+		const hasTab = tabUrl !== ''
+		const tabLabel = () => cfg.tabLabel || t('tabBook')
+		let frameLayer = null
+		let frameTabs = null
+		let frameIdle = null
+		const FRAME_IDLE_SECONDS = 180
+
+		function tabButtons(active) {
+			return h('div', { class: 'kk-tabs', role: 'tablist' },
+				h('button', { type: 'button', role: 'tab', class: 'kk-tab' + (active === 'visitors' ? ' is-active' : ''), 'aria-selected': String(active === 'visitors'), onclick: () => showTab('visitors') }, t('tabVisitors')),
+				h('button', { type: 'button', role: 'tab', class: 'kk-tab' + (active === 'extra' ? ' is-active' : ''), 'aria-selected': String(active === 'extra'), onclick: () => showTab('extra') }, tabLabel()),
+			)
+		}
+
+		function showTab(which) {
+			clearTimeout(frameIdle)
+			if (which === 'visitors') {
+				if (frameLayer) frameLayer.hidden = true
+				go('welcome')
+				return
+			}
+			if (!frameLayer) {
+				const iframe = h('iframe', { class: 'kk-embed', src: tabUrl, title: tabLabel(), allow: "camera 'self'; fullscreen 'self'" })
+				// Same-origin pages (our own display) tell us about touches, so a booking is not cut off; other sites cannot be watched.
+				iframe.addEventListener('load', () => {
+					try {
+						iframe.contentWindow.document.addEventListener('pointerdown', frameTouched, true)
+					} catch (e) { /* another website: no idle return */ }
+					frameTouched()
+				})
+				frameTabs = h('nav', { class: 'kk-top kk-frame-top' })
+				frameLayer = h('div', { class: 'kk-frame-layer' }, frameTabs, iframe)
+				document.body.append(frameLayer)
+			}
+			frameTabs.replaceChildren(tabButtons('extra'))
+			frameLayer.hidden = false
+			frameTouched()
+		}
+
+		// Back to the visitor welcome screen after 3 minutes without a touch in the frame (only where we can see touches).
+		let frameWatchable = false
+		function frameTouched() {
+			clearTimeout(frameIdle)
+			if (!frameLayer || frameLayer.hidden) return
+			try {
+				frameWatchable = !!frameLayer.querySelector('iframe').contentWindow.document
+			} catch (e) { frameWatchable = false }
+			if (frameWatchable) frameIdle = setTimeout(() => showTab('visitors'), FRAME_IDLE_SECONDS * 1000)
+		}
+
 		function topBar() {
 			return h('nav', { class: 'kk-top' },
 				state.screen === 'welcome'
 					? h('span', { class: 'kk-top__company' }, look.logoUrl ? '' : cfg.company) // the logo already says it
 					: h('button', { type: 'button', class: 'kk-lang', onclick: () => go('welcome') }, '‹ ' + t('back')),
+				state.screen === 'welcome' && hasTab ? tabButtons('visitors') : null,
 				h('span', { class: 'kk-langs' },
 					[['vi', 'Tiếng Việt'], ['en', 'English'], ['ja', '日本語']].map(([code, label]) =>
 						h('button', {
@@ -587,7 +645,7 @@
 
 		// Keep the clock and greeting fresh on the welcome screen.
 		setInterval(() => {
-			if (state.screen !== 'welcome') return
+			if (state.screen !== 'welcome' || (frameLayer && !frameLayer.hidden)) return
 			if (Date.now() - loadedAt > RELOAD_AFTER_MS && navigator.onLine !== false) {
 				window.location.reload() // only while nobody is using the tablet
 				return

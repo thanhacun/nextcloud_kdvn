@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>kdvn_directory</id>
+	<name>Directory</name>
+	<summary>See who is in each department or group</summary>
+	<description>Read-only staff directory. Administrators choose which groups are listed; every signed-in user (except groups denied access, such as temporary or guest accounts) can see the members of those groups.</description>
+	<version>0.1.0</version>
+	<licence>agpl</licence>
+	<author>KDVN IT</author>
+	<namespace>KdvnDirectory</namespace>
+	<category>organization</category>
+	<dependencies>
+		<nextcloud min-version="30" max-version="35"/>
+	</dependencies>
+	<settings>
+		<admin>OCA\KdvnDirectory\Settings\Admin</admin>
+		<admin-section>OCA\KdvnDirectory\Settings\Section</admin-section>
+	</settings>
+	<navigations>
+		<navigation>
+			<name>Directory</name>
+			<route>kdvn_directory.page.index</route>
+			<icon>app.svg</icon>
+		</navigation>
+	</navigations>
+</info>

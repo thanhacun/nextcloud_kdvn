@@ -1,0 +1,23 @@
+.kd-wrap { padding: 20px 24px; max-width: 1100px; }
+.kd-search { width: 100%; max-width: 420px; margin: 8px 0 16px; }
+.kd-layout { display: flex; gap: 24px; align-items: flex-start; }
+.kd-groups { flex: 0 0 240px; display: flex; flex-direction: column; gap: 4px; }
+.kd-group { display: flex; justify-content: space-between; text-align: left; width: 100%; background: transparent; border: 0;
+	border-radius: var(--border-radius-large, 10px); padding: 8px 12px; cursor: pointer; color: var(--color-main-text); }
+.kd-group:hover { background: var(--color-background-hover); }
+.kd-group.is-active { background: var(--color-primary-element-light, var(--color-background-dark)); font-weight: 600; }
+.kd-count { color: var(--color-text-maxcontrast); }
+.kd-members { flex: 1 1 auto; min-width: 0; }
+.kd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.kd-person { display: flex; gap: 12px; align-items: center; padding: 8px 10px; border-radius: var(--border-radius-large, 10px);
+	color: var(--color-main-text); text-decoration: none; }
+.kd-person:hover { background: var(--color-background-hover); }
+.kd-avatar { border-radius: 50%; flex: 0 0 44px; background: var(--color-background-dark); }
+.kd-person-text { min-width: 0; }
+.kd-name { font-weight: 600; }
+.kd-email, .kd-in { color: var(--color-text-maxcontrast); font-size: 90%; overflow: hidden; text-overflow: ellipsis; }
+.kd-empty, .kd-loading { color: var(--color-text-maxcontrast); }
+.kd-table { border-collapse: collapse; margin: 12px 0; }
+.kd-table th, .kd-table td { padding: 4px 12px; text-align: left; }
+#kd-status.is-error { color: var(--color-error-text); }
+@media (max-width: 700px) { .kd-layout { flex-direction: column; } .kd-groups { flex-basis: auto; width: 100%; } }
